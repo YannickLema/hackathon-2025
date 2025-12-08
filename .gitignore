@@ -1,0 +1,95 @@
+# ======================
+# ENV (root + subfolders)
+# ======================
+.env
+.env.*
+!.env.example
+
+# ======================
+# Node / JS / TS
+# ======================
+node_modules/
+**/node_modules/
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Si tu veux garder les lockfiles, supprime ces lignes
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ======================
+# Build outputs
+# ======================
+dist/
+build/
+out/
+coverage/
+**/dist/
+**/build/
+**/out/
+**/coverage/
+
+# ======================
+# Vite
+# ======================
+.vite/
+**/.vite/
+
+# ======================
+# NestJS
+# ======================
+backend/dist/
+backend/coverage/
+**/nest-cli.json.tmp
+
+# ======================
+# Prisma / DB local
+# ======================
+backend/prisma/dev.db
+backend/prisma/*.db
+backend/prisma/*.db-journal
+**/*.sqlite
+**/*.sqlite-journal
+
+# ======================
+# Logs
+# ======================
+*.log
+**/*.log
+
+# ======================
+# OS
+# ======================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ======================
+# IDE
+# ======================
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# ======================
+# Docker
+# ======================
+**/.docker/
+**/.dockerignore.bak
+
+# ======================
+# Misc / Cache
+# ======================
+.cache/
+**/.cache/
+tmp/
+**/tmp/
