@@ -1,15 +1,111 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+enum Role {
+  PARTICULIER
+  PROFESSIONNEL
+  ADMIN
+}
+
+enum AccountStatus {
+  PENDING_VERIFICATION
+  VERIFIED
+  SUSPENDED
+}
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  password      String
+  firstName     String
+  lastName      String
+  role          Role
+  status        AccountStatus  @default(PENDING_VERIFICATION)
+  emailVerified Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  // Relations
+  particulierProfile    ParticulierProfile?
+  professionnelProfile  ProfessionnelProfile?
+  emailVerification    EmailVerification?
+
+  @@map("users")
+}
+
+model ParticulierProfile {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Informations personnelles
+  profilePhoto    String?  // URL ou chemin vers la photo
+  postalAddress   String   // Adresse postale complète
+  
+  // Validation âge
+  isOver18        Boolean  @default(false)
+  
+  // Consentements
+  newsletter      Boolean  @default(false)
+  rgpdAccepted    Boolean  @default(false)
+  rgpdAcceptedAt  DateTime?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("particulier_profiles")
+}
+
+model ProfessionnelProfile {
+  id                    String   @id @default(uuid())
+  userId                String   @unique
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Informations entreprise
+  companyName           String   // Dénomination de l'entreprise
+  siret                 String   @unique // Numéro SIRET
+  officialDocument      String   // URL ou chemin vers le document (K-Bis, avis INSEE, etc.)
+  postalAddress         String   // Adresse postale
+  
+  // Marketing
+  website               String?  // Site internet (optionnel)
+  specialities          String[] // Spécialités (obligatoire, tableau)
+  mostSearchedItems    String[] // Objets recherchés (obligatoire, tableau)
+  socialNetworks       Json?    // Réseaux sociaux (optionnel, format JSON flexible)
+  
+  // Documents légaux
+  cgvAccepted           Boolean  @default(false)
+  cgvAcceptedAt        DateTime?
+  mandateAccepted      Boolean  @default(false) // Mandat d'apport d'affaire
+  mandateAcceptedAt     DateTime?
+  
+  // Consentements
+  newsletter            Boolean  @default(false)
+  rgpdAccepted          Boolean  @default(false)
+  rgpdAcceptedAt        DateTime?
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@map("professionnel_profiles")
+}
+
+model EmailVerification {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+
+  @@map("email_verifications")
 }
