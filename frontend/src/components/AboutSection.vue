@@ -17,13 +17,14 @@
 
 <style scoped>
 .about-section {
-  padding: 40px 0;
+  padding: 20px 0;
 }
 
 .about-card {
-  background-color: white;
-  border-radius: 8px;
-  padding: 40px;
+  background-color: transparent;
+  padding: 0;
+  box-shadow: none;
+  border: none;
 }
 
 .about-title {
@@ -51,10 +52,6 @@
 }
 
 @media (max-width: 768px) {
-  .about-card {
-    padding: 20px;
-  }
-  
   .about-title {
     font-size: 2rem;
   }

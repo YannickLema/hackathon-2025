@@ -39,7 +39,7 @@ const toggleMenu = () => {
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid #e0e0e0;
 }
 
 .header-content {
@@ -97,7 +97,7 @@ const toggleMenu = () => {
   font-weight: 600; /* Semibold - Caption */
   border: none;
   padding: 10px 20px;
-  border-radius: 4px;
+  border-radius: 20px;
   font-size: 14px;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -107,6 +107,7 @@ const toggleMenu = () => {
   background-color: transparent;
   color: #213547;
   border: 1px solid #213547;
+  border-radius: 20px;
 }
 
 .btn-login:hover {

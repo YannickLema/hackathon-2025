@@ -49,10 +49,11 @@ const handleSubmit = () => {
 
 .newsletter-card {
   background-color: #3a3a3a;
-  border-radius: 8px;
   padding: 40px;
   position: relative;
   overflow: hidden;
+  box-shadow: none;
+  border: none;
 }
 
 .newsletter-card::before {
@@ -87,7 +88,7 @@ const handleSubmit = () => {
   font-family: 'Be Vietnam Pro', sans-serif;
   font-weight: 200; /* ExtraLight - Paragraphe */
   padding: 12px 16px;
-  border-radius: 4px;
+  border-radius: 20px;
   border: none;
   font-size: 16px;
   background-color: #4a4a4a;
