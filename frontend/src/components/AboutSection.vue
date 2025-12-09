@@ -5,7 +5,9 @@
         <h2 class="about-title">Purple Dog</h2>
         <button class="btn-oval about-btn">Qui sommes-nous ?</button>
         <p class="about-description">
-          Presentation de Purple Dog pour meiux vendre les objets de valeurs a des tiers de confiance.
+          Purple Dog est une plateforme de vente en ligne qui permet aux utilisateurs de vendre des objets de valeur à des tiers de confiance.
+          Nous sommes une équipe de passionnés qui aime partager nos objets de valeur avec le monde.
+          Nous sommes basés à Paris, France. Nous sommes ouverts à tous les utilisateurs qui souhaitent vendre des objets de valeur.
         </p>
       </div>
     </div>
@@ -37,7 +39,7 @@
 }
 
 .about-btn {
-  background-color: #6c63ff;
+  background-color: #E07A5F;
   color: white;
   margin-bottom: 20px;
 }

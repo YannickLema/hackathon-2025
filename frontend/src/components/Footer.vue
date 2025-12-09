@@ -47,6 +47,7 @@ import logo from '@/assets/Purple dog.svg'
   height: 60px;
   width: auto;
   object-fit: contain;
+  filter: brightness(0) saturate(100%) invert(60%) sepia(50%) saturate(2000%) hue-rotate(350deg) brightness(0.9) contrast(1.1);
 }
 
 .footer-links {
@@ -64,16 +65,16 @@ import logo from '@/assets/Purple dog.svg'
 }
 
 .footer-link:hover {
-  color: #6c63ff;
+  color: #E07A5F;
 }
 
 .contact-btn {
-  background-color: #6c63ff;
+  background-color: #E07A5F;
   color: white;
 }
 
 .contact-btn:hover {
-  background-color: #5a52e6;
+  background-color: #D2691E;
 }
 
 @media (max-width: 768px) {

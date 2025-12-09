@@ -151,7 +151,7 @@ const previousImage = () => {
 .cta-button {
   font-family: 'Be Vietnam Pro', sans-serif;
   font-weight: 600; /* Semibold - Caption */
-  background-color: #213547;
+  background-color: #000000;
   color: white;
   border: none;
   padding: 14px 28px;
@@ -165,7 +165,7 @@ const previousImage = () => {
 }
 
 .cta-button:hover {
-  background-color: #2a3f57;
+  background-color: #1a1a1a;
 }
 
 /* Colonnes d'images à droite */
