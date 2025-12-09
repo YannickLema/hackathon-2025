@@ -69,8 +69,10 @@ const handleSubmit = () => {
 }
 
 .newsletter-title {
+  font-family: 'Georgia', serif;
+  font-weight: 400;
+  font-style: italic; /* H2 - Georgia Italic */
   font-size: 2rem;
-  font-weight: 700;
   color: white;
   margin-bottom: 30px;
 }
@@ -83,6 +85,8 @@ const handleSubmit = () => {
 }
 
 .email-input {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 200; /* ExtraLight - Paragraphe */
   padding: 12px 16px;
   border-radius: 4px;
   border: none;
@@ -100,6 +104,8 @@ const handleSubmit = () => {
 }
 
 .checkbox-label {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600; /* Semibold - Caption */
   display: flex;
   align-items: flex-start;
   gap: 10px;

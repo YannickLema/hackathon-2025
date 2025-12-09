@@ -45,7 +45,7 @@ const categories = ref([
   border-radius: 8px;
   padding: 40px;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(5, 1fr);
   gap: 30px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
@@ -70,17 +70,25 @@ const categories = ref([
 }
 
 .category-name {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600; /* Semibold - Caption */
   font-size: 14px;
-  font-weight: 500;
   color: #213547;
   text-align: center;
   margin: 0;
 }
 
+@media (max-width: 1200px) {
+  .categories-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+}
+
 @media (max-width: 768px) {
   .categories-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
     padding: 20px;
   }
 }

@@ -5,9 +5,10 @@
 }
 
 :root {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  /* Typographie par défaut - Be Vietnam Pro ExtraLight pour les paragraphes */
+  font-family: 'Be Vietnam Pro', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   line-height: 1.5;
-  font-weight: 400;
+  font-weight: 200; /* ExtraLight */
   
   color-scheme: light dark;
   color: #213547;
@@ -17,6 +18,35 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typographie selon le guide de style */
+h1 {
+  font-family: 'Georgia', serif;
+  font-weight: 700; /* Bold */
+  font-style: normal;
+}
+
+h2 {
+  font-family: 'Georgia', serif;
+  font-weight: 400;
+  font-style: italic;
+}
+
+h3 {
+  font-family: 'Georgia', serif;
+  font-weight: 700; /* Bold */
+  font-style: italic;
+}
+
+p {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 200; /* ExtraLight */
+}
+
+.caption {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600; /* Semibold */
 }
 
 body {
@@ -32,12 +62,13 @@ body {
 
 /* Styles pour les boutons ovales */
 .btn-oval {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600; /* Semibold - Caption */
   border-radius: 20px;
   padding: 8px 16px;
   border: none;
   cursor: pointer;
   font-size: 14px;
-  font-weight: 500;
   transition: all 0.3s ease;
 }
 
@@ -48,12 +79,13 @@ body {
 
 /* Styles pour les boutons rectangulaires */
 .btn-rect {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600; /* Semibold - Caption */
   border-radius: 4px;
   padding: 12px 24px;
   border: none;
   cursor: pointer;
   font-size: 16px;
-  font-weight: 500;
   transition: all 0.3s ease;
 }
 

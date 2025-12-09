@@ -81,13 +81,17 @@ const previousImage = () => {
 }
 
 .product-title {
+  font-family: 'Georgia', serif;
+  font-weight: 700; /* Bold - H1 */
+  font-style: normal;
   font-size: 2.5rem;
-  font-weight: 700;
   color: #213547;
   margin: 0;
 }
 
 .product-description {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 200; /* ExtraLight - Paragraphe */
   font-size: 1.1rem;
   color: #666;
   line-height: 1.6;

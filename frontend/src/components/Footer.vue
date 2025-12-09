@@ -42,9 +42,10 @@
 }
 
 .logo-placeholder {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600; /* Semibold - Caption */
   color: white;
   font-size: 18px;
-  font-weight: 600;
 }
 
 .footer-links {
@@ -53,6 +54,8 @@
 }
 
 .footer-link {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600; /* Semibold - Caption */
   color: white;
   text-decoration: none;
   font-size: 14px;

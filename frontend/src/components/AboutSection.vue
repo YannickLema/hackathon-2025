@@ -28,8 +28,10 @@
 }
 
 .about-title {
+  font-family: 'Georgia', serif;
+  font-weight: 700; /* Bold - H1 */
+  font-style: normal;
   font-size: 3rem;
-  font-weight: 700;
   color: #213547;
   margin-bottom: 20px;
 }
@@ -41,6 +43,8 @@
 }
 
 .about-description {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 200; /* ExtraLight - Paragraphe */
   font-size: 1.1rem;
   color: #666;
   line-height: 1.6;

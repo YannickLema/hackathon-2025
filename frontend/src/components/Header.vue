@@ -19,13 +19,14 @@
 }
 
 .btn-homepage {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600; /* Semibold - Caption */
   background-color: #3a3a3a;
   color: white;
   border: none;
   padding: 12px 24px;
   border-radius: 4px;
   font-size: 16px;
-  font-weight: 500;
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
