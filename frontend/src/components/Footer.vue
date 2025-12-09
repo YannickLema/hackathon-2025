@@ -3,7 +3,7 @@
     <div class="container">
       <div class="footer-content">
         <div class="footer-left">
-          <div class="logo-placeholder">Logo</div>
+          <img :src="logo" alt="Purple Dog Logo" class="footer-logo" />
           <div class="footer-links">
             <a href="#" class="footer-link">Mentions legales</a>
             <a href="#" class="footer-link">A propos</a>
@@ -18,13 +18,15 @@
 </template>
 
 <script setup>
+import logo from '@/assets/Purple dog.svg'
 </script>
 
 <style scoped>
 .footer {
-  background-color: #2a2a2a;
-  padding: 30px 0;
+  background-color: #ffffff;
+  padding: 40px 0;
   margin-top: auto;
+  border-top: 1px solid #e0e0e0;
 }
 
 .footer-content {
@@ -41,11 +43,10 @@
   gap: 30px;
 }
 
-.logo-placeholder {
-  font-family: 'Be Vietnam Pro', sans-serif;
-  font-weight: 600; /* Semibold - Caption */
-  color: white;
-  font-size: 18px;
+.footer-logo {
+  height: 60px;
+  width: auto;
+  object-fit: contain;
 }
 
 .footer-links {
@@ -56,14 +57,14 @@
 .footer-link {
   font-family: 'Be Vietnam Pro', sans-serif;
   font-weight: 600; /* Semibold - Caption */
-  color: white;
+  color: #213547;
   text-decoration: none;
   font-size: 14px;
-  transition: opacity 0.3s ease;
+  transition: color 0.3s ease;
 }
 
 .footer-link:hover {
-  opacity: 0.8;
+  color: #6c63ff;
 }
 
 .contact-btn {
@@ -84,6 +85,10 @@
   .footer-left {
     flex-direction: column;
     gap: 15px;
+  }
+  
+  .footer-logo {
+    height: 50px;
   }
   
   .footer-links {

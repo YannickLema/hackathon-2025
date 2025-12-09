@@ -47,7 +47,6 @@ const categories = ref([
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 30px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .category-card {

@@ -50,7 +50,6 @@ const previousImage = () => {
   padding: 40px;
   display: flex;
   gap: 40px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .product-image {
