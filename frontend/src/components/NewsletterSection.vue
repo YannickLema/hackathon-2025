@@ -1,26 +1,31 @@
 <template>
   <section class="newsletter-section">
-    <div class="container">
-      <div class="newsletter-card">
-        <h2 class="newsletter-title">Rester informés</h2>
-        <form @submit.prevent="handleSubmit" class="newsletter-form">
-          <input 
-            type="email" 
-            v-model="email"
-            placeholder="Votre adresse email"
-            class="email-input"
-            required
-          />
-          <label class="checkbox-label">
-            <input 
-              type="checkbox" 
-              v-model="acceptTerms"
-              required
-            />
-            <span>J'ai lu et j'accepte que mes donnees soit utillisees</span>
-          </label>
-          <button type="submit" class="btn-rect submit-btn">S'abonner</button>
-        </form>
+    <div class="newsletter-background">
+      <div class="image-overlay"></div>
+      <div class="newsletter-content">
+        <div class="form-content">
+          <h2 class="newsletter-title">Rester informés</h2>
+          <form @submit.prevent="handleSubmit" class="newsletter-form">
+            <div class="email-row">
+              <input 
+                type="email" 
+                v-model="email"
+                placeholder="Votre adresse email"
+                class="email-input"
+                required
+              />
+              <button type="submit" class="btn-rect submit-btn">S'abonner</button>
+            </div>
+            <label class="checkbox-label">
+              <input 
+                type="checkbox" 
+                v-model="acceptTerms"
+                required
+              />
+              <span>J'ai lu et j'accepte que mes donnees soit utillisees</span>
+            </label>
+          </form>
+        </div>
       </div>
     </div>
   </section>
@@ -44,44 +49,71 @@ const handleSubmit = () => {
 
 <style scoped>
 .newsletter-section {
-  padding: 40px 0;
+  margin: 0;
+  padding: 0;
+  margin-bottom: 0 !important;
+  width: 100%;
 }
 
-.newsletter-card {
-  background-color: #3a3a3a;
-  padding: 40px;
+.newsletter-background {
+  background-image: url('https://cdn.pixabay.com/photo/2016/11/29/02/26/library-1866844_1280.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   position: relative;
-  overflow: hidden;
-  box-shadow: none;
-  border: none;
+  width: 100%;
+  min-height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.newsletter-card::before {
-  content: '';
+.image-overlay {
   position: absolute;
   top: 0;
   left: 0;
-  width: 100px;
-  height: 100%;
-  background: linear-gradient(135deg, transparent 0%, transparent 50%, rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0.1) 100%);
-  transform: skewX(-20deg);
-  transform-origin: top left;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.7) 100%);
+}
+
+.newsletter-content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  padding: 40px 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.form-content {
+  width: 100%;
+  max-width: 800px;
 }
 
 .newsletter-title {
-  font-family: 'Georgia', serif;
-  font-weight: 400;
-  font-style: italic; /* H2 - Georgia Italic */
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600; /* Semibold - Caption */
+  font-style: normal;
   font-size: 2rem;
-  color: white;
-  margin-bottom: 30px;
+  color: #ffffff;
+  margin-bottom: 20px;
+  line-height: 1.2;
 }
 
 .newsletter-form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  max-width: 500px;
+  gap: 15px;
+  width: 100%;
+}
+
+.email-row {
+  display: flex;
+  gap: 15px;
+  width: 100%;
+  align-items: stretch;
 }
 
 .email-input {
@@ -89,18 +121,21 @@ const handleSubmit = () => {
   font-weight: 200; /* ExtraLight - Paragraphe */
   padding: 12px 16px;
   border-radius: 20px;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.3);
   font-size: 16px;
-  background-color: #4a4a4a;
-  color: white;
+  background-color: rgba(255, 255, 255, 0.9);
+  color: #213547;
+  flex: 1;
 }
 
 .email-input::placeholder {
-  color: #aaa;
+  color: #999;
 }
 
 .email-input:focus {
   outline: 2px solid #E07A5F;
+  border-color: #E07A5F;
+  background-color: #ffffff;
 }
 
 .checkbox-label {
@@ -109,7 +144,7 @@ const handleSubmit = () => {
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  color: white;
+  color: #ffffff;
   font-size: 14px;
   cursor: pointer;
 }
@@ -117,12 +152,16 @@ const handleSubmit = () => {
 .checkbox-label input[type="checkbox"] {
   margin-top: 3px;
   cursor: pointer;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
 }
 
 .submit-btn {
   background-color: #E07A5F;
   color: white;
-  align-self: flex-start;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .submit-btn:hover {
@@ -130,12 +169,30 @@ const handleSubmit = () => {
 }
 
 @media (max-width: 768px) {
-  .newsletter-card {
-    padding: 20px;
+  .newsletter-background {
+    min-height: 220px;
+  }
+  
+  .newsletter-content {
+    padding: 30px 20px;
   }
   
   .newsletter-title {
     font-size: 1.5rem;
+    margin-bottom: 15px;
+  }
+  
+  .newsletter-form {
+    gap: 12px;
+  }
+  
+  .email-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .submit-btn {
+    width: 100%;
   }
 }
 </style>

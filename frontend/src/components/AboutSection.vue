@@ -5,9 +5,12 @@
         <h2 class="about-title">Purple Dog</h2>
         <button class="btn-oval about-btn">Qui sommes-nous ?</button>
         <p class="about-description">
-          Purple Dog est une plateforme de vente en ligne qui permet aux utilisateurs de vendre des objets de valeur à des tiers de confiance.
-          Nous sommes une équipe de passionnés qui aime partager nos objets de valeur avec le monde.
-          Nous sommes basés à Paris, France. Nous sommes ouverts à tous les utilisateurs qui souhaitent vendre des objets de valeur.
+          Purple Dog est une plateforme de vente en ligne spécialisée dans la mise en relation entre vendeurs et acheteurs d'objets de valeur. 
+          Que vous souhaitiez vendre des bijoux anciens, des œuvres d'art, des meubles de collection ou tout autre objet précieux, 
+          notre plateforme vous offre un espace sécurisé et de confiance pour réaliser vos transactions. 
+          Nous mettons un point d'honneur à garantir l'authenticité et la qualité des objets proposés, tout en offrant une expérience 
+          d'achat et de vente simple et transparente. Rejoignez notre communauté de passionnés et découvrez un nouveau moyen de valoriser 
+          vos objets de collection.
         </p>
       </div>
     </div>
@@ -50,7 +53,7 @@
   font-size: 1.1rem;
   color: #666;
   line-height: 1.6;
-  max-width: 800px;
+  width: 100%;
 }
 
 @media (max-width: 768px) {

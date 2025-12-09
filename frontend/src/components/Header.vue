@@ -3,7 +3,9 @@
     <div class="container">
       <div class="header-content">
         <div class="header-left">
-          <img :src="logo" alt="Purple Dog Logo" class="logo" />
+          <a href="/" class="logo-link">
+            <img :src="logo" alt="Purple Dog Logo" class="logo" />
+          </a>
           <button class="menu-burger" @click="toggleMenu" aria-label="Menu">
             <span class="burger-line"></span>
             <span class="burger-line"></span>
@@ -54,11 +56,22 @@ const toggleMenu = () => {
   gap: 20px;
 }
 
+.logo-link {
+  display: inline-block;
+  text-decoration: none;
+  cursor: pointer;
+}
+
 .logo {
   height: 60px;
   width: auto;
   object-fit: contain;
   filter: brightness(0) saturate(100%) invert(60%) sepia(50%) saturate(2000%) hue-rotate(350deg) brightness(0.9) contrast(1.1);
+  transition: opacity 0.3s ease;
+}
+
+.logo-link:hover .logo {
+  opacity: 0.8;
 }
 
 .menu-burger {
