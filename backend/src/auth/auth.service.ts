@@ -8,7 +8,9 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { AccountStatus, Prisma, Role } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmailService } from '../email/email.service';
 import { RegisterParticulierDto } from './dto/register-particulier.dto';
 import { RegisterProfessionnelDto } from './dto/register-professionnel.dto';
 import { LoginDto } from './dto/login.dto';
@@ -18,6 +20,7 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
+    private readonly emailService: EmailService,
   ) {}
 
   async registerParticulier(dto: RegisterParticulierDto) {
@@ -47,6 +50,9 @@ export class AuthService {
       },
       include: { particulierProfile: true },
     });
+
+    // Générer et envoyer l'email de vérification
+    await this.sendVerificationEmail(user.id, user.email, user.firstName);
 
     return this.buildAuthResponse(user);
   }
@@ -88,6 +94,9 @@ export class AuthService {
       include: { professionnelProfile: true },
     });
 
+    // Générer et envoyer l'email de vérification
+    await this.sendVerificationEmail(user.id, user.email, user.firstName);
+
     return this.buildAuthResponse(user);
   }
 
@@ -112,7 +121,95 @@ export class AuthService {
       throw new ForbiddenException('Compte suspendu');
     }
 
+    if (!user.emailVerified) {
+      throw new ForbiddenException('Veuillez vérifier votre email avant de vous connecter');
+    }
+
     return this.buildAuthResponse(user);
+  }
+
+  async verifyEmail(token: string) {
+    if (!token) {
+      throw new BadRequestException('Token de vérification requis');
+    }
+
+    const verification = await this.prisma.emailVerification.findUnique({
+      where: { token },
+      include: { user: true },
+    });
+
+    if (!verification) {
+      throw new BadRequestException('Token de vérification invalide');
+    }
+
+    if (verification.expiresAt < new Date()) {
+      throw new BadRequestException('Token de vérification expiré');
+    }
+
+    // Vérifier l'email et mettre à jour le statut
+    await this.prisma.user.update({
+      where: { id: verification.userId },
+      data: {
+        emailVerified: true,
+        status: AccountStatus.VERIFIED,
+      },
+    });
+
+    // Supprimer le token de vérification
+    await this.prisma.emailVerification.delete({
+      where: { id: verification.id },
+    });
+
+    return { message: 'Email vérifié avec succès' };
+  }
+
+  async resendVerificationEmail(email: string) {
+    if (!email) {
+      throw new BadRequestException('Email requis');
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      // Ne pas révéler si l'email existe ou non pour des raisons de sécurité
+      return { message: 'Si cet email existe, un email de vérification a été envoyé' };
+    }
+
+    if (user.emailVerified) {
+      throw new BadRequestException('Email déjà vérifié');
+    }
+
+    await this.sendVerificationEmail(user.id, user.email, user.firstName);
+
+    return { message: 'Email de vérification envoyé' };
+  }
+
+  private async sendVerificationEmail(userId: string, email: string, firstName: string) {
+    // Générer un token unique
+    const token = crypto.randomBytes(32).toString('hex');
+
+    // Expiration dans 24 heures
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 24);
+
+    // Supprimer l'ancien token s'il existe
+    await this.prisma.emailVerification.deleteMany({
+      where: { userId },
+    });
+
+    // Créer le nouveau token
+    await this.prisma.emailVerification.create({
+      data: {
+        userId,
+        token,
+        expiresAt,
+      },
+    });
+
+    // Envoyer l'email
+    await this.emailService.sendVerificationEmail(email, token, firstName);
   }
 
   private async ensureEmailAvailable(email: string) {
