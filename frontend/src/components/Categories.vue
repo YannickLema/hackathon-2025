@@ -60,7 +60,6 @@ const categories = ref([
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 20px;
-  box-shadow: none;
   border: none;
 }
 
@@ -77,7 +76,6 @@ const categories = ref([
   background-repeat: no-repeat;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: none;
   border: none;
   overflow: hidden;
 }

@@ -10,7 +10,7 @@ export class RegisterProfessionnelDto {
   website?: string;
   specialities!: string[]; // obligatoire
   mostSearchedItems!: string[]; // obligatoire
-  socialNetworks?: import('@prisma/client').Prisma.InputJsonValue;
+  socialNetworks?: Record<string, string> | null;
   cgvAccepted!: boolean;
   mandateAccepted!: boolean;
   newsletter?: boolean;

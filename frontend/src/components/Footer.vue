@@ -3,12 +3,12 @@
     <div class="container">
       <div class="footer-content">
         <div class="footer-left">
-          <a href="/" class="footer-logo-link">
+          <router-link to="/" class="footer-logo-link">
             <img :src="logo" alt="Purple Dog Logo" class="footer-logo" />
-          </a>
+          </router-link>
           <div class="footer-links">
-            <a href="#" class="footer-link">Mentions legales</a>
-            <a href="#" class="footer-link">A propos</a>
+                <router-link to="/mentions-legales" class="footer-link">Mentions legales</router-link>
+                <router-link to="/a-propos" class="footer-link">A propos</router-link>
             <div class="social-icons">
               <a href="#" class="social-icon" aria-label="Instagram">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
@@ -81,7 +81,7 @@ import logo from '@/assets/Purple dog.svg'
   height: 60px;
   width: auto;
   object-fit: contain;
-  filter: brightness(0) saturate(100%) invert(60%) sepia(50%) saturate(2000%) hue-rotate(350deg) brightness(0.9) contrast(1.1);
+  filter: brightness(0) saturate(100%) invert(40%) sepia(30%) saturate(2000%) hue-rotate(250deg) brightness(0.9) contrast(1.1);
   transition: opacity 0.3s ease;
 }
 
@@ -106,7 +106,7 @@ import logo from '@/assets/Purple dog.svg'
 }
 
 .footer-link:hover {
-  color: #E07A5F;
+  color: #645394;
 }
 
 .social-icons {
@@ -128,7 +128,7 @@ import logo from '@/assets/Purple dog.svg'
 }
 
 .social-icon:hover {
-  color: #E07A5F;
+  color: #645394;
   transform: translateY(-2px);
 }
 
@@ -138,12 +138,12 @@ import logo from '@/assets/Purple dog.svg'
 }
 
 .contact-btn {
-  background-color: #E07A5F;
+  background-color: #645394;
   color: white;
 }
 
 .contact-btn:hover {
-  background-color: #D2691E;
+  background-color: #4F4670;
 }
 
 @media (max-width: 768px) {

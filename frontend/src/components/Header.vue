@@ -3,9 +3,9 @@
     <div class="container">
       <div class="header-content">
         <div class="header-left">
-          <a href="/" class="logo-link">
+          <router-link to="/" class="logo-link">
             <img :src="logo" alt="Purple Dog Logo" class="logo" />
-          </a>
+          </router-link>
           <button class="menu-burger" @click="toggleMenu" aria-label="Menu">
             <span class="burger-line"></span>
             <span class="burger-line"></span>
@@ -13,8 +13,8 @@
           </button>
         </div>
         <div class="header-right">
-          <button class="btn-action btn-login">Connexion</button>
-          <button class="btn-action btn-signup">Inscription</button>
+          <router-link to="/login" class="btn-action btn-login">Connexion</router-link>
+          <router-link to="/register" class="btn-action btn-signup">Inscription</router-link>
         </div>
       </div>
     </div>
@@ -66,7 +66,7 @@ const toggleMenu = () => {
   height: 60px;
   width: auto;
   object-fit: contain;
-  filter: brightness(0) saturate(100%) invert(60%) sepia(50%) saturate(2000%) hue-rotate(350deg) brightness(0.9) contrast(1.1);
+  filter: brightness(0) saturate(100%) invert(40%) sepia(30%) saturate(2000%) hue-rotate(250deg) brightness(0.9) contrast(1.1);
   transition: opacity 0.3s ease;
 }
 
@@ -97,7 +97,7 @@ const toggleMenu = () => {
 }
 
 .menu-burger:hover .burger-line {
-  background-color: #E07A5F;
+  background-color: #645394;
 }
 
 .header-right {
@@ -122,6 +122,8 @@ const toggleMenu = () => {
   color: #213547;
   border: 1px solid #213547;
   border-radius: 20px;
+  text-decoration: none;
+  display: inline-block;
 }
 
 .btn-login:hover {
@@ -129,12 +131,14 @@ const toggleMenu = () => {
 }
 
 .btn-signup {
-  background-color: #E07A5F;
+  background-color: #645394;
   color: white;
+  text-decoration: none;
+  display: inline-block;
 }
 
 .btn-signup:hover {
-  background-color: #D2691E;
+  background-color: #4F4670;
 }
 
 @media (max-width: 768px) {

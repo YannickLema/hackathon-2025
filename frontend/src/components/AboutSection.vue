@@ -28,7 +28,6 @@
 .about-card {
   background-color: transparent;
   padding: 0;
-  box-shadow: none;
   border: none;
 }
 
@@ -42,7 +41,7 @@
 }
 
 .about-btn {
-  background-color: #E07A5F;
+  background-color: #645394;
   color: white;
   margin-bottom: 20px;
 }

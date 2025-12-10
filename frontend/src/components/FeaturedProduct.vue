@@ -19,23 +19,23 @@
         <div class="images-column">
           <div class="image-card">
             <img 
-              :src="featuredImages[0].image" 
-              :alt="featuredImages[0].title"
+              :src="getCurrentImage(0).image" 
+              :alt="getCurrentImage(0).title"
               class="card-image"
             />
             <div class="image-overlay">
-              <h3 class="overlay-title">{{ featuredImages[0].title }}</h3>
+              <h3 class="overlay-title">{{ getCurrentImage(0).title }}</h3>
               <span class="overlay-link">EXPLORER ></span>
             </div>
           </div>
           <div class="image-card">
             <img 
-              :src="featuredImages[1].image" 
-              :alt="featuredImages[1].title"
+              :src="getCurrentImage(1).image" 
+              :alt="getCurrentImage(1).title"
               class="card-image"
             />
             <div class="image-overlay">
-              <h3 class="overlay-title">{{ featuredImages[1].title }}</h3>
+              <h3 class="overlay-title">{{ getCurrentImage(1).title }}</h3>
               <span class="overlay-link">EXPLORER ></span>
             </div>
           </div>
@@ -57,27 +57,69 @@ const featuredImages = ref([
   {
     id: 1,
     title: 'Bijoux de collection',
-    // Exemple: Remplacez par une URL Pixabay d'un bijou
     image: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&h=1200&fit=crop',
     category: 'Bijoux & montres'
   },
   {
     id: 2,
     title: 'Objets d\'art précieux',
-    // Exemple: Remplacez par une URL Pixabay d'un objet d'art
     image: 'https://cdn.pixabay.com/photo/2018/11/30/18/53/church-3848348_1280.jpg',
     category: 'Objets d\'art & tableaux'
+  },
+  {
+    id: 3,
+    title: 'Meubles anciens',
+    image: 'https://cdn.pixabay.com/photo/2017/07/11/12/11/chair-backrest-2493326_1280.jpg',
+    category: 'Meubles anciens'
+  },
+  {
+    id: 4,
+    title: 'Vins & spiritueux',
+    image: 'https://cdn.pixabay.com/photo/2023/10/28/06/40/wine-8346641_1280.jpg',
+    category: 'Vins & spiritueux de collection'
+  },
+  {
+    id: 5,
+    title: 'Instruments de musique',
+    image: 'https://cdn.pixabay.com/photo/2020/12/09/18/42/violin-5818267_1280.jpg',
+    category: 'Instruments de musique'
+  },
+  {
+    id: 6,
+    title: 'Livres anciens',
+    image: 'https://cdn.pixabay.com/photo/2014/09/05/18/32/old-books-436498_1280.jpg',
+    category: 'Livres anciens & manuscrits'
   }
 ])
 
+// Fonction pour obtenir l'image à afficher selon l'index (0 ou 1) et currentImage
+const getCurrentImage = (index) => {
+  // On affiche 2 images à la fois, donc on calcule l'index réel
+  const realIndex = (currentImage.value * 2 + index) % featuredImages.value.length
+  return featuredImages.value[realIndex]
+}
+
 const nextImage = () => {
-  // Logique pour passer à l'image suivante
-  console.log('Image suivante')
+  // On avance de 2 images à la fois (car on affiche 2 images)
+  // On s'assure de ne pas dépasser la longueur du tableau
+  const maxIndex = Math.floor((featuredImages.value.length - 2) / 2)
+  if (currentImage.value < maxIndex) {
+    currentImage.value++
+  } else {
+    // Retour au début
+    currentImage.value = 0
+  }
 }
 
 const previousImage = () => {
-  // Logique pour passer à l'image précédente
-  console.log('Image précédente')
+  // On recule de 2 images à la fois
+  if (currentImage.value > 0) {
+    currentImage.value--
+  } else {
+    // Aller à la fin
+    const maxIndex = Math.floor((featuredImages.value.length - 2) / 2)
+    currentImage.value = maxIndex
+  }
 }
 </script>
 
@@ -101,6 +143,7 @@ const previousImage = () => {
   flex-direction: column;
   gap: 30px;
   align-self: stretch;
+  border-radius: 20px;
 }
 
 .carousel-nav {
@@ -182,6 +225,7 @@ const previousImage = () => {
   position: relative;
   width: 100%;
   height: 100%;
+  min-height: 500px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -191,6 +235,7 @@ const previousImage = () => {
 .card-image {
   width: 100%;
   height: 100%;
+  min-height: 500px;
   object-fit: cover;
   display: block;
 }

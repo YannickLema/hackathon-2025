@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterParticulierDto } from './dto/register-particulier.dto';
 import { RegisterProfessionnelDto } from './dto/register-professionnel.dto';
@@ -44,6 +44,11 @@ export class AuthController {
   @Post('reset-password')
   resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(dto);
+  }
+
+  @Get('validate-siret/:siret')
+  async validateSiret(@Param('siret') siret: string) {
+    return this.authService.validateSiret(siret);
   }
 }
 

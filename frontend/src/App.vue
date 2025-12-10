@@ -1,23 +1,16 @@
 <template>
   <div id="app">
-    <Header />
-    <main>
-      <FeaturedProduct />
-      <Categories />
-      <AboutSection />
-      <NewsletterSection />
-    </main>
-    <Footer />
+    <router-view />
   </div>
 </template>
 
 <script setup>
-import Header from './components/Header.vue'
-import FeaturedProduct from './components/FeaturedProduct.vue'
-import Categories from './components/Categories.vue'
-import AboutSection from './components/AboutSection.vue'
-import NewsletterSection from './components/NewsletterSection.vue'
-import Footer from './components/Footer.vue'
+import { onMounted } from 'vue'
+import router from './router'
+
+onMounted(() => {
+  // Configuration du router
+})
 </script>
 
 <style>
@@ -25,9 +18,5 @@ import Footer from './components/Footer.vue'
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-}
-
-main {
-  flex: 1;
 }
 </style>
