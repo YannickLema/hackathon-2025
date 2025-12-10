@@ -81,7 +81,7 @@ import logo from '@/assets/Purple dog.svg'
   height: 60px;
   width: auto;
   object-fit: contain;
-  filter: brightness(0) saturate(100%) invert(60%) sepia(50%) saturate(2000%) hue-rotate(350deg) brightness(0.9) contrast(1.1);
+  filter: brightness(0) saturate(100%) invert(40%) sepia(30%) saturate(2000%) hue-rotate(250deg) brightness(0.9) contrast(1.1);
   transition: opacity 0.3s ease;
 }
 
@@ -106,7 +106,7 @@ import logo from '@/assets/Purple dog.svg'
 }
 
 .footer-link:hover {
-  color: #E07A5F;
+  color: #645394;
 }
 
 .social-icons {
@@ -128,7 +128,7 @@ import logo from '@/assets/Purple dog.svg'
 }
 
 .social-icon:hover {
-  color: #E07A5F;
+  color: #645394;
   transform: translateY(-2px);
 }
 
@@ -138,12 +138,12 @@ import logo from '@/assets/Purple dog.svg'
 }
 
 .contact-btn {
-  background-color: #E07A5F;
+  background-color: #645394;
   color: white;
 }
 
 .contact-btn:hover {
-  background-color: #D2691E;
+  background-color: #4F4670;
 }
 
 @media (max-width: 768px) {

@@ -41,7 +41,7 @@
 }
 
 .about-btn {
-  background-color: #E07A5F;
+  background-color: #645394;
   color: white;
   margin-bottom: 20px;
 }

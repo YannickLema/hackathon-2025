@@ -190,7 +190,7 @@ const handleForgotPassword = () => {
 }
 
 .toggle-option.active {
-  background-color: #E07A5F;
+  background-color: #645394;
   color: #ffffff;
 }
 
@@ -232,7 +232,7 @@ const handleForgotPassword = () => {
 
 .form-input:focus {
   outline: none;
-  border-color: #E07A5F;
+  border-color: #645394;
   background-color: #ffffff;
 }
 
@@ -252,7 +252,7 @@ const handleForgotPassword = () => {
 }
 
 .forgot-password:hover {
-  color: #E07A5F;
+  color: #645394;
 }
 
 .login-button {

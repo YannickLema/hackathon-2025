@@ -66,7 +66,7 @@ const toggleMenu = () => {
   height: 60px;
   width: auto;
   object-fit: contain;
-  filter: brightness(0) saturate(100%) invert(60%) sepia(50%) saturate(2000%) hue-rotate(350deg) brightness(0.9) contrast(1.1);
+  filter: brightness(0) saturate(100%) invert(40%) sepia(30%) saturate(2000%) hue-rotate(250deg) brightness(0.9) contrast(1.1);
   transition: opacity 0.3s ease;
 }
 
@@ -97,7 +97,7 @@ const toggleMenu = () => {
 }
 
 .menu-burger:hover .burger-line {
-  background-color: #E07A5F;
+  background-color: #645394;
 }
 
 .header-right {
@@ -131,14 +131,14 @@ const toggleMenu = () => {
 }
 
 .btn-signup {
-  background-color: #E07A5F;
+  background-color: #645394;
   color: white;
   text-decoration: none;
   display: inline-block;
 }
 
 .btn-signup:hover {
-  background-color: #D2691E;
+  background-color: #4F4670;
 }
 
 @media (max-width: 768px) {

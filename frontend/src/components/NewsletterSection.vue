@@ -133,8 +133,8 @@ const handleSubmit = () => {
 }
 
 .email-input:focus {
-  outline: 2px solid #E07A5F;
-  border-color: #E07A5F;
+  outline: 2px solid #645394;
+  border-color: #645394;
   background-color: #ffffff;
 }
 
@@ -158,14 +158,14 @@ const handleSubmit = () => {
 }
 
 .submit-btn {
-  background-color: #E07A5F;
+  background-color: #645394;
   color: white;
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 .submit-btn:hover {
-  background-color: #D2691E;
+  background-color: #4F4670;
 }
 
 @media (max-width: 768px) {

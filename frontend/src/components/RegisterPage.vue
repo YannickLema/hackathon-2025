@@ -48,13 +48,42 @@
 
           <div class="form-group">
             <label for="particulier-profilePhoto" class="form-label">Photo de profil</label>
-            <input
-              id="particulier-profilePhoto"
-              v-model="particulierForm.profilePhoto"
-              type="text"
-              class="form-input"
-              placeholder="URL de la photo"
-            />
+            <div class="file-upload-container">
+              <input
+                id="particulier-profilePhoto"
+                type="file"
+                class="file-input-hidden"
+                @change="handleProfilePhotoChange"
+                accept=".jpg,.jpeg,.png,.gif,.webp"
+              />
+              <label for="particulier-profilePhoto" class="file-upload-label">
+                <span class="file-upload-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                  </svg>
+                </span>
+                <span class="file-upload-text">
+                  {{ profilePhotoFile ? profilePhotoFile.name : 'Choisir une photo' }}
+                </span>
+              </label>
+              <button 
+                v-if="profilePhotoFile" 
+                type="button" 
+                @click="removeProfilePhoto" 
+                class="file-remove-btn"
+                aria-label="Supprimer la photo"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+            <div v-if="profilePhotoFile" class="file-info-text">
+              Format accepté : JPG, PNG, GIF, WEBP (max 10MB)
+            </div>
           </div>
 
           <div class="form-group">
@@ -268,17 +297,42 @@
 
             <div class="form-group">
               <label for="professionnel-officialDocument" class="form-label">Document officiel (K-Bis, avis de situation INSEE, etc...)</label>
-              <input
-                id="professionnel-officialDocument"
-                type="file"
-                class="form-input file-input"
-                @change="handleFileChange"
-                accept=".pdf,.jpg,.jpeg,.png"
-                required
-              />
-              <div v-if="officialDocumentFile" class="file-info">
-                <span class="file-name">{{ officialDocumentFile.name }}</span>
-                <button type="button" @click="removeFile" class="file-remove">×</button>
+              <div class="file-upload-container">
+                <input
+                  id="professionnel-officialDocument"
+                  type="file"
+                  class="file-input-hidden"
+                  @change="handleFileChange"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  required
+                />
+                <label for="professionnel-officialDocument" class="file-upload-label">
+                  <span class="file-upload-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                      <polyline points="17 8 12 3 7 8"></polyline>
+                      <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                  </span>
+                  <span class="file-upload-text">
+                    {{ officialDocumentFile ? officialDocumentFile.name : 'Choisir un fichier' }}
+                  </span>
+                </label>
+                <button 
+                  v-if="officialDocumentFile" 
+                  type="button" 
+                  @click="removeFile" 
+                  class="file-remove-btn"
+                  aria-label="Supprimer le fichier"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </div>
+              <div v-if="officialDocumentFile" class="file-info-text">
+                Format accepté : PDF, JPG, PNG (max 10MB)
               </div>
             </div>
 
@@ -555,6 +609,9 @@ const professionnelForm = reactive({
 
 // Gestion du fichier document officiel
 const officialDocumentFile = ref(null)
+
+// Gestion du fichier photo de profil
+const profilePhotoFile = ref(null)
 
 // Validation SIRET
 const siretError = ref('')
@@ -846,22 +903,24 @@ const handleRegisterParticulier = async () => {
   isLoading.value = true
 
   try {
+    // Créer FormData pour envoyer le fichier photo si présent
+    const formData = new FormData()
+    formData.append('firstName', particulierForm.firstName)
+    formData.append('lastName', particulierForm.lastName)
+    formData.append('email', particulierForm.email)
+    formData.append('password', particulierForm.password)
+    if (profilePhotoFile.value) {
+      formData.append('profilePhoto', profilePhotoFile.value)
+    }
+    formData.append('postalAddress', particulierForm.postalAddress)
+    formData.append('isOver18', particulierForm.isOver18.toString())
+    formData.append('newsletter', (particulierForm.newsletter || false).toString())
+    formData.append('rgpdAccepted', particulierForm.rgpdAccepted.toString())
+
     const response = await fetch(`${API_URL}/auth/register/particulier`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        firstName: particulierForm.firstName,
-        lastName: particulierForm.lastName,
-        email: particulierForm.email,
-        password: particulierForm.password,
-        profilePhoto: particulierForm.profilePhoto || undefined,
-        postalAddress: particulierForm.postalAddress,
-        isOver18: particulierForm.isOver18,
-        newsletter: particulierForm.newsletter || undefined,
-        rgpdAccepted: particulierForm.rgpdAccepted,
-      }),
+      // Ne pas définir Content-Type, le navigateur le fera automatiquement avec la boundary pour FormData
+      body: formData,
     })
 
     const data = await response.json()
@@ -1019,7 +1078,7 @@ const handleRegisterProfessionnel = async () => {
 }
 
 .toggle-option.active {
-  background-color: #E07A5F;
+  background-color: #645394;
   color: #ffffff;
 }
 
@@ -1067,7 +1126,7 @@ const handleRegisterProfessionnel = async () => {
 
 .form-input:focus {
   outline: none;
-  border-color: #E07A5F;
+  border-color: #645394;
   background-color: #ffffff;
 }
 
@@ -1155,53 +1214,98 @@ const handleRegisterProfessionnel = async () => {
   margin-top: 4px;
 }
 
-.file-input {
-  cursor: pointer;
-}
-
-.file-input::-webkit-file-upload-button {
-  visibility: hidden;
-}
-
-.file-info {
+.file-upload-container {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-top: 8px;
-  padding: 8px 12px;
-  background-color: #f5f5f5;
-  border-radius: 8px;
 }
 
-.file-name {
-  font-family: 'Be Vietnam Pro', sans-serif;
-  font-weight: 600;
-  font-size: 14px;
-  color: #213547;
+.file-input-hidden {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.file-upload-label {
   flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background-color: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 200;
+  font-size: 16px;
+  color: #213547;
+  min-height: 48px;
 }
 
-.file-remove {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 20px;
-  line-height: 1;
-  padding: 0;
-  width: 24px;
-  height: 24px;
+.file-upload-label:hover {
+  background-color: #e8e8e8;
+  border-color: #645394;
+}
+
+.file-upload-label:active {
+  background-color: #e0e0e0;
+}
+
+.file-upload-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #d32f2f;
-  transition: color 0.3s ease;
-  border-radius: 4px;
+  color: #666;
+  flex-shrink: 0;
 }
 
-.file-remove:hover {
+.file-upload-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #213547;
+}
+
+.file-upload-label:hover .file-upload-icon {
+  color: #645394;
+}
+
+.file-remove-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background-color: transparent;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #d32f2f;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.file-remove-btn:hover {
   background-color: #ffebee;
+  border-color: #d32f2f;
   color: #b71c1c;
 }
+
+.file-info-text {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 200;
+  font-size: 12px;
+  color: #666;
+  margin-top: 6px;
+}
+
 
 .form-separator {
   height: 1px;
@@ -1308,7 +1412,7 @@ const handleRegisterProfessionnel = async () => {
 }
 
 .tag-remove:hover {
-  color: #E07A5F;
+  color: #645394;
 }
 
 .social-network-row {
@@ -1337,7 +1441,7 @@ const handleRegisterProfessionnel = async () => {
 
 .form-select:focus {
   outline: none;
-  border-color: #E07A5F;
+  border-color: #645394;
   background-color: #ffffff;
 }
 
@@ -1365,7 +1469,7 @@ const handleRegisterProfessionnel = async () => {
   font-weight: 600;
   font-size: 20px;
   padding: 12px 16px;
-  background-color: #E07A5F;
+  background-color: #645394;
   color: #ffffff;
   border: none;
   border-radius: 8px;
@@ -1376,7 +1480,7 @@ const handleRegisterProfessionnel = async () => {
 }
 
 .add-button:hover {
-  background-color: #D2691E;
+  background-color: #4F4670;
 }
 
 /* Stepper */
@@ -1425,8 +1529,8 @@ const handleRegisterProfessionnel = async () => {
 }
 
 .step.active .step-number {
-  background-color: #E07A5F;
-  border-color: #E07A5F;
+  background-color: #645394;
+  border-color: #645394;
   color: #ffffff;
 }
 
@@ -1446,7 +1550,7 @@ const handleRegisterProfessionnel = async () => {
 }
 
 .step.active .step-label {
-  color: #E07A5F;
+  color: #645394;
 }
 
 .step.completed .step-label {
