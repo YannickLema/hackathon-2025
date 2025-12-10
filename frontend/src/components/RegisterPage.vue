@@ -35,7 +35,7 @@
               />
             </div>
             <div class="form-group">
-              <label for="particulier-firstName" class="form-label">Prenom</label>
+              <label for="particulier-firstName" class="form-label">Prenom<span class="required-asterisk">*</span></label>
               <input
                 id="particulier-firstName"
                 v-model="particulierForm.firstName"
@@ -87,7 +87,7 @@
           </div>
 
           <div class="form-group">
-            <label for="particulier-email" class="form-label">Email</label>
+            <label for="particulier-email" class="form-label">Email<span class="required-asterisk">*</span></label>
             <input
               id="particulier-email"
               v-model="particulierForm.email"
@@ -98,7 +98,7 @@
           </div>
 
           <div class="form-group">
-            <label for="particulier-postalAddress" class="form-label">Adresse postale</label>
+            <label for="particulier-postalAddress" class="form-label">Adresse postale<span class="required-asterisk">*</span></label>
             <input
               id="particulier-postalAddress"
               v-model="particulierForm.postalAddress"
@@ -110,7 +110,7 @@
 
           <div class="form-row">
             <div class="form-group">
-              <label for="particulier-password" class="form-label">Mot de passe</label>
+              <label for="particulier-password" class="form-label">Mot de passe<span class="required-asterisk">*</span></label>
               <input
                 id="particulier-password"
                 v-model="particulierForm.password"
@@ -120,7 +120,7 @@
               />
             </div>
             <div class="form-group">
-              <label for="particulier-confirmPassword" class="form-label">Confirmation de Mot de passe</label>
+              <label for="particulier-confirmPassword" class="form-label">Confirmation de Mot de passe<span class="required-asterisk">*</span></label>
               <input
                 id="particulier-confirmPassword"
                 v-model="particulierForm.confirmPassword"
@@ -163,7 +163,7 @@
                 v-model="particulierForm.isOver18"
                 required
               />
-              <span>Je certifie avoir plus de 18 ans</span>
+              <span>Je certifie avoir plus de 18 ans<span class="required-asterisk">*</span></span>
             </label>
             <label class="checkbox-label">
               <input 
@@ -178,7 +178,7 @@
                 v-model="particulierForm.rgpdAccepted"
                 required
               />
-              <span>J'ai lu et j'accepte les conditions d'utilisations des donnees personnelles.</span>
+              <span>J'ai lu et j'accepte les conditions d'utilisations des donnees personnelles.<span class="required-asterisk">*</span></span>
             </label>
           </div>
 
@@ -213,7 +213,7 @@
           <div v-show="currentStep === 1" class="step-content">
             <div class="form-row">
               <div class="form-group">
-                <label for="professionnel-lastName" class="form-label">Nom</label>
+                <label for="professionnel-lastName" class="form-label">Nom<span class="required-asterisk">*</span></label>
                 <input
                   id="professionnel-lastName"
                   v-model="professionnelForm.lastName"
@@ -223,7 +223,7 @@
                 />
               </div>
               <div class="form-group">
-                <label for="professionnel-firstName" class="form-label">Prenom</label>
+                <label for="professionnel-firstName" class="form-label">Prenom<span class="required-asterisk">*</span></label>
                 <input
                   id="professionnel-firstName"
                   v-model="professionnelForm.firstName"
@@ -235,7 +235,7 @@
             </div>
 
             <div class="form-group">
-              <label for="professionnel-email" class="form-label">Email</label>
+              <label for="professionnel-email" class="form-label">Email<span class="required-asterisk">*</span></label>
               <input
                 id="professionnel-email"
                 v-model="professionnelForm.email"
@@ -247,7 +247,7 @@
 
             <div class="form-row">
               <div class="form-group">
-                <label for="professionnel-companyName" class="form-label">Denomination de l'entreprise</label>
+                <label for="professionnel-companyName" class="form-label">Denomination de l'entreprise<span class="required-asterisk">*</span></label>
                 <input
                   id="professionnel-companyName"
                   v-model="professionnelForm.companyName"
@@ -257,7 +257,7 @@
                 />
               </div>
               <div class="form-group">
-                <label for="professionnel-siret" class="form-label">N. SIRET</label>
+                <label for="professionnel-siret" class="form-label">N. SIRET<span class="required-asterisk">*</span></label>
                 <div class="input-with-icon">
                   <input
                     id="professionnel-siret"
@@ -296,7 +296,7 @@
             </div>
 
             <div class="form-group">
-              <label for="professionnel-officialDocument" class="form-label">Document officiel (K-Bis, avis de situation INSEE, etc...)</label>
+              <label for="professionnel-officialDocument" class="form-label">Document officiel (K-Bis, avis de situation INSEE, etc...)<span class="required-asterisk">*</span></label>
               <div class="file-upload-container">
                 <input
                   id="professionnel-officialDocument"
@@ -337,7 +337,7 @@
             </div>
 
             <div class="form-group">
-              <label for="professionnel-postalAddress" class="form-label">Adresse postale</label>
+              <label for="professionnel-postalAddress" class="form-label">Adresse postale<span class="required-asterisk">*</span></label>
               <input
                 id="professionnel-postalAddress"
                 v-model="professionnelForm.postalAddress"
@@ -349,7 +349,7 @@
 
             <div class="form-row">
               <div class="form-group">
-                <label for="professionnel-password" class="form-label">Mot de passe</label>
+                <label for="professionnel-password" class="form-label">Mot de passe<span class="required-asterisk">*</span></label>
                 <input
                   id="professionnel-password"
                   v-model="professionnelForm.password"
@@ -359,7 +359,7 @@
                 />
               </div>
               <div class="form-group">
-                <label for="professionnel-confirmPassword" class="form-label">Confirmation de Mot de passe</label>
+                <label for="professionnel-confirmPassword" class="form-label">Confirmation de Mot de passe<span class="required-asterisk">*</span></label>
                 <input
                   id="professionnel-confirmPassword"
                   v-model="professionnelForm.confirmPassword"
@@ -484,7 +484,7 @@
                 v-model="professionnelForm.cgvAccepted"
                 required
               />
-              <span>J'accepte les CGV de Purple Dog</span>
+              <span>J'accepte les CGV de Purple Dog<span class="required-asterisk">*</span></span>
             </label>
             <label class="checkbox-label">
               <input 
@@ -492,7 +492,7 @@
                 v-model="professionnelForm.mandateAccepted"
                 required
               />
-              <span>J'accepte le mandat d'apport d'affaire</span>
+              <span>J'accepte le mandat d'apport d'affaire<span class="required-asterisk">*</span></span>
             </label>
             <label class="checkbox-label">
               <input 
@@ -507,7 +507,7 @@
                 v-model="professionnelForm.rgpdAccepted"
                 required
               />
-              <span>J'ai lu et j'accepte les conditions d'utilisations des donnees personnelles.</span>
+              <span>J'ai lu et j'accepte les conditions d'utilisations des donnees personnelles.<span class="required-asterisk">*</span></span>
             </label>
             </div>
           </div>
@@ -1034,7 +1034,7 @@ const handleRegisterProfessionnel = async () => {
 }
 
 .register-title {
-  font-family: 'Be Vietnam Pro', sans-serif;
+  font-family: 'Georgia', sans-serif;
   font-weight: 600;
   font-size: 2.5rem;
   color: #000000;
@@ -1110,6 +1110,11 @@ const handleRegisterProfessionnel = async () => {
   font-weight: 600;
   font-size: 14px;
   color: #213547;
+}
+
+.form-label .required-asterisk {
+  color: #d32f2f;
+  margin-left: 4px;
 }
 
 .form-input {

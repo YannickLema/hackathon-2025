@@ -24,7 +24,7 @@
       <!-- Formulaire de connexion -->
       <form @submit.prevent="handleLogin" class="login-form">
         <div class="form-group">
-          <label for="email" class="form-label">Email</label>
+          <label for="email" class="form-label">Email<span class="required-asterisk">*</span></label>
           <input
             id="email"
             v-model="email"
@@ -36,7 +36,7 @@
         </div>
 
         <div class="form-group">
-          <label for="password" class="form-label">Mot de passe</label>
+          <label for="password" class="form-label">Mot de passe<span class="required-asterisk">*</span></label>
           <input
             id="password"
             v-model="password"
@@ -47,9 +47,9 @@
           />
         </div>
 
-        <a href="#" class="forgot-password" @click.prevent="handleForgotPassword">
-          J'ai oublié mon mot de passe
-        </a>
+              <router-link to="/forgot-password" class="forgot-password">
+                J'ai oublié mon mot de passe
+              </router-link>
 
         <button type="submit" class="login-button" :disabled="isLoading">
           {{ isLoading ? 'Connexion...' : 'Se connecter' }}
@@ -115,10 +115,6 @@ const handleLogin = async () => {
   }
 }
 
-const handleForgotPassword = () => {
-  // TODO: Implémenter la récupération de mot de passe
-  console.log('Mot de passe oublié')
-}
 </script>
 
 <style scoped>
@@ -146,7 +142,7 @@ const handleForgotPassword = () => {
 }
 
 .login-title {
-  font-family: 'Be Vietnam Pro', sans-serif;
+  font-family: 'Georgia', sans-serif;
   font-weight: 600;
   font-size: 2.5rem;
   color: #000000;
@@ -216,6 +212,11 @@ const handleForgotPassword = () => {
   font-weight: 600;
   font-size: 14px;
   color: #213547;
+}
+
+.form-label .required-asterisk {
+  color: #d32f2f;
+  margin-left: 4px;
 }
 
 .form-input {
