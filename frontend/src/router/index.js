@@ -3,6 +3,8 @@ import HomePage from '../components/HomePage.vue'
 import LoginPage from '../components/LoginPage.vue'
 import RegisterPage from '../components/RegisterPage.vue'
 import ForgotPasswordPage from '../components/ForgotPasswordPage.vue'
+import LegalNoticePage from '../components/LegalNoticePage.vue'
+import AboutPage from '../components/AboutPage.vue'
 
 const routes = [
   {
@@ -24,6 +26,16 @@ const routes = [
     path: '/forgot-password',
     name: 'ForgotPassword',
     component: ForgotPasswordPage,
+  },
+  {
+    path: '/mentions-legales',
+    name: 'LegalNotice',
+    component: LegalNoticePage,
+  },
+  {
+    path: '/a-propos',
+    name: 'About',
+    component: AboutPage,
   },
 ]
 
