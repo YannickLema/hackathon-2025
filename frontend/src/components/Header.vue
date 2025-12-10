@@ -6,7 +6,12 @@
           <router-link to="/" class="logo-link">
             <img :src="logo" alt="Purple Dog Logo" class="logo" />
           </router-link>
-          <button class="menu-burger" @click="toggleMenu" aria-label="Menu">
+          <button 
+            class="menu-burger" 
+            :class="{ active: isMenuOpen }"
+            @click="toggleMenu" 
+            aria-label="Menu"
+          >
             <span class="burger-line"></span>
             <span class="burger-line"></span>
             <span class="burger-line"></span>
@@ -18,6 +23,56 @@
         </div>
       </div>
     </div>
+    
+    <!-- Menu latéral -->
+    <div class="menu-overlay" :class="{ open: isMenuOpen }" @click="closeMenu"></div>
+    <nav class="menu-sidebar" :class="{ open: isMenuOpen }">
+      <div class="menu-header">
+        <router-link to="/" class="menu-logo-link" @click="closeMenu">
+          <img :src="logo" alt="Purple Dog Logo" class="menu-logo" />
+        </router-link>
+        <button class="menu-close" @click="closeMenu" aria-label="Fermer le menu">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      
+      <div class="menu-content">
+        <ul class="menu-list">
+          <li class="menu-item">
+            <router-link to="/" class="menu-link" @click="closeMenu">
+              <span class="menu-link-text">Accueil</span>
+            </router-link>
+          </li>
+          <li class="menu-item">
+            <router-link to="/a-propos" class="menu-link" @click="closeMenu">
+              <span class="menu-link-text">À propos</span>
+            </router-link>
+          </li>
+          <li class="menu-item">
+            <router-link to="/contact" class="menu-link" @click="closeMenu">
+              <span class="menu-link-text">Contact</span>
+            </router-link>
+          </li>
+          <li class="menu-item">
+            <router-link to="/mentions-legales" class="menu-link" @click="closeMenu">
+              <span class="menu-link-text">Mentions légales</span>
+            </router-link>
+          </li>
+        </ul>
+        
+        <div class="menu-auth">
+          <router-link to="/login" class="menu-auth-link menu-auth-login" @click="closeMenu">
+            Connexion
+          </router-link>
+          <router-link to="/register" class="menu-auth-link menu-auth-signup" @click="closeMenu">
+            Inscription
+          </router-link>
+        </div>
+      </div>
+    </nav>
   </header>
 </template>
 
@@ -29,8 +84,17 @@ const isMenuOpen = ref(false)
 
 const toggleMenu = () => {
   isMenuOpen.value = !isMenuOpen.value
-  // Logique pour ouvrir/fermer le menu
-  console.log('Menu:', isMenuOpen.value ? 'ouvert' : 'fermé')
+  // Empêcher le scroll du body quand le menu est ouvert
+  if (isMenuOpen.value) {
+    document.body.style.overflow = 'hidden'
+  } else {
+    document.body.style.overflow = ''
+  }
+}
+
+const closeMenu = () => {
+  isMenuOpen.value = false
+  document.body.style.overflow = ''
 }
 </script>
 
@@ -86,6 +150,8 @@ const toggleMenu = () => {
   align-items: center;
   width: 30px;
   height: 30px;
+  position: relative;
+  z-index: 101;
 }
 
 .burger-line {
@@ -94,9 +160,26 @@ const toggleMenu = () => {
   background-color: #213547;
   transition: all 0.3s ease;
   display: block;
+  transform-origin: center;
 }
 
 .menu-burger:hover .burger-line {
+  background-color: #645394;
+}
+
+.menu-burger.active .burger-line:nth-child(1) {
+  transform: rotate(45deg) translate(6px, 6px);
+}
+
+.menu-burger.active .burger-line:nth-child(2) {
+  opacity: 0;
+}
+
+.menu-burger.active .burger-line:nth-child(3) {
+  transform: rotate(-45deg) translate(6px, -6px);
+}
+
+.menu-burger.active .burger-line {
   background-color: #645394;
 }
 
@@ -139,6 +222,200 @@ const toggleMenu = () => {
 
 .btn-signup:hover {
   background-color: #4F4670;
+}
+
+/* Menu overlay */
+.menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  z-index: 99;
+}
+
+.menu-overlay.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Menu sidebar */
+.menu-sidebar {
+  position: fixed;
+  top: 0;
+  left: -100%;
+  width: 320px;
+  max-width: 85vw;
+  height: 100vh;
+  background-color: #ffffff;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  transition: left 0.3s ease;
+  z-index: 100;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.menu-sidebar.open {
+  left: 0;
+}
+
+.menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30px 25px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.menu-logo-link {
+  display: inline-block;
+  text-decoration: none;
+}
+
+.menu-logo {
+  height: 50px;
+  width: auto;
+  object-fit: contain;
+  filter: brightness(0) saturate(100%) invert(40%) sepia(30%) saturate(2000%) hue-rotate(250deg) brightness(0.9) contrast(1.1);
+}
+
+.menu-close {
+  background: none;
+  border: none;
+  color: #213547;
+  cursor: pointer;
+  padding: 8px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+}
+
+.menu-close:hover {
+  background-color: #f5f5f5;
+  color: #645394;
+}
+
+.menu-close svg {
+  width: 20px;
+  height: 20px;
+}
+
+.menu-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 0;
+}
+
+.menu-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex: 1;
+}
+
+.menu-item {
+  margin: 0;
+}
+
+.menu-link {
+  display: flex;
+  align-items: center;
+  padding: 16px 25px;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  color: #213547;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.menu-link::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  background-color: #645394;
+  transition: width 0.3s ease;
+}
+
+.menu-link:hover {
+  background-color: #fafafa;
+  color: #645394;
+  padding-left: 30px;
+}
+
+.menu-link:hover::before {
+  width: 4px;
+}
+
+.menu-link.router-link-active {
+  background-color: #fafafa;
+  color: #645394;
+  padding-left: 30px;
+}
+
+.menu-link.router-link-active::before {
+  width: 4px;
+}
+
+.menu-link-text {
+  position: relative;
+  z-index: 1;
+}
+
+.menu-auth {
+  padding: 20px 25px;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.menu-auth-link {
+  display: block;
+  padding: 12px 20px;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+}
+
+.menu-auth-login {
+  background-color: transparent;
+  color: #213547;
+  border: 1px solid #213547;
+}
+
+.menu-auth-login:hover {
+  background-color: rgba(33, 53, 71, 0.1);
+  border-color: #645394;
+  color: #645394;
+}
+
+.menu-auth-signup {
+  background-color: #645394;
+  color: white;
+}
+
+.menu-auth-signup:hover {
+  background-color: #4F4670;
+  transform: translateY(-1px);
 }
 
 @media (max-width: 768px) {
