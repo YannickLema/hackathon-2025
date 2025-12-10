@@ -38,9 +38,9 @@
             </div>
           </div>
         </div>
-        <div class="footer-right">
-          <button class="btn-oval contact-btn">Nous contacter</button>
-        </div>
+            <div class="footer-right">
+              <router-link to="/contact" class="btn-oval contact-btn">Nous contacter</router-link>
+            </div>
       </div>
     </div>
   </footer>
@@ -140,6 +140,8 @@ import logo from '@/assets/Purple dog.svg'
 .contact-btn {
   background-color: #645394;
   color: white;
+  text-decoration: none;
+  display: inline-block;
 }
 
 .contact-btn:hover {

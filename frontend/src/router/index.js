@@ -5,6 +5,7 @@ import RegisterPage from '../components/RegisterPage.vue'
 import ForgotPasswordPage from '../components/ForgotPasswordPage.vue'
 import LegalNoticePage from '../components/LegalNoticePage.vue'
 import AboutPage from '../components/AboutPage.vue'
+import ContactPage from '../components/ContactPage.vue'
 
 const routes = [
   {
@@ -36,6 +37,11 @@ const routes = [
     path: '/a-propos',
     name: 'About',
     component: AboutPage,
+  },
+  {
+    path: '/contact',
+    name: 'Contact',
+    component: ContactPage,
   },
 ]
 
