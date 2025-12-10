@@ -110,7 +110,6 @@ import Footer from './Footer.vue'
 
 <style scoped>
 .legal-notice-page-wrapper {
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
@@ -120,15 +119,12 @@ import Footer from './Footer.vue'
   display: flex;
   justify-content: center;
   padding: 60px 20px;
-  background-color: #f5f5f5;
+  background-color: #ffffff;
 }
 
 .legal-notice-container {
   width: 100%;
   max-width: 900px;
-  background-color: #ffffff;
-  padding: 60px 50px;
-  border-radius: 12px;
 }
 
 .legal-notice-title {
@@ -144,13 +140,11 @@ import Footer from './Footer.vue'
 .legal-content {
   display: flex;
   flex-direction: column;
-  gap: 40px;
 }
 
 .legal-section {
   display: flex;
   flex-direction: column;
-  gap: 15px;
 }
 
 .section-title {
