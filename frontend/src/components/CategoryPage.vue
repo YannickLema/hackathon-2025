@@ -794,6 +794,7 @@ onMounted(() => {
   font-weight: 200;
   font-size: 16px;
   background-color: #f5f5f5;
+  color: #213547;
   transition: all 0.3s ease;
 }
 
@@ -801,6 +802,11 @@ onMounted(() => {
   outline: none;
   border-color: #645394;
   background-color: #ffffff;
+  color: #213547;
+}
+
+.search-input::placeholder {
+  color: #999;
 }
 
 .products-actions {
@@ -1060,6 +1066,7 @@ onMounted(() => {
   font-weight: 200;
   font-size: 16px;
   background-color: #f5f5f5;
+  color: #213547;
   transition: all 0.3s ease;
 }
 
@@ -1067,6 +1074,11 @@ onMounted(() => {
   outline: none;
   border-color: #645394;
   background-color: #ffffff;
+  color: #213547;
+}
+
+.price-input::placeholder {
+  color: #999;
 }
 
 .filter-select {
@@ -1078,14 +1090,30 @@ onMounted(() => {
   font-weight: 200;
   font-size: 16px;
   background-color: #f5f5f5;
+  color: #213547;
   cursor: pointer;
   transition: all 0.3s ease;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
 }
 
 .filter-select:focus {
   outline: none;
   border-color: #645394;
   background-color: #ffffff;
+  color: #213547;
+}
+
+.filter-select option {
+  color: #213547;
+  background-color: #ffffff;
+  padding: 10px;
+}
+
+.filter-select option:checked {
+  background-color: #f5f5f5;
+  color: #213547;
 }
 
 .filter-modal-footer {
@@ -1270,6 +1298,7 @@ onMounted(() => {
   font-weight: 200;
   font-size: 16px;
   background-color: #f5f5f5;
+  color: #213547;
   transition: all 0.3s ease;
 }
 
@@ -1277,6 +1306,11 @@ onMounted(() => {
   outline: none;
   border-color: #645394;
   background-color: #ffffff;
+  color: #213547;
+}
+
+.price-input::placeholder {
+  color: #999;
 }
 
 .filter-select {
@@ -1288,14 +1322,30 @@ onMounted(() => {
   font-weight: 200;
   font-size: 16px;
   background-color: #f5f5f5;
+  color: #213547;
   cursor: pointer;
   transition: all 0.3s ease;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
 }
 
 .filter-select:focus {
   outline: none;
   border-color: #645394;
   background-color: #ffffff;
+  color: #213547;
+}
+
+.filter-select option {
+  color: #213547;
+  background-color: #ffffff;
+  padding: 10px;
+}
+
+.filter-select option:checked {
+  background-color: #f5f5f5;
+  color: #213547;
 }
 
 .filter-modal-footer {
