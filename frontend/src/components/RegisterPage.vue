@@ -229,20 +229,40 @@
               </div>
               <div class="form-group">
                 <label for="professionnel-siret" class="form-label">N. SIRET</label>
-                <input
-                  id="professionnel-siret"
-                  v-model="professionnelForm.siret"
-                  type="text"
-                  class="form-input"
-                  :class="{ 'input-error': siretError, 'input-valid': siretValid }"
-                  @blur="validateSiret"
-                  @input="siretError = ''; siretValid = false"
-                  required
-                  maxlength="14"
-                />
+                <div class="input-with-icon">
+                  <input
+                    id="professionnel-siret"
+                    v-model="professionnelForm.siret"
+                    type="text"
+                    class="form-input"
+                    :class="{ 'input-error': siretError, 'input-valid': siretValid }"
+                    @blur="validateSiret"
+                    @input="handleSiretInput"
+                    required
+                    maxlength="14"
+                  />
+                  <!-- Check vert si valide -->
+                  <span v-if="siretValid && !siretError && !isValidatingSiret" class="validation-icon valid-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  </span>
+                  <!-- Croix rouge si erreur -->
+                  <span v-if="siretError && !isValidatingSiret" class="validation-icon error-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </span>
+                  <!-- Spinner si en cours de validation -->
+                  <span v-if="isValidatingSiret" class="validation-icon loading-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="spinner">
+                      <circle cx="12" cy="12" r="10"></circle>
+                    </svg>
+                  </span>
+                </div>
                 <div v-if="siretError" class="field-error">{{ siretError }}</div>
                 <div v-if="siretValid && !siretError" class="field-success">SIRET valide</div>
-                <div v-if="isValidatingSiret" class="field-info">Vérification en cours...</div>
               </div>
             </div>
 
@@ -602,7 +622,58 @@ const removeFile = () => {
   }
 }
 
-// Validation SIRET via API INSEE Sirene
+// Timer pour debounce de la validation SIRET
+let siretValidationTimer = null
+
+// Gestion de la saisie SIRET avec validation en temps réel
+const handleSiretInput = () => {
+  const siret = professionnelForm.siret.replace(/\s/g, '')
+  
+  // Réinitialiser les états si le champ est vide
+  if (!siret) {
+    siretError.value = ''
+    siretValid.value = false
+    isValidatingSiret.value = false
+    if (siretValidationTimer) {
+      clearTimeout(siretValidationTimer)
+      siretValidationTimer = null
+    }
+    return
+  }
+  
+  // Vérification immédiate du format (sans appel API)
+  if (siret.length < 14 || !/^\d+$/.test(siret)) {
+    if (siret.length > 0) {
+      siretError.value = 'Le SIRET doit contenir 14 chiffres'
+      siretValid.value = false
+    }
+    // Annuler la validation en cours si le format n'est pas bon
+    if (siretValidationTimer) {
+      clearTimeout(siretValidationTimer)
+      siretValidationTimer = null
+    }
+    return
+  }
+  
+  // Si on a exactement 14 chiffres, déclencher la validation après un délai (debounce)
+  if (siret.length === 14) {
+    // Annuler le timer précédent s'il existe
+    if (siretValidationTimer) {
+      clearTimeout(siretValidationTimer)
+    }
+    
+    // Réinitialiser les messages d'erreur précédents
+    siretError.value = ''
+    siretValid.value = false
+    
+    // Déclencher la validation après 500ms d'inactivité
+    siretValidationTimer = setTimeout(() => {
+      validateSiret()
+    }, 500)
+  }
+}
+
+// Validation SIRET via le backend
 const validateSiret = async () => {
   const siret = professionnelForm.siret.replace(/\s/g, '') // Supprimer les espaces
   
@@ -618,10 +689,8 @@ const validateSiret = async () => {
   siretValid.value = false
 
   try {
-    // Utiliser l'API Sirene de l'INSEE (version publique)
-    // Note: Cette API nécessite généralement une clé API, mais on peut utiliser une version publique limitée
-    // Pour un environnement de production, il faudrait passer par le backend
-    const response = await fetch(`https://entreprise.api.gouv.fr/v3/insee/sirene/etablissements/${siret}`, {
+    // Utiliser l'endpoint backend pour valider le SIRET
+    const response = await fetch(`${API_URL}/auth/validate-siret/${siret}`, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
@@ -630,32 +699,25 @@ const validateSiret = async () => {
 
     if (response.ok) {
       const data = await response.json()
-      if (data.etablissement) {
+      if (data.valid) {
         siretValid.value = true
         siretError.value = ''
-        // Optionnel : pré-remplir le nom de l'entreprise si disponible
-        if (data.etablissement.unite_legale && data.etablissement.unite_legale.denomination && !professionnelForm.companyName) {
-          professionnelForm.companyName = data.etablissement.unite_legale.denomination
+        // Pré-remplir le nom de l'entreprise si disponible et si le champ est vide
+        if (data.companyName && !professionnelForm.companyName) {
+          professionnelForm.companyName = data.companyName
         }
       } else {
-        siretError.value = 'SIRET introuvable dans l\'annuaire des entreprises'
+        siretError.value = data.error || 'SIRET invalide'
         siretValid.value = false
       }
-    } else if (response.status === 404) {
-      siretError.value = 'SIRET introuvable dans l\'annuaire des entreprises'
-      siretValid.value = false
     } else {
-      // Si l'API publique ne fonctionne pas, on peut vérifier via le backend
-      // Pour l'instant, on accepte le SIRET mais on affiche un avertissement
-      console.warn('Impossible de vérifier le SIRET via l\'API publique. Vérification côté serveur nécessaire.')
-      siretError.value = 'Impossible de vérifier le SIRET. La vérification sera effectuée lors de la soumission.'
+      const data = await response.json().catch(() => ({}))
+      siretError.value = data.error || 'Erreur lors de la vérification du SIRET'
       siretValid.value = false
     }
   } catch (err) {
-    // En cas d'erreur réseau, on peut essayer via le backend
     console.error('Erreur lors de la vérification du SIRET:', err)
-    // On ne bloque pas l'utilisateur, la vérification se fera côté serveur
-    siretError.value = 'Vérification impossible. La validation sera effectuée lors de la soumission.'
+    siretError.value = 'Erreur réseau. Veuillez réessayer.'
     siretValid.value = false
   } finally {
     isValidatingSiret.value = false
@@ -1013,12 +1075,60 @@ const handleRegisterProfessionnel = async () => {
   color: #999;
 }
 
+.input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-with-icon .form-input {
+  width: 100%;
+  padding-right: 40px; /* Espace pour l'icône de validation */
+}
+
 .form-input.input-error {
   border-color: #d32f2f;
 }
 
 .form-input.input-valid {
   border-color: #2e7d32;
+}
+
+.validation-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.valid-icon {
+  color: #2e7d32; /* Vert */
+}
+
+.error-icon {
+  color: #d32f2f; /* Rouge */
+}
+
+.loading-icon {
+  color: #666;
+}
+
+.loading-icon .spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .field-error {

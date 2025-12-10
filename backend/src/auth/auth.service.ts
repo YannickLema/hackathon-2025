@@ -159,6 +159,131 @@ export class AuthService {
     }
   }
 
+  async validateSiret(siret: string) {
+    // Nettoyer le SIRET (supprimer les espaces)
+    const cleanSiret = siret.replace(/\s/g, '');
+
+    // Vérifier le format (14 chiffres)
+    if (!cleanSiret || cleanSiret.length !== 14 || !/^\d+$/.test(cleanSiret)) {
+      return {
+        valid: false,
+        error: 'Le SIRET doit contenir 14 chiffres',
+      };
+    }
+
+    // Validation locale avec algorithme de Luhn (pour environnement de test)
+    const isValidLuhn = this.validateLuhn(cleanSiret);
+    
+    if (!isValidLuhn) {
+      return {
+        valid: false,
+        error: 'SIRET invalide (clé de contrôle incorrecte)',
+      };
+    }
+
+    // Pour un environnement de test, on accepte tous les SIRET valides selon Luhn
+    // Cela permet de tester sans avoir besoin d'une clé API INSEE
+    // En production, vous pouvez décommenter le code ci-dessous pour utiliser l'API INSEE
+    return {
+      valid: true,
+      companyName: null, // En test, on ne récupère pas le nom depuis l'API
+    };
+
+    /* Code pour production avec API INSEE (nécessite une clé API)
+    try {
+      const apiKey = process.env.INSEE_API_KEY;
+      const headers: Record<string, string> = {
+        Accept: 'application/json',
+      };
+
+      if (apiKey) {
+        headers['Authorization'] = `Bearer ${apiKey}`;
+      }
+
+      const response = await fetch(
+        `https://entreprise.api.gouv.fr/v3/insee/sirene/etablissements/${cleanSiret}`,
+        {
+          method: 'GET',
+          headers,
+        },
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.etablissement) {
+          return {
+            valid: true,
+            companyName:
+              data.etablissement.unite_legale?.denomination ||
+              data.etablissement.unite_legale?.prenom_usuel ||
+              null,
+          };
+        } else {
+          return {
+            valid: false,
+            error: 'SIRET introuvable dans l\'annuaire des entreprises',
+          };
+        }
+      } else if (response.status === 404) {
+        return {
+          valid: false,
+          error: 'SIRET introuvable dans l\'annuaire des entreprises',
+        };
+      } else {
+        return {
+          valid: false,
+          error: 'Impossible de vérifier le SIRET. Veuillez réessayer plus tard.',
+        };
+      }
+    } catch (err) {
+      console.error('Erreur lors de la vérification du SIRET:', err);
+      return {
+        valid: false,
+        error: 'Erreur lors de la vérification. Veuillez réessayer plus tard.',
+      };
+    }
+    */
+  }
+
+  /**
+   * Valide un SIRET en utilisant l'algorithme de Luhn
+   * Le SIRET est valide si sa clé de contrôle (dernier chiffre) est correcte
+   * L'algorithme compte depuis la droite (le dernier chiffre est la clé)
+   */
+  private validateLuhn(siret: string): boolean {
+    if (siret.length !== 14 || !/^\d+$/.test(siret)) {
+      return false;
+    }
+
+    // Extraire les chiffres
+    const digits = siret.split('').map(Number);
+    const checkDigit = digits[13]; // Dernier chiffre (clé de contrôle)
+    
+    // Calculer la somme selon l'algorithme de Luhn
+    // On compte depuis la droite (position 1 = dernier chiffre avant la clé)
+    let sum = 0;
+    for (let i = 0; i < 13; i++) {
+      // Position depuis la droite (1 = dernier avant clé, 2 = avant-dernier, etc.)
+      const positionFromRight = 13 - i;
+      let digit = digits[i];
+      
+      // Multiplier par 2 les chiffres en position impaire depuis la droite (1, 3, 5, 7, 9, 11, 13)
+      if (positionFromRight % 2 === 1) {
+        digit *= 2;
+        // Si le résultat est >= 10, additionner les chiffres
+        if (digit >= 10) {
+          digit = Math.floor(digit / 10) + (digit % 10);
+        }
+      }
+      sum += digit;
+    }
+    
+    // La clé de contrôle doit être telle que (sum + checkDigit) % 10 === 0
+    const calculatedCheck = (10 - (sum % 10)) % 10;
+    
+    return calculatedCheck === checkDigit;
+  }
+
   private validateProfessionnel(dto: RegisterProfessionnelDto) {
     if (!dto) {
       throw new BadRequestException('Corps de requête manquant');

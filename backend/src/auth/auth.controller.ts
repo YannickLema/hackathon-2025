@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterParticulierDto } from './dto/register-particulier.dto';
 import { RegisterProfessionnelDto } from './dto/register-professionnel.dto';
@@ -21,6 +21,11 @@ export class AuthController {
   @Post('login')
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
+  }
+
+  @Get('validate-siret/:siret')
+  async validateSiret(@Param('siret') siret: string) {
+    return this.authService.validateSiret(siret);
   }
 }
 
