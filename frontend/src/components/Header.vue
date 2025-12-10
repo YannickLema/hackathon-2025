@@ -12,7 +12,7 @@
             @click="toggleMenu" 
             aria-label="Menu"
           >
-            <span class="material-symbols-outlined burger-icon">{{ isMenuOpen ? 'close' : 'menu' }}</span>
+            <span class="material-symbols-outlined burger-icon">menu</span>
           </button>
         </div>
         <div class="header-right">
@@ -159,6 +159,11 @@ const closeMenu = () => {
   background-color: #f5f5f5;
 }
 
+.menu-burger.active {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .burger-icon {
   font-size: 28px;
   color: #213547;
@@ -167,10 +172,6 @@ const closeMenu = () => {
 }
 
 .menu-burger:hover .burger-icon {
-  color: #645394;
-}
-
-.menu-burger.active .burger-icon {
   color: #645394;
 }
 
