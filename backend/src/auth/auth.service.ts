@@ -14,6 +14,8 @@ import { EmailService } from '../email/email.service';
 import { RegisterParticulierDto } from './dto/register-particulier.dto';
 import { RegisterProfessionnelDto } from './dto/register-professionnel.dto';
 import { LoginDto } from './dto/login.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -184,6 +186,90 @@ export class AuthService {
     await this.sendVerificationEmail(user.id, user.email, user.firstName);
 
     return { message: 'Email de vérification envoyé' };
+  }
+
+  async forgotPassword(dto: ForgotPasswordDto) {
+    if (!dto?.email) {
+      throw new BadRequestException('Email requis');
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
+
+    // Ne pas révéler si l'email existe ou non pour des raisons de sécurité
+    if (!user) {
+      return { message: 'Si cet email existe, un email de réinitialisation a été envoyé' };
+    }
+
+    // Générer un token unique
+    const token = crypto.randomBytes(32).toString('hex');
+
+    // Expiration dans 1 heure
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 1);
+
+    // Supprimer l'ancien token s'il existe
+    await this.prisma.passwordReset.deleteMany({
+      where: { userId: user.id },
+    });
+
+    // Créer le nouveau token
+    await this.prisma.passwordReset.create({
+      data: {
+        userId: user.id,
+        token,
+        expiresAt,
+      },
+    });
+
+    // Envoyer l'email
+    await this.emailService.sendPasswordResetEmail(
+      user.email,
+      token,
+      user.firstName,
+    );
+
+    return { message: 'Si cet email existe, un email de réinitialisation a été envoyé' };
+  }
+
+  async resetPassword(dto: ResetPasswordDto) {
+    if (!dto?.token || !dto?.password) {
+      throw new BadRequestException('Token et nouveau mot de passe requis');
+    }
+
+    if (dto.password.length < 8) {
+      throw new BadRequestException('Le mot de passe doit contenir au moins 8 caractères');
+    }
+
+    const passwordReset = await this.prisma.passwordReset.findUnique({
+      where: { token: dto.token },
+      include: { user: true },
+    });
+
+    if (!passwordReset) {
+      throw new BadRequestException('Token de réinitialisation invalide');
+    }
+
+    if (passwordReset.expiresAt < new Date()) {
+      throw new BadRequestException('Token de réinitialisation expiré');
+    }
+
+    // Hasher le nouveau mot de passe
+    const hashedPassword = await bcrypt.hash(dto.password, 10);
+
+    // Mettre à jour le mot de passe
+    await this.prisma.user.update({
+      where: { id: passwordReset.userId },
+      data: { password: hashedPassword },
+    });
+
+    // Supprimer le token de réinitialisation
+    await this.prisma.passwordReset.delete({
+      where: { id: passwordReset.id },
+    });
+
+    return { message: 'Mot de passe réinitialisé avec succès' };
   }
 
   private async sendVerificationEmail(userId: string, email: string, firstName: string) {

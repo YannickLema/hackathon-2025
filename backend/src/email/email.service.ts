@@ -100,8 +100,9 @@ export class EmailService {
   }
 
   async sendPasswordResetEmail(email: string, token: string, firstName: string): Promise<void> {
-    const baseUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:3000');
-    const resetUrl = `${baseUrl}/reset-password?token=${token}`;
+    // URL du backend pour la réinitialisation (accessible directement)
+    const backendUrl = this.configService.get<string>('BACKEND_URL', 'http://localhost:3000');
+    const resetUrl = `${backendUrl}/reset-password?token=${token}`;
 
     const mailOptions = {
       from: this.configService.get<string>('EMAIL_FROM', 'noreply@example.com'),

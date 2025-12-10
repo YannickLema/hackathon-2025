@@ -4,6 +4,8 @@ import { RegisterParticulierDto } from './dto/register-particulier.dto';
 import { RegisterProfessionnelDto } from './dto/register-professionnel.dto';
 import { LoginDto } from './dto/login.dto';
 import { ResendVerificationDto } from './dto/resend-verification.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -32,6 +34,16 @@ export class AuthController {
   @Post('resend-verification')
   resendVerificationEmail(@Body() dto: ResendVerificationDto) {
     return this.authService.resendVerificationEmail(dto.email);
+  }
+
+  @Post('forgot-password')
+  forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto);
+  }
+
+  @Post('reset-password')
+  resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto);
   }
 }
 
