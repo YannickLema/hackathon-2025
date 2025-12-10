@@ -32,14 +32,16 @@
         <div class="container">
           <h2 class="subcategories-title">Sous-catégories</h2>
           <div class="subcategories-grid">
-            <div 
+            <button
               v-for="subcategory in categoryData.subcategories" 
               :key="subcategory.id"
               class="subcategory-card"
+              :class="{ active: selectedSubcategory === subcategory.id }"
+              @click="selectSubcategory(subcategory.id)"
             >
               <span class="material-symbols-outlined subcategory-icon">{{ subcategory.icon }}</span>
               <span class="subcategory-name">{{ subcategory.name }}</span>
-            </div>
+            </button>
           </div>
         </div>
       </section>
@@ -55,14 +57,72 @@
               class="search-input"
             />
             <div class="products-actions">
-              <button class="filter-btn">
+              <button class="filter-btn" @click="toggleFilterModal">
                 <span class="material-symbols-outlined">tune</span>
                 <span>Filtre</span>
               </button>
-              <button class="sort-btn">
+              <button class="sort-btn" @click="toggleSortModal">
                 <span class="material-symbols-outlined">sort</span>
                 <span>Trier par</span>
               </button>
+            </div>
+            
+            <!-- Modal Filtres -->
+            <div class="filter-modal" v-if="showFilterModal" @click.self="closeFilterModal">
+              <div class="filter-modal-content">
+                <div class="filter-modal-header">
+                  <h3>Filtres</h3>
+                  <button class="filter-modal-close" @click="closeFilterModal">
+                    <span class="material-symbols-outlined">close</span>
+                  </button>
+                </div>
+                <div class="filter-options">
+                  <div class="filter-group">
+                    <label class="filter-label">Prix</label>
+                    <div class="price-range">
+                      <input type="number" v-model.number="filters.minPrice" placeholder="Min" class="price-input" />
+                      <span>-</span>
+                      <input type="number" v-model.number="filters.maxPrice" placeholder="Max" class="price-input" />
+                    </div>
+                  </div>
+                  <div class="filter-group">
+                    <label class="filter-label">Sous-catégorie</label>
+                    <select v-model="filters.subcategory" class="filter-select">
+                      <option value="">Toutes</option>
+                      <option v-for="subcat in categoryData.subcategories" :key="subcat.id" :value="subcat.id">
+                        {{ subcat.name }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+                <div class="filter-modal-footer">
+                  <button class="filter-reset-btn" @click="resetFilters">Réinitialiser</button>
+                  <button class="filter-apply-btn" @click="applyFilters">Appliquer</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Modal Trier -->
+            <div class="sort-modal" v-if="showSortModal" @click.self="closeSortModal">
+              <div class="sort-modal-content">
+                <div class="sort-modal-header">
+                  <h3>Trier par</h3>
+                  <button class="sort-modal-close" @click="closeSortModal">
+                    <span class="material-symbols-outlined">close</span>
+                  </button>
+                </div>
+                <div class="sort-options">
+                  <button 
+                    v-for="option in sortOptions" 
+                    :key="option.value"
+                    class="sort-option"
+                    :class="{ active: sortBy === option.value }"
+                    @click="selectSort(option.value)"
+                  >
+                    {{ option.label }}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -111,6 +171,24 @@ import NewsletterSection from './NewsletterSection.vue'
 
 const route = useRoute()
 const searchQuery = ref('')
+const selectedSubcategory = ref(null)
+const showFilterModal = ref(false)
+const showSortModal = ref(false)
+const sortBy = ref('default')
+
+const filters = ref({
+  minPrice: null,
+  maxPrice: null,
+  subcategory: null
+})
+
+const sortOptions = [
+  { value: 'default', label: 'Par défaut' },
+  { value: 'price-asc', label: 'Prix croissant' },
+  { value: 'price-desc', label: 'Prix décroissant' },
+  { value: 'name-asc', label: 'Nom A-Z' },
+  { value: 'name-desc', label: 'Nom Z-A' }
+]
 
 // Base de données des catégories avec descriptions
 const categoriesDatabase = {
@@ -340,7 +418,8 @@ const products = ref([
     description: 'Description du produit',
     price: 150,
     image: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop',
-    isWishlisted: false
+    isWishlisted: false,
+    subcategoryId: 1
   },
   {
     id: 2,
@@ -348,7 +427,8 @@ const products = ref([
     description: 'Description du produit',
     price: 200,
     image: 'https://cdn.pixabay.com/photo/2018/11/30/18/53/church-3848348_1280.jpg',
-    isWishlisted: false
+    isWishlisted: false,
+    subcategoryId: 2
   },
   {
     id: 3,
@@ -356,7 +436,8 @@ const products = ref([
     description: 'Description du produit',
     price: 175,
     image: 'https://cdn.pixabay.com/photo/2017/07/11/12/11/chair-backrest-2493326_1280.jpg',
-    isWishlisted: false
+    isWishlisted: false,
+    subcategoryId: 3
   },
   {
     id: 4,
@@ -364,7 +445,8 @@ const products = ref([
     description: 'Description du produit',
     price: 300,
     image: 'https://cdn.pixabay.com/photo/2023/10/28/06/40/wine-8346641_1280.jpg',
-    isWishlisted: false
+    isWishlisted: false,
+    subcategoryId: 1
   },
   {
     id: 5,
@@ -372,7 +454,8 @@ const products = ref([
     description: 'Description du produit',
     price: 250,
     image: 'https://cdn.pixabay.com/photo/2020/12/09/18/42/violin-5818267_1280.jpg',
-    isWishlisted: false
+    isWishlisted: false,
+    subcategoryId: 2
   },
   {
     id: 6,
@@ -380,7 +463,8 @@ const products = ref([
     description: 'Description du produit',
     price: 180,
     image: 'https://cdn.pixabay.com/photo/2014/09/05/18/32/old-books-436498_1280.jpg',
-    isWishlisted: false
+    isWishlisted: false,
+    subcategoryId: 4
   },
   {
     id: 7,
@@ -388,7 +472,8 @@ const products = ref([
     description: 'Description du produit',
     price: 220,
     image: 'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=400&h=400&fit=crop',
-    isWishlisted: false
+    isWishlisted: false,
+    subcategoryId: 1
   },
   {
     id: 8,
@@ -396,7 +481,8 @@ const products = ref([
     description: 'Description du produit',
     price: 190,
     image: 'https://cdn.pixabay.com/photo/2021/09/28/14/21/clocks-6664622_1280.jpg',
-    isWishlisted: false
+    isWishlisted: false,
+    subcategoryId: 3
   },
   {
     id: 9,
@@ -404,20 +490,117 @@ const products = ref([
     description: 'Description du produit',
     price: 160,
     image: 'https://cdn.pixabay.com/photo/2015/04/07/14/34/camera-711040_1280.jpg',
-    isWishlisted: false
+    isWishlisted: false,
+    subcategoryId: 2
   }
 ])
 
 const filteredProducts = computed(() => {
-  if (!searchQuery.value) {
-    return products.value
+  let filtered = [...products.value]
+
+  // Filtre par recherche textuelle
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase()
+    filtered = filtered.filter(product => 
+      product.title.toLowerCase().includes(query) ||
+      product.description.toLowerCase().includes(query)
+    )
   }
-  const query = searchQuery.value.toLowerCase()
-  return products.value.filter(product => 
-    product.title.toLowerCase().includes(query) ||
-    product.description.toLowerCase().includes(query)
-  )
+
+  // Filtre par sous-catégorie sélectionnée
+  if (selectedSubcategory.value) {
+    filtered = filtered.filter(product => product.subcategoryId === selectedSubcategory.value)
+  }
+
+  // Filtre par sous-catégorie depuis le modal
+  if (filters.value.subcategory) {
+    filtered = filtered.filter(product => product.subcategoryId === filters.value.subcategory)
+  }
+
+  // Filtre par prix
+  if (filters.value.minPrice !== null && filters.value.minPrice !== '') {
+    filtered = filtered.filter(product => product.price >= filters.value.minPrice)
+  }
+  if (filters.value.maxPrice !== null && filters.value.maxPrice !== '') {
+    filtered = filtered.filter(product => product.price <= filters.value.maxPrice)
+  }
+
+  // Tri
+  if (sortBy.value === 'price-asc') {
+    filtered.sort((a, b) => a.price - b.price)
+  } else if (sortBy.value === 'price-desc') {
+    filtered.sort((a, b) => b.price - a.price)
+  } else if (sortBy.value === 'name-asc') {
+    filtered.sort((a, b) => a.title.localeCompare(b.title))
+  } else if (sortBy.value === 'name-desc') {
+    filtered.sort((a, b) => b.title.localeCompare(a.title))
+  }
+
+  return filtered
 })
+
+const selectSubcategory = (subcategoryId) => {
+  if (selectedSubcategory.value === subcategoryId) {
+    // Désélectionner si déjà sélectionné
+    selectedSubcategory.value = null
+  } else {
+    selectedSubcategory.value = subcategoryId
+  }
+  // Synchroniser avec le filtre modal
+  filters.value.subcategory = selectedSubcategory.value
+}
+
+const toggleFilterModal = () => {
+  showFilterModal.value = !showFilterModal.value
+  if (showFilterModal.value) {
+    document.body.style.overflow = 'hidden'
+  } else {
+    document.body.style.overflow = ''
+  }
+}
+
+const closeFilterModal = () => {
+  showFilterModal.value = false
+  document.body.style.overflow = ''
+}
+
+const toggleSortModal = () => {
+  showSortModal.value = !showSortModal.value
+  if (showSortModal.value) {
+    document.body.style.overflow = 'hidden'
+  } else {
+    document.body.style.overflow = ''
+  }
+}
+
+const closeSortModal = () => {
+  showSortModal.value = false
+  document.body.style.overflow = ''
+}
+
+const selectSort = (sortValue) => {
+  sortBy.value = sortValue
+  closeSortModal()
+}
+
+const applyFilters = () => {
+  // Synchroniser la sous-catégorie sélectionnée avec le filtre
+  if (filters.value.subcategory) {
+    selectedSubcategory.value = filters.value.subcategory
+  } else {
+    selectedSubcategory.value = null
+  }
+  closeFilterModal()
+}
+
+const resetFilters = () => {
+  filters.value = {
+    minPrice: null,
+    maxPrice: null,
+    subcategory: null
+  }
+  selectedSubcategory.value = null
+}
 
 const toggleWishlist = (productId) => {
   const product = products.value.find(p => p.id === productId)
@@ -564,6 +747,8 @@ onMounted(() => {
   gap: 12px;
   cursor: pointer;
   transition: transform 0.3s ease;
+  background-color: transparent;
+  border: none;
 }
 
 .subcategory-card:hover {
@@ -774,6 +959,204 @@ onMounted(() => {
   transform: translateY(-1px);
 }
 
+/* Modals */
+.filter-modal,
+.sort-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.filter-modal-content,
+.sort-modal-content {
+  background-color: #ffffff;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.filter-modal-header,
+.sort-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 25px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.filter-modal-header h3,
+.sort-modal-header h3 {
+  font-family: 'Georgia', serif;
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: #213547;
+  margin: 0;
+}
+
+.filter-modal-close,
+.sort-modal-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.filter-modal-close:hover,
+.sort-modal-close:hover {
+  background-color: #f5f5f5;
+}
+
+.filter-modal-close .material-symbols-outlined,
+.sort-modal-close .material-symbols-outlined {
+  font-size: 24px;
+  color: #213547;
+}
+
+.filter-options {
+  padding: 25px;
+}
+
+.filter-group {
+  margin-bottom: 25px;
+}
+
+.filter-label {
+  display: block;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  color: #213547;
+  margin-bottom: 10px;
+}
+
+.price-range {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.price-input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 200;
+  font-size: 16px;
+  background-color: #f5f5f5;
+  transition: all 0.3s ease;
+}
+
+.price-input:focus {
+  outline: none;
+  border-color: #645394;
+  background-color: #ffffff;
+}
+
+.filter-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 200;
+  font-size: 16px;
+  background-color: #f5f5f5;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: #645394;
+  background-color: #ffffff;
+}
+
+.filter-modal-footer {
+  display: flex;
+  gap: 12px;
+  padding: 20px 25px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.filter-reset-btn,
+.filter-apply-btn {
+  flex: 1;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.filter-reset-btn {
+  background-color: #f5f5f5;
+  color: #213547;
+}
+
+.filter-reset-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.filter-apply-btn {
+  background-color: #645394;
+  color: #ffffff;
+}
+
+.filter-apply-btn:hover {
+  background-color: #4F4670;
+}
+
+.sort-options {
+  padding: 20px 25px;
+}
+
+.sort-option {
+  width: 100%;
+  padding: 15px 20px;
+  margin-bottom: 10px;
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  color: #213547;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.sort-option:hover {
+  background-color: #fafafa;
+  border-color: #645394;
+}
+
+.sort-option.active {
+  background-color: #fafafa;
+  border-color: #645394;
+  color: #645394;
+}
+
 @media (max-width: 1024px) {
   .subcategories-grid {
     grid-template-columns: repeat(4, 1fr);
@@ -784,6 +1167,204 @@ onMounted(() => {
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
   }
+}
+
+/* Modals */
+.filter-modal,
+.sort-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.filter-modal-content,
+.sort-modal-content {
+  background-color: #ffffff;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.filter-modal-header,
+.sort-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 25px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.filter-modal-header h3,
+.sort-modal-header h3 {
+  font-family: 'Georgia', serif;
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: #213547;
+  margin: 0;
+}
+
+.filter-modal-close,
+.sort-modal-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.filter-modal-close:hover,
+.sort-modal-close:hover {
+  background-color: #f5f5f5;
+}
+
+.filter-modal-close .material-symbols-outlined,
+.sort-modal-close .material-symbols-outlined {
+  font-size: 24px;
+  color: #213547;
+}
+
+.filter-options {
+  padding: 25px;
+}
+
+.filter-group {
+  margin-bottom: 25px;
+}
+
+.filter-label {
+  display: block;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  color: #213547;
+  margin-bottom: 10px;
+}
+
+.price-range {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.price-input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 200;
+  font-size: 16px;
+  background-color: #f5f5f5;
+  transition: all 0.3s ease;
+}
+
+.price-input:focus {
+  outline: none;
+  border-color: #645394;
+  background-color: #ffffff;
+}
+
+.filter-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 200;
+  font-size: 16px;
+  background-color: #f5f5f5;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: #645394;
+  background-color: #ffffff;
+}
+
+.filter-modal-footer {
+  display: flex;
+  gap: 12px;
+  padding: 20px 25px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.filter-reset-btn,
+.filter-apply-btn {
+  flex: 1;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.filter-reset-btn {
+  background-color: #f5f5f5;
+  color: #213547;
+}
+
+.filter-reset-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.filter-apply-btn {
+  background-color: #645394;
+  color: #ffffff;
+}
+
+.filter-apply-btn:hover {
+  background-color: #4F4670;
+}
+
+.sort-options {
+  padding: 20px 25px;
+}
+
+.sort-option {
+  width: 100%;
+  padding: 15px 20px;
+  margin-bottom: 10px;
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  color: #213547;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.sort-option:hover {
+  background-color: #fafafa;
+  border-color: #645394;
+}
+
+.sort-option.active {
+  background-color: #fafafa;
+  border-color: #645394;
+  color: #645394;
 }
 
 @media (max-width: 768px) {
