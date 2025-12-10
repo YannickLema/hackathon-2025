@@ -43,6 +43,11 @@ const routes = [
     name: 'Contact',
     component: ContactPage,
   },
+  {
+    path: '/categorie/:id',
+    name: 'Category',
+    component: () => import('../components/CategoryPage.vue'),
+  },
 ]
 
 const router = createRouter({

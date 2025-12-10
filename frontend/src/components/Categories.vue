@@ -2,15 +2,16 @@
   <section class="categories">
     <div class="container">
       <div class="categories-grid">
-        <div 
-          v-for="category in categories" 
-          :key="category.id"
-          class="category-card"
-          :style="{ backgroundImage: `url(${category.image})` }"
-        >
-          <h3 class="category-name">{{ category.name }}</h3>
-          <div class="category-overlay"></div>
-        </div>
+            <router-link
+              v-for="category in categories" 
+              :key="category.id"
+              :to="`/categorie/${category.id}`"
+              class="category-card"
+              :style="{ backgroundImage: `url(${category.image})` }"
+            >
+              <h3 class="category-name">{{ category.name }}</h3>
+              <div class="category-overlay"></div>
+            </router-link>
       </div>
     </div>
   </section>
@@ -78,6 +79,8 @@ const categories = ref([
   transition: all 0.3s ease;
   border: none;
   overflow: hidden;
+  text-decoration: none;
+  color: inherit;
 }
 
 .category-overlay {
