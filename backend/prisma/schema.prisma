@@ -38,6 +38,7 @@ model User {
   particulierProfile    ParticulierProfile?
   professionnelProfile  ProfessionnelProfile?
   emailVerification    EmailVerification?
+  passwordReset        PasswordReset?
 
   @@map("users")
 }
@@ -108,4 +109,15 @@ model EmailVerification {
   createdAt DateTime  @default(now())
 
   @@map("email_verifications")
+}
+
+model PasswordReset {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+
+  @@map("password_resets")
 }
