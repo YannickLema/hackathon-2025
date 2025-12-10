@@ -12,9 +12,7 @@
             @click="toggleMenu" 
             aria-label="Menu"
           >
-            <span class="burger-line"></span>
-            <span class="burger-line"></span>
-            <span class="burger-line"></span>
+            <span class="material-symbols-outlined burger-icon">{{ isMenuOpen ? 'close' : 'menu' }}</span>
           </button>
         </div>
         <div class="header-right">
@@ -32,10 +30,7 @@
           <img :src="logo" alt="Purple Dog Logo" class="menu-logo" />
         </router-link>
         <button class="menu-close" @click="closeMenu" aria-label="Fermer le menu">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
+          <span class="material-symbols-outlined">close</span>
         </button>
       </div>
       
@@ -43,21 +38,25 @@
         <ul class="menu-list">
           <li class="menu-item">
             <router-link to="/" class="menu-link" @click="closeMenu">
+              <span class="material-symbols-outlined menu-icon">home</span>
               <span class="menu-link-text">Accueil</span>
             </router-link>
           </li>
           <li class="menu-item">
             <router-link to="/a-propos" class="menu-link" @click="closeMenu">
+              <span class="material-symbols-outlined menu-icon">info</span>
               <span class="menu-link-text">À propos</span>
             </router-link>
           </li>
           <li class="menu-item">
             <router-link to="/contact" class="menu-link" @click="closeMenu">
+              <span class="material-symbols-outlined menu-icon">mail</span>
               <span class="menu-link-text">Contact</span>
             </router-link>
           </li>
           <li class="menu-item">
             <router-link to="/mentions-legales" class="menu-link" @click="closeMenu">
+              <span class="material-symbols-outlined menu-icon">gavel</span>
               <span class="menu-link-text">Mentions légales</span>
             </router-link>
           </li>
@@ -65,10 +64,12 @@
         
         <div class="menu-auth">
           <router-link to="/login" class="menu-auth-link menu-auth-login" @click="closeMenu">
-            Connexion
+            <span class="material-symbols-outlined menu-auth-icon">login</span>
+            <span>Connexion</span>
           </router-link>
           <router-link to="/register" class="menu-auth-link menu-auth-signup" @click="closeMenu">
-            Inscription
+            <span class="material-symbols-outlined menu-auth-icon">person_add</span>
+            <span>Inscription</span>
           </router-link>
         </div>
       </div>
@@ -144,43 +145,33 @@ const closeMenu = () => {
   cursor: pointer;
   padding: 8px;
   display: flex;
-  flex-direction: column;
-  gap: 5px;
   justify-content: center;
   align-items: center;
-  width: 30px;
-  height: 30px;
+  width: 40px;
+  height: 40px;
   position: relative;
   z-index: 101;
+  border-radius: 8px;
+  transition: all 0.3s ease;
 }
 
-.burger-line {
-  width: 24px;
-  height: 2px;
-  background-color: #213547;
+.menu-burger:hover {
+  background-color: #f5f5f5;
+}
+
+.burger-icon {
+  font-size: 28px;
+  color: #213547;
   transition: all 0.3s ease;
   display: block;
-  transform-origin: center;
 }
 
-.menu-burger:hover .burger-line {
-  background-color: #645394;
+.menu-burger:hover .burger-icon {
+  color: #645394;
 }
 
-.menu-burger.active .burger-line:nth-child(1) {
-  transform: rotate(45deg) translate(6px, 6px);
-}
-
-.menu-burger.active .burger-line:nth-child(2) {
-  opacity: 0;
-}
-
-.menu-burger.active .burger-line:nth-child(3) {
-  transform: rotate(-45deg) translate(6px, -6px);
-}
-
-.menu-burger.active .burger-line {
-  background-color: #645394;
+.menu-burger.active .burger-icon {
+  color: #645394;
 }
 
 .header-right {
@@ -268,13 +259,16 @@ const closeMenu = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 30px 25px;
+  padding: 25px;
   border-bottom: 1px solid #f0f0f0;
+  position: relative;
 }
 
 .menu-logo-link {
-  display: inline-block;
+  display: flex;
+  align-items: center;
   text-decoration: none;
+  flex: 1;
 }
 
 .menu-logo {
@@ -297,6 +291,8 @@ const closeMenu = () => {
   justify-content: center;
   transition: all 0.3s ease;
   border-radius: 8px;
+  flex-shrink: 0;
+  margin-left: 15px;
 }
 
 .menu-close:hover {
@@ -304,9 +300,9 @@ const closeMenu = () => {
   color: #645394;
 }
 
-.menu-close svg {
-  width: 20px;
-  height: 20px;
+.menu-close .material-symbols-outlined {
+  font-size: 24px;
+  display: block;
 }
 
 .menu-content {
@@ -330,6 +326,7 @@ const closeMenu = () => {
 .menu-link {
   display: flex;
   align-items: center;
+  gap: 15px;
   padding: 16px 25px;
   font-family: 'Be Vietnam Pro', sans-serif;
   font-weight: 600;
@@ -338,6 +335,12 @@ const closeMenu = () => {
   text-decoration: none;
   transition: all 0.3s ease;
   position: relative;
+}
+
+.menu-icon {
+  font-size: 24px;
+  color: #645394;
+  transition: all 0.3s ease;
 }
 
 .menu-link::before {
@@ -361,6 +364,11 @@ const closeMenu = () => {
   width: 4px;
 }
 
+.menu-link:hover .menu-icon {
+  color: #645394;
+  transform: scale(1.1);
+}
+
 .menu-link.router-link-active {
   background-color: #fafafa;
   color: #645394;
@@ -369,6 +377,10 @@ const closeMenu = () => {
 
 .menu-link.router-link-active::before {
   width: 4px;
+}
+
+.menu-link.router-link-active .menu-icon {
+  color: #645394;
 }
 
 .menu-link-text {
@@ -385,15 +397,21 @@ const closeMenu = () => {
 }
 
 .menu-auth-link {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   padding: 12px 20px;
   font-family: 'Be Vietnam Pro', sans-serif;
   font-weight: 600;
   font-size: 14px;
-  text-align: center;
   text-decoration: none;
   border-radius: 20px;
   transition: all 0.3s ease;
+}
+
+.menu-auth-icon {
+  font-size: 20px;
 }
 
 .menu-auth-login {
