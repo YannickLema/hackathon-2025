@@ -3,9 +3,9 @@
     <div class="container">
       <div class="header-content">
         <div class="header-left">
-          <a href="/" class="logo-link">
+          <router-link to="/" class="logo-link">
             <img :src="logo" alt="Purple Dog Logo" class="logo" />
-          </a>
+          </router-link>
           <button class="menu-burger" @click="toggleMenu" aria-label="Menu">
             <span class="burger-line"></span>
             <span class="burger-line"></span>
@@ -13,7 +13,7 @@
           </button>
         </div>
         <div class="header-right">
-          <button class="btn-action btn-login">Connexion</button>
+          <router-link to="/login" class="btn-action btn-login">Connexion</router-link>
           <button class="btn-action btn-signup">Inscription</button>
         </div>
       </div>
@@ -122,6 +122,8 @@ const toggleMenu = () => {
   color: #213547;
   border: 1px solid #213547;
   border-radius: 20px;
+  text-decoration: none;
+  display: inline-block;
 }
 
 .btn-login:hover {

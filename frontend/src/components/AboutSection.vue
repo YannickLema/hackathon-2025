@@ -28,7 +28,6 @@
 .about-card {
   background-color: transparent;
   padding: 0;
-  box-shadow: none;
   border: none;
 }
 

@@ -101,6 +101,7 @@ const previousImage = () => {
   flex-direction: column;
   gap: 30px;
   align-self: stretch;
+  border-radius: 20px;
 }
 
 .carousel-nav {

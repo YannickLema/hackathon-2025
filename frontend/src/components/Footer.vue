@@ -3,9 +3,9 @@
     <div class="container">
       <div class="footer-content">
         <div class="footer-left">
-          <a href="/" class="footer-logo-link">
+          <router-link to="/" class="footer-logo-link">
             <img :src="logo" alt="Purple Dog Logo" class="footer-logo" />
-          </a>
+          </router-link>
           <div class="footer-links">
             <a href="#" class="footer-link">Mentions legales</a>
             <a href="#" class="footer-link">A propos</a>
