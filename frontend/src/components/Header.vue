@@ -14,7 +14,7 @@
         </div>
         <div class="header-right">
           <router-link to="/login" class="btn-action btn-login">Connexion</router-link>
-          <button class="btn-action btn-signup">Inscription</button>
+          <router-link to="/register" class="btn-action btn-signup">Inscription</router-link>
         </div>
       </div>
     </div>
@@ -133,6 +133,8 @@ const toggleMenu = () => {
 .btn-signup {
   background-color: #E07A5F;
   color: white;
+  text-decoration: none;
+  display: inline-block;
 }
 
 .btn-signup:hover {
