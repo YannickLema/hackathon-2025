@@ -16,6 +16,14 @@
           </button>
         </div>
         <div class="header-right">
+          <button class="header-icon-btn" @click="toggleWishlist" aria-label="Favoris">
+            <span class="material-symbols-outlined">favorite</span>
+            <span v-if="wishlistCount > 0" class="icon-badge">{{ wishlistCount }}</span>
+          </button>
+          <button class="header-icon-btn" @click="toggleCart" aria-label="Panier">
+            <span class="material-symbols-outlined">shopping_cart</span>
+            <span v-if="cartCount > 0" class="icon-badge">{{ cartCount }}</span>
+          </button>
           <router-link to="/login" class="btn-action btn-login">Connexion</router-link>
           <router-link to="/register" class="btn-action btn-signup">Inscription</router-link>
         </div>
@@ -23,7 +31,7 @@
     </div>
     
     <!-- Menu latéral -->
-    <div class="menu-overlay" :class="{ open: isMenuOpen }" @click="closeMenu"></div>
+    <div class="menu-overlay" :class="{ open: isMenuOpen || isWishlistOpen || isCartOpen }" @click="closeAllPanels"></div>
     <nav class="menu-sidebar" :class="{ open: isMenuOpen }">
       <div class="menu-header">
         <router-link to="/" class="menu-logo-link" @click="closeMenu">
@@ -62,6 +70,19 @@
           </li>
         </ul>
         
+        <div class="menu-actions">
+          <button class="menu-action-btn" @click="openWishlistFromMenu" aria-label="Mes favoris">
+            <span class="material-symbols-outlined menu-action-icon">favorite</span>
+            <span class="menu-action-text">Mes favoris</span>
+            <span v-if="wishlistCount > 0" class="menu-action-badge">{{ wishlistCount }}</span>
+          </button>
+          <button class="menu-action-btn" @click="openCartFromMenu" aria-label="Mon panier">
+            <span class="material-symbols-outlined menu-action-icon">shopping_cart</span>
+            <span class="menu-action-text">Mon panier</span>
+            <span v-if="cartCount > 0" class="menu-action-badge">{{ cartCount }}</span>
+          </button>
+        </div>
+        
         <div class="menu-auth">
           <router-link to="/login" class="menu-auth-link menu-auth-login" @click="closeMenu">
             <span class="material-symbols-outlined menu-auth-icon">login</span>
@@ -74,11 +95,116 @@
         </div>
       </div>
     </nav>
+
+    <!-- Panneau Favoris -->
+    <div class="panel-sidebar wishlist-panel" :class="{ open: isWishlistOpen }">
+      <div class="panel-header">
+        <h2 class="panel-title">Mes favoris</h2>
+        <button class="panel-close" @click="closeWishlist" aria-label="Fermer les favoris">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="panel-content">
+        <div v-if="wishlistItems.length === 0" class="panel-empty">
+          <span class="material-symbols-outlined empty-icon">favorite_border</span>
+          <p class="empty-text">Votre liste de favoris est vide</p>
+          <router-link to="/" class="empty-link" @click="closeWishlist">Découvrir nos produits</router-link>
+        </div>
+        <div v-else class="panel-items">
+          <div 
+            v-for="item in wishlistItems" 
+            :key="item.id" 
+            class="panel-item wishlist-item"
+          >
+            <router-link 
+              :to="`/categorie/${item.categoryId}/produit/${item.id}`"
+              class="panel-item-link-content"
+              @click="closeWishlist"
+            >
+              <img :src="item.image" :alt="item.title" class="panel-item-image" />
+              <div class="panel-item-info">
+                <h3 class="panel-item-title">{{ item.title }}</h3>
+                <p class="panel-item-price">{{ item.price }}€</p>
+              </div>
+            </router-link>
+            <button 
+              class="panel-item-remove" 
+              @click="removeFromWishlist(item.id)" 
+              aria-label="Retirer des favoris"
+              title="Retirer des favoris"
+            >
+              <span class="material-symbols-outlined">favorite</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panneau Panier -->
+    <div class="panel-sidebar cart-panel" :class="{ open: isCartOpen }">
+      <div class="panel-header">
+        <h2 class="panel-title">Mon panier</h2>
+        <button class="panel-close" @click="closeCart" aria-label="Fermer le panier">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="panel-content">
+        <div v-if="cartItems.length === 0" class="panel-empty">
+          <span class="material-symbols-outlined empty-icon">shopping_cart</span>
+          <p class="empty-text">Votre panier est vide</p>
+          <router-link to="/" class="empty-link" @click="closeCart">Découvrir nos produits</router-link>
+        </div>
+        <div v-else class="panel-items">
+          <router-link 
+            v-for="item in cartItems" 
+            :key="item.id" 
+            :to="`/categorie/${item.categoryId}/produit/${item.id}`"
+            class="panel-item-link"
+            @click="closeCart"
+          >
+            <div class="panel-item">
+              <img :src="item.image" :alt="item.title" class="panel-item-image" />
+              <div class="panel-item-info">
+                <h3 class="panel-item-title">{{ item.title }}</h3>
+                <div class="panel-item-details">
+                  <p class="panel-item-price">{{ item.price }}€</p>
+                  <div class="panel-item-quantity">
+                    <button 
+                      class="quantity-btn" 
+                      @click.stop.prevent="decreaseQuantity(item.id)"
+                    >-</button>
+                    <span class="quantity-value">{{ item.quantity }}</span>
+                    <button 
+                      class="quantity-btn" 
+                      @click.stop.prevent="increaseQuantity(item.id)"
+                    >+</button>
+                  </div>
+                </div>
+              </div>
+              <button 
+                class="panel-item-remove" 
+                @click.stop.prevent="removeFromCart(item.id)" 
+                aria-label="Retirer du panier"
+              >
+                <span class="material-symbols-outlined">close</span>
+              </button>
+            </div>
+          </router-link>
+          <div class="panel-footer">
+            <div class="panel-total">
+              <span class="total-label">Total :</span>
+              <span class="total-price">{{ cartTotal }}€</span>
+            </div>
+            <button class="panel-checkout-btn" @click="goToCheckout">Valider le panier</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </header>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import logo from '@/assets/Purple dog.svg'
 
 const isMenuOpen = ref(false)
@@ -87,6 +213,8 @@ const toggleMenu = () => {
   isMenuOpen.value = !isMenuOpen.value
   // Empêcher le scroll du body quand le menu est ouvert
   if (isMenuOpen.value) {
+    isWishlistOpen.value = false
+    isCartOpen.value = false
     document.body.style.overflow = 'hidden'
   } else {
     document.body.style.overflow = ''
@@ -97,6 +225,133 @@ const closeMenu = () => {
   isMenuOpen.value = false
   document.body.style.overflow = ''
 }
+
+const isWishlistOpen = ref(false)
+const isCartOpen = ref(false)
+
+// Favoris
+const wishlistItems = ref([])
+const wishlistCount = computed(() => wishlistItems.value.length)
+
+// Panier
+const cartItems = ref([])
+const cartCount = computed(() => cartItems.value.reduce((sum, item) => sum + item.quantity, 0))
+const cartTotal = computed(() => cartItems.value.reduce((sum, item) => sum + (item.price * item.quantity), 0))
+
+const toggleWishlist = () => {
+  isWishlistOpen.value = !isWishlistOpen.value
+  if (isWishlistOpen.value) {
+    isCartOpen.value = false
+    isMenuOpen.value = false
+    document.body.style.overflow = 'hidden'
+    loadWishlist()
+  } else {
+    document.body.style.overflow = ''
+  }
+}
+
+const closeWishlist = () => {
+  isWishlistOpen.value = false
+  document.body.style.overflow = ''
+}
+
+const toggleCart = () => {
+  isCartOpen.value = !isCartOpen.value
+  if (isCartOpen.value) {
+    isWishlistOpen.value = false
+    isMenuOpen.value = false
+    document.body.style.overflow = 'hidden'
+    loadCart()
+  } else {
+    document.body.style.overflow = ''
+  }
+}
+
+const closeCart = () => {
+  isCartOpen.value = false
+  document.body.style.overflow = ''
+}
+
+const closeAllPanels = () => {
+  isMenuOpen.value = false
+  isWishlistOpen.value = false
+  isCartOpen.value = false
+  document.body.style.overflow = ''
+}
+
+const loadWishlist = () => {
+  // Charger depuis localStorage ou API
+  const saved = localStorage.getItem('wishlist')
+  if (saved) {
+    wishlistItems.value = JSON.parse(saved)
+  }
+}
+
+const loadCart = () => {
+  // Charger depuis localStorage ou API
+  const saved = localStorage.getItem('cart')
+  if (saved) {
+    cartItems.value = JSON.parse(saved)
+  }
+}
+
+const removeFromWishlist = (itemId) => {
+  wishlistItems.value = wishlistItems.value.filter(item => item.id !== itemId)
+  localStorage.setItem('wishlist', JSON.stringify(wishlistItems.value))
+}
+
+const removeFromCart = (itemId) => {
+  cartItems.value = cartItems.value.filter(item => item.id !== itemId)
+  localStorage.setItem('cart', JSON.stringify(cartItems.value))
+}
+
+const increaseQuantity = (itemId) => {
+  const item = cartItems.value.find(i => i.id === itemId)
+  if (item) {
+    item.quantity++
+    localStorage.setItem('cart', JSON.stringify(cartItems.value))
+  }
+}
+
+const decreaseQuantity = (itemId) => {
+  const item = cartItems.value.find(i => i.id === itemId)
+  if (item && item.quantity > 1) {
+    item.quantity--
+    localStorage.setItem('cart', JSON.stringify(cartItems.value))
+  } else if (item && item.quantity === 1) {
+    removeFromCart(itemId)
+  }
+}
+
+const goToCheckout = () => {
+  // TODO: Rediriger vers la page de paiement
+  console.log('Aller au paiement')
+  closeCart()
+}
+
+const openWishlistFromMenu = () => {
+  closeMenu()
+  setTimeout(() => {
+    toggleWishlist()
+  }, 300)
+}
+
+const openCartFromMenu = () => {
+  closeMenu()
+  setTimeout(() => {
+    toggleCart()
+  }, 300)
+}
+
+onMounted(() => {
+  // Charger les données au montage du composant
+  loadWishlist()
+  loadCart()
+  
+  // Écouter les événements de mise à jour depuis d'autres composants
+  window.addEventListener('wishlist-updated', loadWishlist)
+  window.addEventListener('cart-updated', loadCart)
+})
 </script>
 
 <style scoped>
@@ -179,6 +434,54 @@ const closeMenu = () => {
   display: flex;
   align-items: center;
   gap: 15px;
+}
+
+.header-icon-btn {
+  position: relative;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.header-icon-btn:hover {
+  background-color: #f5f5f5;
+}
+
+.header-icon-btn .material-symbols-outlined {
+  font-size: 24px;
+  color: #213547;
+  transition: color 0.3s ease;
+}
+
+.header-icon-btn:hover .material-symbols-outlined {
+  color: #645394;
+}
+
+.icon-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background-color: #645394;
+  color: #ffffff;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600;
+  font-size: 11px;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+  line-height: 1;
 }
 
 .btn-action {
@@ -389,9 +692,71 @@ const closeMenu = () => {
   z-index: 1;
 }
 
+.menu-actions {
+  padding: 15px 25px;
+  border-top: 1px solid #f0f0f0;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.menu-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 12px 16px;
+  background: none;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  color: #213547;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  text-align: left;
+}
+
+.menu-action-btn:hover {
+  background-color: #fafafa;
+  border-color: #645394;
+  color: #645394;
+}
+
+.menu-action-icon {
+  font-size: 24px;
+  color: #645394;
+  transition: all 0.3s ease;
+}
+
+.menu-action-btn:hover .menu-action-icon {
+  transform: scale(1.1);
+}
+
+.menu-action-text {
+  flex: 1;
+}
+
+.menu-action-badge {
+  background-color: #645394;
+  color: #ffffff;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  line-height: 1;
+}
+
 .menu-auth {
   padding: 20px 25px;
-  border-top: 1px solid #f0f0f0;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -437,6 +802,350 @@ const closeMenu = () => {
   transform: translateY(-1px);
 }
 
+/* Panneaux latéraux (Favoris et Panier) */
+.panel-sidebar {
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: 400px;
+  max-width: 90vw;
+  height: 100vh;
+  background-color: #ffffff;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+  transition: right 0.3s ease;
+  z-index: 100;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-sidebar.open {
+  right: 0;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 25px;
+  border-bottom: 1px solid #e0e0e0;
+  position: sticky;
+  top: 0;
+  background-color: #ffffff;
+  z-index: 1;
+}
+
+.panel-title {
+  font-family: 'Georgia', serif;
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: #213547;
+  margin: 0;
+  flex: 1;
+  text-align: left;
+}
+
+.panel-close {
+  background: none;
+  border: none;
+  color: #213547;
+  cursor: pointer;
+  padding: 8px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.panel-close:hover {
+  background-color: #f5f5f5;
+  color: #645394;
+}
+
+.panel-close .material-symbols-outlined {
+  font-size: 24px;
+}
+
+.panel-content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.panel-items {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.wishlist-panel .panel-items {
+  gap: 12px;
+}
+
+.panel-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 64px;
+  color: #e0e0e0;
+  margin-bottom: 20px;
+}
+
+.empty-text {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 200;
+  font-size: 1rem;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.empty-link {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  color: #645394;
+  text-decoration: none;
+  padding: 10px 20px;
+  border: 1px solid #645394;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+}
+
+.empty-link:hover {
+  background-color: #645394;
+  color: #ffffff;
+}
+
+.panel-items {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.panel-item-link-content {
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  gap: 15px;
+  flex: 1;
+  align-items: center;
+  transition: opacity 0.2s ease;
+}
+
+.panel-item-link-content:hover {
+  opacity: 0.8;
+}
+
+.panel-item {
+  display: flex;
+  gap: 15px;
+  padding: 15px;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  background-color: #fafafa;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+/* Style spécifique pour les favoris */
+.wishlist-item {
+  background-color: #f5f5f5;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.wishlist-item:hover {
+  background-color: #f0f0f0;
+}
+
+.panel-item-image {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.wishlist-item .panel-item-image {
+  width: 100px;
+  height: 100px;
+  border-radius: 8px;
+}
+
+.panel-item-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+}
+
+.panel-item-title {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  color: #213547;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.wishlist-item .panel-item-title {
+  font-size: 16px;
+  color: #213547;
+}
+
+.panel-item-price {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600;
+  font-size: 18px;
+  color: #645394;
+  margin: 0;
+}
+
+.wishlist-item .panel-item-price {
+  font-size: 18px;
+  color: #645394;
+}
+
+.panel-item-details {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.panel-item-quantity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.quantity-btn {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background-color: #ffffff;
+  color: #213547;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.quantity-btn:hover {
+  border-color: #645394;
+  color: #645394;
+  background-color: #fafafa;
+}
+
+.quantity-value {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  color: #213547;
+  min-width: 24px;
+  text-align: center;
+}
+
+.panel-item-remove {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  color: #d32f2f;
+  cursor: pointer;
+  padding: 6px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  z-index: 10;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.panel-item-remove:hover {
+  background-color: #d32f2f;
+  color: #ffffff;
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(211, 47, 47, 0.3);
+}
+
+.panel-item-remove .material-symbols-outlined {
+  font-size: 20px;
+  font-weight: 400;
+}
+
+.panel-footer {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0;
+  position: sticky;
+  bottom: 0;
+  background-color: #ffffff;
+}
+
+.panel-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: #fafafa;
+  border-radius: 8px;
+}
+
+.total-label {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600;
+  font-size: 18px;
+  color: #213547;
+}
+
+.total-price {
+  font-family: 'Georgia', serif;
+  font-weight: 700;
+  font-size: 24px;
+  color: #645394;
+}
+
+.panel-checkout-btn {
+  width: 100%;
+  padding: 14px 20px;
+  background-color: #000000;
+  color: #ffffff;
+  border: none;
+  border-radius: 20px;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.panel-checkout-btn:hover {
+  background-color: #1a1a1a;
+  transform: translateY(-1px);
+}
+
 @media (max-width: 768px) {
   .header-content {
     flex-wrap: wrap;
@@ -453,6 +1162,21 @@ const closeMenu = () => {
   .btn-action {
     padding: 8px 16px;
     font-size: 12px;
+  }
+
+  .header-icon-btn {
+    width: 36px;
+    height: 36px;
+    padding: 6px;
+  }
+
+  .header-icon-btn .material-symbols-outlined {
+    font-size: 20px;
+  }
+
+  .panel-sidebar {
+    width: 100%;
+    max-width: 100vw;
   }
 }
 </style>

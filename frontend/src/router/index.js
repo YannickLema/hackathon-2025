@@ -48,6 +48,11 @@ const routes = [
     name: 'Category',
     component: () => import('../components/CategoryPage.vue'),
   },
+  {
+    path: '/categorie/:categoryId/produit/:id',
+    name: 'Product',
+    component: () => import('../components/CategoryPage.vue'), // Temporaire, à remplacer par ProductPage.vue
+  },
 ]
 
 const router = createRouter({

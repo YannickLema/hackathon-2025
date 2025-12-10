@@ -127,30 +127,40 @@
           </div>
 
           <div class="products-grid">
-            <div 
+            <router-link 
               v-for="product in filteredProducts" 
               :key="product.id"
-              class="product-card"
+              :to="`/categorie/${route.params.id}/produit/${product.id}`"
+              class="product-card-link"
             >
-              <div class="product-image">
-                <img :src="product.image" :alt="product.title" />
-                <button class="wishlist-btn" @click="toggleWishlist(product.id)">
-                  <span class="material-symbols-outlined" :class="{ active: product.isWishlisted }">
-                    favorite
-                  </span>
-                </button>
-              </div>
-              <div class="product-content">
-                <div class="product-header">
-                  <h3 class="product-title">{{ product.title }}</h3>
-                  <span class="product-price">{{ product.price }}€</span>
+              <div class="product-card">
+                <div class="product-image">
+                  <img :src="product.image" :alt="product.title" />
+                  <button 
+                    class="wishlist-btn" 
+                    @click.stop.prevent="toggleWishlist(product.id)"
+                    aria-label="Ajouter aux favoris"
+                  >
+                    <span class="material-symbols-outlined" :class="{ active: product.isWishlisted }">
+                      favorite
+                    </span>
+                  </button>
                 </div>
-                <p class="product-description">{{ product.description }}</p>
-                <button class="add-to-cart-btn" @click="addToCart(product.id)">
-                  Ajouter au panier
-                </button>
+                <div class="product-content">
+                  <div class="product-header">
+                    <h3 class="product-title">{{ product.title }}</h3>
+                    <span class="product-price">{{ product.price }}€</span>
+                  </div>
+                  <p class="product-description">{{ product.description }}</p>
+                  <button 
+                    class="add-to-cart-btn" 
+                    @click.stop.prevent="addToCart(product.id)"
+                  >
+                    Ajouter au panier
+                  </button>
+                </div>
               </div>
-            </div>
+            </router-link>
           </div>
         </div>
       </section>
@@ -606,12 +616,54 @@ const toggleWishlist = (productId) => {
   const product = products.value.find(p => p.id === productId)
   if (product) {
     product.isWishlisted = !product.isWishlisted
+    
+    // Gérer le localStorage pour les favoris
+    let wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]')
+    
+    if (product.isWishlisted) {
+      // Ajouter aux favoris
+      if (!wishlist.find(item => item.id === productId)) {
+        wishlist.push({
+          id: product.id,
+          title: product.title,
+          price: product.price,
+          image: product.image,
+          categoryId: parseInt(route.params.id) // Ajouter l'ID de la catégorie
+        })
+      }
+    } else {
+      // Retirer des favoris
+      wishlist = wishlist.filter(item => item.id !== productId)
+    }
+    
+    localStorage.setItem('wishlist', JSON.stringify(wishlist))
+    window.dispatchEvent(new Event('wishlist-updated'))
   }
 }
 
 const addToCart = (productId) => {
-  console.log('Ajouter au panier:', productId)
-  // TODO: Implémenter l'ajout au panier
+  const product = products.value.find(p => p.id === productId)
+  if (product) {
+    // Gérer le localStorage pour le panier
+    let cart = JSON.parse(localStorage.getItem('cart') || '[]')
+    const existingItem = cart.find(item => item.id === productId)
+    
+    if (existingItem) {
+      existingItem.quantity++
+    } else {
+      cart.push({
+        id: product.id,
+        title: product.title,
+        price: product.price,
+        image: product.image,
+        quantity: 1,
+        categoryId: parseInt(route.params.id) // Ajouter l'ID de la catégorie
+      })
+    }
+    
+    localStorage.setItem('cart', JSON.stringify(cart))
+    window.dispatchEvent(new Event('cart-updated'))
+  }
 }
 
 onMounted(() => {
@@ -849,15 +901,22 @@ onMounted(() => {
   gap: 30px;
 }
 
+.product-card-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
 .product-card {
   background-color: #ffffff;
   border: 1px solid #e0e0e0;
   border-radius: 12px;
   overflow: hidden;
   transition: all 0.3s ease;
+  cursor: pointer;
 }
 
-.product-card:hover {
+.product-card-link:hover .product-card {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
 }
