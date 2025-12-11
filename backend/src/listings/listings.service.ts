@@ -634,7 +634,6 @@ export class ListingsService {
     return result;
   }
 
-<<<<<<< HEAD
   async findAll(filters: {
     category?: string;
     status?: string;
