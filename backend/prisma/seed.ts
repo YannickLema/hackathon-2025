@@ -58,7 +58,7 @@ async function main() {
   const testListings = [
     {
       title: 'Montre de collection Rolex Submariner 1960',
-      category: ListingCategory.MONTRE,
+      category: ListingCategory.BIJOUX_MONTRES,
       dimensions: '42mm x 13mm',
       weightKg: 0.15,
       description: 'Magnifique montre de collection Rolex Submariner datant de 1960. En excellent état, avec boîte et papiers d\'origine. Mouvement automatique fonctionnel. Bracelet original en acier inoxydable.',
@@ -80,7 +80,7 @@ async function main() {
     },
     {
       title: 'Peinture à l\'huile - Paysage de Provence',
-      category: ListingCategory.PEINTURE,
+      category: ListingCategory.OBJETS_ART_TABLEAUX,
       dimensions: '60cm x 80cm',
       weightKg: 2.5,
       description: 'Superbe peinture à l\'huile représentant un paysage de Provence. Signée par l\'artiste, datée de 1985. Encadrée dans un cadre doré ancien. Excellent état de conservation.',
@@ -101,7 +101,7 @@ async function main() {
     },
     {
       title: 'Collier en or et diamants - Art Déco',
-      category: ListingCategory.BIJOU,
+      category: ListingCategory.BIJOUX_MONTRES,
       dimensions: 'Longueur: 45cm',
       weightKg: 0.08,
       description: 'Magnifique collier en or 18 carats avec diamants, style Art Déco des années 1920. Pièce authentique et rare. Certificat d\'authenticité inclus. État impeccable.',
@@ -123,7 +123,7 @@ async function main() {
     },
     {
       title: 'Sculpture en bronze - Figure féminine',
-      category: ListingCategory.SCULPTURE,
+      category: ListingCategory.SCULPTURES_DECORATION,
       dimensions: 'Hauteur: 45cm, Largeur: 25cm, Profondeur: 20cm',
       weightKg: 8.5,
       description: 'Élégante sculpture en bronze représentant une figure féminine. Signée par l\'artiste, datée de 1970. Patine originale préservée. Pièce unique et authentique.',
@@ -144,7 +144,7 @@ async function main() {
     },
     {
       title: 'Photographie ancienne - Portrait de famille 1900',
-      category: ListingCategory.PHOTOGRAPHIE,
+      category: ListingCategory.PHOTOGRAPHIES,
       dimensions: '20cm x 25cm',
       weightKg: 0.05,
       description: 'Photographie ancienne sur papier albuminé, représentant un portrait de famille datant de 1900. Excellent état de conservation. Encadrée dans un cadre d\'époque.',
@@ -165,7 +165,7 @@ async function main() {
     },
     {
       title: 'Meuble ancien - Commode Louis XVI',
-      category: ListingCategory.DESIGN,
+      category: ListingCategory.AUTRE,
       dimensions: '120cm x 60cm x 80cm',
       weightKg: 45,
       description: 'Superbe commode en bois massif de style Louis XVI. Marqueterie d\'époque, poignées en bronze doré originales. Restauration professionnelle récente. Pièce authentique et rare.',
@@ -208,7 +208,7 @@ async function main() {
     },
     {
       title: 'Sac à main Hermès Birkin - Cuir noir',
-      category: ListingCategory.ACCESSOIRE,
+      category: ListingCategory.MODE_ACCESSOIRES_LUXE,
       dimensions: '30cm x 22cm x 16cm',
       weightKg: 1.2,
       description: 'Authentique sac à main Hermès Birkin en cuir noir. Modèle rare et recherché. Excellent état, avec serrure, clés et boîte d\'origine. Certificat d\'authenticité inclus.',
@@ -230,7 +230,7 @@ async function main() {
     },
     {
       title: 'Vase en porcelaine de Sèvres - XVIIIe siècle',
-      category: ListingCategory.OBJET_ART,
+      category: ListingCategory.OBJETS_ART_TABLEAUX,
       dimensions: 'Hauteur: 35cm, Diamètre: 20cm',
       weightKg: 1.8,
       description: 'Exceptionnel vase en porcelaine de Sèvres datant du XVIIIe siècle. Décor floral bleu et or. Marque de manufacture authentique. État de conservation remarquable.',

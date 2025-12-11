@@ -56,7 +56,7 @@ async function main() {
   const particulierListings = [
     {
       title: 'Vase en porcelaine de famille - XIXe siècle',
-      category: ListingCategory.OBJET_ART,
+      category: ListingCategory.OBJETS_ART_TABLEAUX,
       dimensions: 'Hauteur: 30cm, Diamètre: 15cm',
       weightKg: 1.2,
       description: 'Magnifique vase en porcelaine hérité de ma grand-mère, datant du XIXe siècle. Décor floral délicat, quelques signes d\'usure mais en bon état général. Certificat d\'authenticité disponible.',
@@ -70,7 +70,7 @@ async function main() {
     },
     {
       title: 'Tableau peinture à l\'huile - Paysage montagneux',
-      category: ListingCategory.PEINTURE,
+      category: ListingCategory.OBJETS_ART_TABLEAUX,
       dimensions: '50cm x 70cm',
       weightKg: 2.8,
       description: 'Tableau peinture à l\'huile représentant un paysage montagneux. Signé par l\'artiste, daté de 1995. Encadré dans un cadre en bois. Excellent état.',
@@ -86,7 +86,7 @@ async function main() {
     },
     {
       title: 'Montre ancienne - Marque suisse',
-      category: ListingCategory.MONTRE,
+      category: ListingCategory.BIJOUX_MONTRES,
       dimensions: '40mm de diamètre',
       weightKg: 0.12,
       description: 'Montre ancienne de marque suisse, mécanisme manuel. Boîtier en or, cadran émaillé. Fonctionne correctement. Bracelet en cuir d\'origine.',
@@ -104,7 +104,7 @@ async function main() {
   const professionnelListings = [
     {
       title: 'Montre de collection Rolex Submariner 1960',
-      category: ListingCategory.MONTRE,
+      category: ListingCategory.BIJOUX_MONTRES,
       dimensions: '42mm x 13mm',
       weightKg: 0.15,
       description: 'Magnifique montre de collection Rolex Submariner datant de 1960. En excellent état, avec boîte et papiers d\'origine. Mouvement automatique fonctionnel. Bracelet original en acier inoxydable.',
@@ -120,7 +120,7 @@ async function main() {
     },
     {
       title: 'Peinture à l\'huile - Paysage de Provence',
-      category: ListingCategory.PEINTURE,
+      category: ListingCategory.OBJETS_ART_TABLEAUX,
       dimensions: '60cm x 80cm',
       weightKg: 2.5,
       description: 'Superbe peinture à l\'huile représentant un paysage de Provence. Signée par l\'artiste, datée de 1985. Encadrée dans un cadre doré ancien. Excellent état de conservation.',
@@ -134,7 +134,7 @@ async function main() {
     },
     {
       title: 'Collier en or et diamants - Art Déco',
-      category: ListingCategory.BIJOU,
+      category: ListingCategory.BIJOUX_MONTRES,
       dimensions: 'Longueur: 45cm',
       weightKg: 0.08,
       description: 'Magnifique collier en or 18 carats avec diamants, style Art Déco des années 1920. Pièce authentique et rare. Certificat d\'authenticité inclus. État impeccable.',
@@ -150,7 +150,7 @@ async function main() {
     },
     {
       title: 'Sculpture en bronze - Figure féminine',
-      category: ListingCategory.SCULPTURE,
+      category: ListingCategory.SCULPTURES_DECORATION,
       dimensions: 'Hauteur: 45cm, Largeur: 25cm, Profondeur: 20cm',
       weightKg: 8.5,
       description: 'Élégante sculpture en bronze représentant une figure féminine. Signée par l\'artiste, datée de 1970. Patine originale préservée. Pièce unique et authentique.',
@@ -164,7 +164,7 @@ async function main() {
     },
     {
       title: 'Sac à main Hermès Birkin - Cuir noir',
-      category: ListingCategory.ACCESSOIRE,
+      category: ListingCategory.MODE_ACCESSOIRES_LUXE,
       dimensions: '30cm x 22cm x 16cm',
       weightKg: 1.2,
       description: 'Authentique sac à main Hermès Birkin en cuir noir. Modèle rare et recherché. Excellent état, avec serrure, clés et boîte d\'origine. Certificat d\'authenticité inclus.',

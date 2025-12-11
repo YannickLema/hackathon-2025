@@ -285,7 +285,7 @@ export class ListingsService {
     // Première offre en vente rapide = vendu
     await this.prisma.listing.update({
       where: { id: listingId },
-      data: { status: ListingStatus.SOLD },
+      data: { status: ListingStatus.ENDED },
     });
 
     return offer;
