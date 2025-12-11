@@ -22,6 +22,31 @@ enum AccountStatus {
   SUSPENDED
 }
 
+enum ListingCategory {
+  PEINTURE
+  SCULPTURE
+  MONTRE
+  BIJOU
+  OBJET_ART
+  PHOTOGRAPHIE
+  VETEMENT
+  ACCESSOIRE
+  DESIGN
+  AUTRE
+}
+
+enum SaleMode {
+  AUCTION
+  INSTANT_SALE
+}
+
+enum ListingStatus {
+  DRAFT
+  PUBLISHED
+  ENDED
+  CANCELLED
+}
+
 model User {
   id            String         @id @default(uuid())
   email         String         @unique
@@ -39,6 +64,7 @@ model User {
   professionnelProfile  ProfessionnelProfile?
   emailVerification    EmailVerification?
   passwordReset        PasswordReset?
+  listings             Listing[]
 
   @@map("users")
 }
@@ -120,4 +146,52 @@ model PasswordReset {
   createdAt DateTime  @default(now())
 
   @@map("password_resets")
+}
+
+model Listing {
+  id               String          @id @default(uuid())
+  sellerId         String
+  seller           User            @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  title            String
+  category         ListingCategory
+  dimensions       String
+  weightKg         Decimal         @db.Decimal(10, 2)
+  description      String
+  priceDesired     Decimal         @db.Decimal(10, 2)
+  saleMode         SaleMode
+  auctionStartPrice Decimal?       @db.Decimal(10, 2)
+  auctionEndAt     DateTime?
+  publishedAt      DateTime?
+  status           ListingStatus   @default(PUBLISHED)
+  photos           ListingPhoto[]
+  documents        ListingDocument[]
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  @@index([sellerId])
+  @@map("listings")
+}
+
+model ListingPhoto {
+  id        String   @id @default(uuid())
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  url       String
+  position  Int
+  createdAt DateTime @default(now())
+
+  @@index([listingId])
+  @@map("listing_photos")
+}
+
+model ListingDocument {
+  id        String   @id @default(uuid())
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  url       String
+  label     String?
+  createdAt DateTime @default(now())
+
+  @@index([listingId])
+  @@map("listing_documents")
 }
