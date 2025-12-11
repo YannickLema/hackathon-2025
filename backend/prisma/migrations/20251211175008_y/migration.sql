@@ -1,0 +1,18 @@
+-- AlterTable
+ALTER TABLE "users" ADD COLUMN     "notificationsEmail" BOOLEAN NOT NULL DEFAULT true;
+
+-- CreateTable
+CREATE TABLE "feedbacks" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "stars" INTEGER,
+    "nps" INTEGER,
+    "comment" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "feedbacks_pkey" PRIMARY KEY ("id")
+);
+
+-- AddForeignKey
+ALTER TABLE "feedbacks" ADD CONSTRAINT "feedbacks_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
