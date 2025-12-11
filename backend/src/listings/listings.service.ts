@@ -31,8 +31,8 @@ export class ListingsService {
 
   async createListing(user: User | undefined, dto: CreateListingDto) {
     if (!user) throw new ForbiddenException('Authentification requise');
-    if (user.role !== Role.PROFESSIONNEL) {
-      throw new ForbiddenException('Réservé aux professionnels');
+    if (!this.isSeller(user)) {
+      throw new ForbiddenException('Réservé aux vendeurs (professionnels ou particuliers)');
     }
     this.ensureValidPayload(dto);
 
@@ -90,8 +90,8 @@ export class ListingsService {
 
   async findMyListings(user: User | undefined, status?: string) {
     if (!user) throw new ForbiddenException('Authentification requise');
-    if (user.role !== Role.PROFESSIONNEL) {
-      throw new ForbiddenException('Réservé aux professionnels');
+    if (!this.isSeller(user)) {
+      throw new ForbiddenException('Réservé aux vendeurs (professionnels ou particuliers)');
     }
 
     const whereStatus =
@@ -113,8 +113,8 @@ export class ListingsService {
 
   async getUnreadCounts(user: User | undefined) {
     if (!user) throw new ForbiddenException('Authentification requise');
-    if (user.role !== Role.PROFESSIONNEL) {
-      throw new ForbiddenException('Réservé aux professionnels');
+    if (!this.isSeller(user)) {
+      throw new ForbiddenException('Réservé aux vendeurs (professionnels ou particuliers)');
     }
     const [offers, messages] = await Promise.all([
       this.prisma.offer.count({
@@ -129,8 +129,8 @@ export class ListingsService {
 
   async markOffersRead(user: User | undefined, listingId: string) {
     if (!user) throw new ForbiddenException('Authentification requise');
-    if (user.role !== Role.PROFESSIONNEL) {
-      throw new ForbiddenException('Réservé aux professionnels');
+    if (!this.isSeller(user)) {
+      throw new ForbiddenException('Réservé aux vendeurs (professionnels ou particuliers)');
     }
     await this.ensureListingOwnership(user.id, listingId);
     const result = await this.prisma.offer.updateMany({
@@ -142,8 +142,8 @@ export class ListingsService {
 
   async markMessagesRead(user: User | undefined, listingId: string) {
     if (!user) throw new ForbiddenException('Authentification requise');
-    if (user.role !== Role.PROFESSIONNEL) {
-      throw new ForbiddenException('Réservé aux professionnels');
+    if (!this.isSeller(user)) {
+      throw new ForbiddenException('Réservé aux vendeurs (professionnels ou particuliers)');
     }
     await this.ensureListingOwnership(user.id, listingId);
     const result = await this.prisma.listingMessage.updateMany({
@@ -216,6 +216,9 @@ export class ListingsService {
 
   async createOffer(user: User | undefined, listingId: string, dto: CreateOfferDto) {
     if (!user) throw new ForbiddenException('Authentification requise');
+    if (user.role === Role.PARTICULIER) {
+      throw new ForbiddenException('Réservé aux acheteurs professionnels');
+    }
     const listing = await this.prisma.listing.findUnique({
       where: { id: listingId },
       include: { seller: true },
@@ -273,6 +276,9 @@ export class ListingsService {
 
   async createBid(user: User | undefined, listingId: string, dto: CreateBidDto) {
     if (!user) throw new ForbiddenException('Authentification requise');
+    if (user.role === Role.PARTICULIER) {
+      throw new ForbiddenException('Réservé aux acheteurs professionnels');
+    }
     const listing = await this.prisma.listing.findUnique({
       where: { id: listingId },
       include: { seller: true },
@@ -333,6 +339,9 @@ export class ListingsService {
 
   async createMessage(user: User | undefined, listingId: string, dto: CreateMessageDto) {
     if (!user) throw new ForbiddenException('Authentification requise');
+    if (user.role === Role.PARTICULIER) {
+      throw new ForbiddenException('Réservé aux acheteurs professionnels');
+    }
     const listing = await this.prisma.listing.findUnique({
       where: { id: listingId },
       include: { seller: true },
@@ -367,8 +376,8 @@ export class ListingsService {
 
   async updateSaleMode(user: User | undefined, listingId: string, dto: UpdateSaleModeDto) {
     if (!user) throw new ForbiddenException('Authentification requise');
-    if (user.role !== Role.PROFESSIONNEL) {
-      throw new ForbiddenException('Réservé aux professionnels');
+    if (!this.isSeller(user)) {
+      throw new ForbiddenException('Réservé aux vendeurs (professionnels ou particuliers)');
     }
     await this.ensureListingOwnership(user.id, listingId);
     const offersCount = await this.prisma.offer.count({ where: { listingId } });
@@ -402,8 +411,8 @@ export class ListingsService {
 
   async updatePrice(user: User | undefined, listingId: string, dto: UpdatePriceDto) {
     if (!user) throw new ForbiddenException('Authentification requise');
-    if (user.role !== Role.PROFESSIONNEL) {
-      throw new ForbiddenException('Réservé aux professionnels');
+    if (!this.isSeller(user)) {
+      throw new ForbiddenException('Réservé aux vendeurs (professionnels ou particuliers)');
     }
     await this.ensureListingOwnership(user.id, listingId);
     const offersCount = await this.prisma.offer.count({ where: { listingId } });
@@ -603,6 +612,10 @@ export class ListingsService {
     const result = new Date(date);
     result.setDate(result.getDate() + days);
     return result;
+  }
+
+  private isSeller(user: User) {
+    return user.role === Role.PROFESSIONNEL || user.role === Role.PARTICULIER;
   }
 
   private async ensureListingOwnership(userId: string, listingId: string) {
