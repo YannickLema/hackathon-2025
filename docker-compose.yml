@@ -27,6 +27,7 @@ services:
     environment:
       - DOCKER=true
       - DATABASE_URL=postgresql://purple:purple@db:5432/purpledog
+    command: sh -c "npm run start:prod"
     ports:
       - "3000:3000"
     depends_on:
