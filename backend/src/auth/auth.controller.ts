@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Request } from 'express';
 import { AuthService } from './auth.service';
 import { RegisterParticulierDto } from './dto/register-particulier.dto';
 import { RegisterProfessionnelDto } from './dto/register-professionnel.dto';
@@ -6,6 +7,10 @@ import { LoginDto } from './dto/login.dto';
 import { ResendVerificationDto } from './dto/resend-verification.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
+import { UpdatePasswordDto } from './dto/update-password.dto';
+import { UpdateEmailDto } from './dto/update-email.dto';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -46,9 +51,28 @@ export class AuthController {
     return this.authService.resetPassword(dto);
   }
 
-  @Get('validate-siret/:siret')
-  async validateSiret(@Param('siret') siret: string) {
-    return this.authService.validateSiret(siret);
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  me(@Req() req: Request) {
+    return this.authService.getProfile(req.user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('profile')
+  updateProfile(@Req() req: Request, @Body() dto: UpdateProfileDto) {
+    return this.authService.updateProfile(req.user, dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('profile/password')
+  updatePassword(@Req() req: Request, @Body() dto: UpdatePasswordDto) {
+    return this.authService.updatePassword(req.user, dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('profile/email')
+  updateEmail(@Req() req: Request, @Body() dto: UpdateEmailDto) {
+    return this.authService.updateEmail(req.user, dto);
   }
 
   @Post('admin/verify-email')
