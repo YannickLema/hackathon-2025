@@ -1,32 +1,30 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { AuthModule } from '../auth/auth.module';
 import { PrismaModule } from '../prisma/prisma.module';
-import { EmailModule } from '../email/email.module';
-import { ListingsController } from './listings.controller';
-import { ListingsService } from './listings.service';
+import { AuthModule } from '../auth/auth.module';
+import { FeedbackService } from './feedback.service';
+import { FeedbackController } from './feedback.controller';
 
 @Module({
   imports: [
     ConfigModule,
-    AuthModule,
     PrismaModule,
-    EmailModule,
+    AuthModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         secret: config.get<string>('JWT_SECRET') ?? 'dev-secret-change-me',
         signOptions: {
-          // jose accepte string ou number; cast pour satisfaire le typage Nest/JWT
           expiresIn: (config.get<string>('JWT_EXPIRES_IN') ?? '1d') as unknown as number,
         },
       }),
     }),
   ],
-  controllers: [ListingsController],
-  providers: [ListingsService],
+  controllers: [FeedbackController],
+  providers: [FeedbackService],
 })
-export class ListingsModule {}
+export class FeedbackModule {}
+
 

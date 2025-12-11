@@ -6,7 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { AccountStatus, Prisma, Role } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -16,6 +16,21 @@ import { RegisterProfessionnelDto } from './dto/register-professionnel.dto';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
+import { UpdatePasswordDto } from './dto/update-password.dto';
+import { UpdateEmailDto } from './dto/update-email.dto';
+
+const ACCOUNT_STATUS = {
+  PENDING_VERIFICATION: 'PENDING_VERIFICATION',
+  VERIFIED: 'VERIFIED',
+  SUSPENDED: 'SUSPENDED',
+} as const;
+
+const ROLES = {
+  PARTICULIER: 'PARTICULIER',
+  PROFESSIONNEL: 'PROFESSIONNEL',
+  ADMIN: 'ADMIN',
+} as const;
 
 @Injectable()
 export class AuthService {
@@ -36,8 +51,8 @@ export class AuthService {
         password: hashed,
         firstName: dto.firstName,
         lastName: dto.lastName,
-        role: Role.PARTICULIER,
-        status: AccountStatus.PENDING_VERIFICATION,
+        role: ROLES.PARTICULIER,
+        status: ACCOUNT_STATUS.PENDING_VERIFICATION,
         emailVerified: false,
         particulierProfile: {
           create: {
@@ -70,8 +85,8 @@ export class AuthService {
         password: hashed,
         firstName: dto.firstName,
         lastName: dto.lastName,
-        role: Role.PROFESSIONNEL,
-        status: AccountStatus.PENDING_VERIFICATION,
+        role: ROLES.PROFESSIONNEL,
+        status: ACCOUNT_STATUS.PENDING_VERIFICATION,
         emailVerified: false,
         professionnelProfile: {
           create: {
@@ -119,7 +134,7 @@ export class AuthService {
       throw new UnauthorizedException('Identifiants invalides');
     }
 
-    if (user.status === AccountStatus.SUSPENDED) {
+    if (user.status === ACCOUNT_STATUS.SUSPENDED) {
       throw new ForbiddenException('Compte suspendu');
     }
 
@@ -153,7 +168,7 @@ export class AuthService {
       where: { id: verification.userId },
       data: {
         emailVerified: true,
-        status: AccountStatus.VERIFIED,
+        status: ACCOUNT_STATUS.VERIFIED,
       },
     });
 
@@ -310,16 +325,106 @@ export class AuthService {
     email: string;
     firstName: string;
     lastName: string;
-    role: Role;
-    status: AccountStatus;
+    role: string;
+    status: string;
     emailVerified: boolean;
     password?: string;
   }) {
     const payload = { sub: user.id, role: user.role, email: user.email };
     const accessToken = this.jwt.sign(payload);
 
-    const { password, ...safeUser } = user;
+    const { password, ...safeUser } = user as Record<string, unknown>;
     return { accessToken, user: safeUser };
+  }
+
+  async getProfile(user: any) {
+    if (!user) throw new UnauthorizedException();
+    const found = await this.prisma.user.findUnique({ where: { id: user.sub } });
+    if (!found) throw new UnauthorizedException();
+    const { password, ...safe } = found;
+    return safe;
+  }
+
+  async updateProfile(user: any, dto: UpdateProfileDto) {
+    if (!user) throw new UnauthorizedException();
+    const found = await this.prisma.user.findUnique({ where: { id: user.sub } });
+    if (!found) throw new UnauthorizedException();
+    if (found.role !== ROLES.PROFESSIONNEL) {
+      throw new ForbiddenException('Réservé aux professionnels');
+    }
+
+    const data: Record<string, unknown> = {
+      ...(dto.firstName?.trim() ? { firstName: dto.firstName.trim() } : {}),
+      ...(dto.lastName?.trim() ? { lastName: dto.lastName.trim() } : {}),
+      ...(dto.notificationsEmail !== undefined
+        ? { notificationsEmail: dto.notificationsEmail }
+        : {}),
+    };
+    const updated = await this.prisma.user.update({
+      where: { id: user.sub },
+      data,
+    });
+    const { password, ...safe } = updated;
+    return safe;
+  }
+
+  async updatePassword(user: any, dto: UpdatePasswordDto) {
+    if (!user) throw new UnauthorizedException();
+    if (!dto?.currentPassword || !dto?.newPassword) {
+      throw new BadRequestException('Mot de passe actuel et nouveau mot de passe requis');
+    }
+    if (dto.newPassword.length < 8) {
+      throw new BadRequestException('Le nouveau mot de passe doit contenir au moins 8 caractères');
+    }
+
+    const found = await this.prisma.user.findUnique({ where: { id: user.sub } });
+    if (!found) throw new UnauthorizedException();
+
+    const ok = await bcrypt.compare(dto.currentPassword, found.password);
+    if (!ok) {
+      throw new UnauthorizedException('Mot de passe actuel invalide');
+    }
+
+    const hashed = await bcrypt.hash(dto.newPassword, 10);
+    await this.prisma.user.update({
+      where: { id: user.sub },
+      data: { password: hashed },
+    });
+    return { message: 'Mot de passe mis à jour' };
+  }
+
+  async updateEmail(user: any, dto: UpdateEmailDto) {
+    if (!user) throw new UnauthorizedException();
+    if (!dto?.currentPassword || !dto?.newEmail) {
+      throw new BadRequestException('Mot de passe actuel et nouvel email requis');
+    }
+
+    const found = await this.prisma.user.findUnique({ where: { id: user.sub } });
+    if (!found) throw new UnauthorizedException();
+
+    const ok = await bcrypt.compare(dto.currentPassword, found.password);
+    if (!ok) {
+      throw new UnauthorizedException('Mot de passe actuel invalide');
+    }
+
+    if (dto.newEmail === found.email) {
+      throw new BadRequestException('Nouvel email identique à l’actuel');
+    }
+
+    await this.ensureEmailAvailable(dto.newEmail);
+
+    const updated = await this.prisma.user.update({
+      where: { id: user.sub },
+      data: {
+        email: dto.newEmail,
+        emailVerified: false,
+        status: ACCOUNT_STATUS.PENDING_VERIFICATION,
+      },
+    });
+
+    await this.sendVerificationEmail(updated.id, updated.email, updated.firstName);
+
+    return { message: 'Email mis à jour. Vérifiez votre boîte mail.' };
   }
 
   private validateParticulier(dto: RegisterParticulierDto) {

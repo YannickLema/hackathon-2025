@@ -153,5 +153,59 @@ export class EmailService {
       throw new Error('Impossible d\'envoyer l\'email de réinitialisation');
     }
   }
+
+  async sendOfferNotification(params: {
+    sellerEmail: string;
+    sellerFirstName: string;
+    listingTitle: string;
+    offerAmount: number;
+    buyerName: string;
+  }): Promise<void> {
+    const { sellerEmail, sellerFirstName, listingTitle, offerAmount, buyerName } = params;
+    const mailOptions = {
+      from: this.configService.get<string>('EMAIL_FROM', 'noreply@example.com'),
+      to: sellerEmail,
+      subject: `Nouvelle offre sur votre objet "${listingTitle}"`,
+      html: `
+        <p>Bonjour ${sellerFirstName},</p>
+        <p>Vous avez reçu une nouvelle offre de <strong>${buyerName}</strong> sur votre objet <strong>${listingTitle}</strong>.</p>
+        <p>Montant proposé : <strong>${offerAmount} €</strong></p>
+        <p>Connectez-vous pour consulter l'offre et répondre.</p>
+      `,
+    };
+
+    try {
+      await this.transporter.sendMail(mailOptions);
+    } catch (error) {
+      console.error("Erreur lors de l'envoi de l'email d'offre:", error);
+    }
+  }
+
+  async sendMessageNotification(params: {
+    sellerEmail: string;
+    sellerFirstName: string;
+    listingTitle: string;
+    buyerName: string;
+    messagePreview: string;
+  }): Promise<void> {
+    const { sellerEmail, sellerFirstName, listingTitle, buyerName, messagePreview } = params;
+    const mailOptions = {
+      from: this.configService.get<string>('EMAIL_FROM', 'noreply@example.com'),
+      to: sellerEmail,
+      subject: `Nouveau message sur votre objet "${listingTitle}"`,
+      html: `
+        <p>Bonjour ${sellerFirstName},</p>
+        <p>Vous avez reçu un nouveau message de <strong>${buyerName}</strong> concernant votre objet <strong>${listingTitle}</strong>.</p>
+        <blockquote>${messagePreview}</blockquote>
+        <p>Connectez-vous pour répondre.</p>
+      `,
+    };
+
+    try {
+      await this.transporter.sendMail(mailOptions);
+    } catch (error) {
+      console.error("Erreur lors de l'envoi de l'email de message:", error);
+    }
+  }
 }
 

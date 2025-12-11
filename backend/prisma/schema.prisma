@@ -10,6 +10,41 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum ListingCategory {
+  BIJOUX_MONTRES
+  MEUBLES_ANCIENS
+  OBJETS_ART_TABLEAUX
+  OBJETS_COLLECTION
+  VINS_SPIRITUEUX
+  INSTRUMENTS_MUSIQUE
+  LIVRES_MANUSCRITS
+  MODE_ACCESSOIRES_LUXE
+  HORLOGERIE_PENDULES
+  PHOTOGRAPHIES
+  VAISSELLE_ARGENTERIE_CRISTALLERIE
+  SCULPTURES_DECORATION
+  VEHICULES_COLLECTION
+  AUTRE
+}
+
+enum SaleMode {
+  AUCTION
+  INSTANT_SALE
+}
+
+enum ListingStatus {
+  DRAFT
+  PUBLISHED
+  SOLD
+  ARCHIVED
+}
+
+enum OfferStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
 enum Role {
   PARTICULIER
   PROFESSIONNEL
@@ -22,31 +57,6 @@ enum AccountStatus {
   SUSPENDED
 }
 
-enum ListingCategory {
-  PEINTURE
-  SCULPTURE
-  MONTRE
-  BIJOU
-  OBJET_ART
-  PHOTOGRAPHIE
-  VETEMENT
-  ACCESSOIRE
-  DESIGN
-  AUTRE
-}
-
-enum SaleMode {
-  AUCTION
-  INSTANT_SALE
-}
-
-enum ListingStatus {
-  DRAFT
-  PUBLISHED
-  ENDED
-  CANCELLED
-}
-
 model User {
   id            String         @id @default(uuid())
   email         String         @unique
@@ -56,6 +66,7 @@ model User {
   role          Role
   status        AccountStatus  @default(PENDING_VERIFICATION)
   emailVerified Boolean        @default(false)
+  notificationsEmail Boolean   @default(true)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
@@ -64,7 +75,12 @@ model User {
   professionnelProfile  ProfessionnelProfile?
   emailVerification    EmailVerification?
   passwordReset        PasswordReset?
-  listings             Listing[]
+  listings             Listing[]              @relation("SellerListings")      // Annonces créées (vendeur)
+  offers               Offer[]                @relation("BuyerOffers")        // Offres faites (acheteur)
+  listingMessages      ListingMessage[]       @relation("MessageSender")      // Messages envoyés
+  favorites            Favorite[]             @relation("UserFavorites")      // Objets likés
+  bids                 Bid[]                  @relation("UserBids")           // Enchères placées
+  feedbacks            Feedback[]             @relation("UserFeedbacks")      // Avis laissés
 
   @@map("users")
 }
@@ -149,24 +165,28 @@ model PasswordReset {
 }
 
 model Listing {
-  id               String          @id @default(uuid())
-  sellerId         String
-  seller           User            @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-  title            String
-  category         ListingCategory
-  dimensions       String
-  weightKg         Decimal         @db.Decimal(10, 2)
-  description      String
-  priceDesired     Decimal         @db.Decimal(10, 2)
-  saleMode         SaleMode
-  auctionStartPrice Decimal?       @db.Decimal(10, 2)
-  auctionEndAt     DateTime?
-  publishedAt      DateTime?
-  status           ListingStatus   @default(PUBLISHED)
-  photos           ListingPhoto[]
-  documents        ListingDocument[]
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
+  id                String            @id @default(uuid())
+  sellerId          String
+  seller            User              @relation("SellerListings", fields: [sellerId], references: [id], onDelete: Cascade)
+  title             String
+  category          ListingCategory
+  dimensions        String
+  weightKg          Decimal           @db.Decimal(10, 2)
+  description       String
+  priceDesired      Decimal           @db.Decimal(10, 2)
+  saleMode          SaleMode
+  auctionStartPrice Decimal?          @db.Decimal(10, 2)
+  auctionEndAt      DateTime?
+  publishedAt       DateTime?
+  status            ListingStatus     @default(PUBLISHED)
+  photos            ListingPhoto[]
+  documents         ListingDocument[]
+  offers            Offer[]           @relation("ListingOffers")
+  messages          ListingMessage[]
+  bids              Bid[]
+  favorites         Favorite[]
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 
   @@index([sellerId])
   @@map("listings")
@@ -194,4 +214,77 @@ model ListingDocument {
 
   @@index([listingId])
   @@map("listing_documents")
+}
+
+model Offer {
+  id           String       @id @default(uuid())
+  listingId    String
+  listing      Listing      @relation("ListingOffers", fields: [listingId], references: [id], onDelete: Cascade)
+  buyerId      String
+  buyer        User         @relation("BuyerOffers", fields: [buyerId], references: [id], onDelete: Cascade)
+  amount       Decimal      @db.Decimal(10, 2)
+  status       OfferStatus  @default(PENDING)
+  message      String?
+  readBySeller Boolean      @default(false)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([listingId])
+  @@index([buyerId])
+  @@map("offers")
+}
+
+model ListingMessage {
+  id           String   @id @default(uuid())
+  listingId    String
+  listing      Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  senderId     String
+  sender       User     @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  content      String
+  readBySeller Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  @@index([listingId])
+  @@index([senderId])
+  @@map("listing_messages")
+}
+
+model Favorite {
+  id        String   @id @default(uuid())
+  userId    String
+  listingId String
+  user      User     @relation("UserFavorites", fields: [userId], references: [id], onDelete: Cascade)
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, listingId])
+  @@index([listingId])
+  @@map("favorites")
+}
+
+model Bid {
+  id        String   @id @default(uuid())
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  bidderId  String
+  bidder    User     @relation("UserBids", fields: [bidderId], references: [id], onDelete: Cascade)
+  amount    Decimal  @db.Decimal(10, 2)
+  createdAt DateTime @default(now())
+
+  @@index([listingId])
+  @@index([bidderId])
+  @@map("bids")
+}
+
+model Feedback {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation("UserFeedbacks", fields: [userId], references: [id], onDelete: Cascade)
+  stars     Int?
+  nps       Int?
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("feedbacks")
 }
