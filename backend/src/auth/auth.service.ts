@@ -6,7 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { Prisma } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -395,6 +395,9 @@ export class AuthService {
     if (!user) throw new UnauthorizedException();
     const found = await this.prisma.user.findUnique({ where: { id: user.sub } });
     if (!found) throw new UnauthorizedException();
+    if (found.role !== Role.PROFESSIONNEL && found.role !== Role.PARTICULIER) {
+      throw new ForbiddenException('Réservé aux profils vendeur');
+    }
     const { password, ...safe } = found;
     return safe;
   }
@@ -403,8 +406,8 @@ export class AuthService {
     if (!user) throw new UnauthorizedException();
     const found = await this.prisma.user.findUnique({ where: { id: user.sub } });
     if (!found) throw new UnauthorizedException();
-    if (found.role !== ROLES.PROFESSIONNEL) {
-      throw new ForbiddenException('Réservé aux professionnels');
+    if (found.role !== Role.PROFESSIONNEL && found.role !== Role.PARTICULIER) {
+      throw new ForbiddenException('Réservé aux profils vendeur');
     }
 
     const data: Record<string, unknown> = {
@@ -433,6 +436,9 @@ export class AuthService {
 
     const found = await this.prisma.user.findUnique({ where: { id: user.sub } });
     if (!found) throw new UnauthorizedException();
+    if (found.role !== Role.PROFESSIONNEL && found.role !== Role.PARTICULIER) {
+      throw new ForbiddenException('Réservé aux profils vendeur');
+    }
 
     const ok = await bcrypt.compare(dto.currentPassword, found.password);
     if (!ok) {
@@ -455,6 +461,9 @@ export class AuthService {
 
     const found = await this.prisma.user.findUnique({ where: { id: user.sub } });
     if (!found) throw new UnauthorizedException();
+    if (found.role !== Role.PROFESSIONNEL && found.role !== Role.PARTICULIER) {
+      throw new ForbiddenException('Réservé aux profils vendeur');
+    }
 
     const ok = await bcrypt.compare(dto.currentPassword, found.password);
     if (!ok) {
