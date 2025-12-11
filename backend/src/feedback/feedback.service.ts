@@ -2,12 +2,6 @@ import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/com
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateFeedbackDto } from './dto/create-feedback.dto';
 
-const ROLES = {
-  PARTICULIER: 'PARTICULIER',
-  PROFESSIONNEL: 'PROFESSIONNEL',
-  ADMIN: 'ADMIN',
-} as const;
-
 @Injectable()
 export class FeedbackService {
   constructor(private readonly prisma: PrismaService) {}
@@ -20,8 +14,8 @@ export class FeedbackService {
       select: { id: true, role: true },
     });
     if (!dbUser) throw new ForbiddenException('Utilisateur introuvable');
-    if (dbUser.role !== ROLES.PROFESSIONNEL) {
-      throw new ForbiddenException('Réservé aux professionnels');
+    if (dbUser.role !== 'PROFESSIONNEL' && dbUser.role !== 'PARTICULIER') {
+      throw new ForbiddenException('Réservé aux utilisateurs inscrits (particulier ou pro)');
     }
 
     const hasStars = dto.stars !== undefined;
@@ -32,13 +26,13 @@ export class FeedbackService {
     }
 
     if (hasStars) {
-      if (dto.stars! < 1 || dto.stars! > 5) {
-        throw new BadRequestException('stars doit être entre 1 et 5');
+      if (!Number.isInteger(dto.stars) || dto.stars! < 1 || dto.stars! > 5) {
+        throw new BadRequestException('stars doit être un entier entre 1 et 5');
       }
     }
     if (hasNps) {
-      if (dto.nps! < 1 || dto.nps! > 10) {
-        throw new BadRequestException('nps doit être entre 1 et 10');
+      if (!Number.isInteger(dto.nps) || dto.nps! < 1 || dto.nps! > 10) {
+        throw new BadRequestException('nps doit être un entier entre 1 et 10');
       }
     }
 
