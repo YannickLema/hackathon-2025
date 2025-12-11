@@ -37,6 +37,20 @@
 
         <!-- Stripe Card Element -->
         <div v-if="!paymentStatus?.hasPaymentMethod" class="payment-form-card">
+          <div v-if="errorMessage && errorMessage.includes('Clé API Stripe')" class="stripe-config-warning">
+            <span class="material-symbols-outlined">info</span>
+            <div class="warning-content">
+              <strong>Configuration Stripe requise</strong>
+              <p>Pour utiliser cette fonctionnalité, vous devez configurer vos clés Stripe dans le fichier .env :</p>
+              <ol>
+                <li>Créez un compte sur <a href="https://stripe.com" target="_blank">stripe.com</a></li>
+                <li>Accédez à <strong>Developers → API keys</strong></li>
+                <li>Copiez vos clés de test (commencent par <code>sk_test_</code> et <code>pk_test_</code>)</li>
+                <li>Ajoutez-les dans le fichier <code>.env</code> à la racine du projet</li>
+              </ol>
+            </div>
+          </div>
+          
           <h2 class="form-title">Ajouter une carte bancaire</h2>
           <p class="form-subtitle">Utilisez une carte de test Stripe pour tester la fonctionnalité</p>
           
@@ -229,10 +243,15 @@ const handleSubmit = async (event) => {
     })
 
     if (!setupResponse.ok) {
-      throw new Error('Erreur lors de la création du setup intent')
+      const errorData = await setupResponse.json().catch(() => ({}))
+      throw new Error(errorData.message || `Erreur lors de la création du setup intent (${setupResponse.status})`)
     }
 
     const { clientSecret } = await setupResponse.json()
+    
+    if (!clientSecret) {
+      throw new Error('Client secret non reçu du serveur')
+    }
 
     // Confirmer le setup intent avec la carte
     const { error: confirmError, setupIntent } = await stripe.value.confirmCardSetup(clientSecret, {
@@ -273,7 +292,13 @@ const handleSubmit = async (event) => {
 
   } catch (err) {
     console.error('Erreur:', err)
-    errorMessage.value = err.message || 'Une erreur est survenue lors de l\'ajout de la carte'
+    const errorMsg = err instanceof Error ? err.message : 'Une erreur est survenue lors de l\'ajout de la carte'
+    errorMessage.value = errorMsg
+    
+    // Si c'est une erreur de clé Stripe, afficher un message plus explicite
+    if (errorMsg.includes('Clé API Stripe') || errorMsg.includes('STRIPE_SECRET_KEY')) {
+      errorMessage.value = 'Configuration Stripe manquante. Veuillez contacter l\'administrateur ou vérifier que les clés Stripe sont correctement configurées dans le fichier .env'
+    }
   } finally {
     isProcessing.value = false
   }
@@ -430,6 +455,64 @@ onUnmounted(() => {
 /* Payment Form */
 .payment-form-card {
   margin-bottom: 32px;
+}
+
+.stripe-config-warning {
+  display: flex;
+  gap: 16px;
+  padding: 20px;
+  background: #fff3cd;
+  border: 2px solid #ffc107;
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+.stripe-config-warning .material-symbols-outlined {
+  color: #ff9800;
+  font-size: 32px;
+  flex-shrink: 0;
+}
+
+.warning-content strong {
+  display: block;
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: #1a1a1a;
+  margin-bottom: 8px;
+}
+
+.warning-content p {
+  margin: 8px 0;
+  color: #495057;
+}
+
+.warning-content ol {
+  margin: 12px 0 0 20px;
+  padding: 0;
+}
+
+.warning-content li {
+  margin: 8px 0;
+  color: #495057;
+}
+
+.warning-content code {
+  background: #ffffff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.875rem;
+  color: #645394;
+}
+
+.warning-content a {
+  color: #645394;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.warning-content a:hover {
+  text-decoration: underline;
 }
 
 .form-title {
