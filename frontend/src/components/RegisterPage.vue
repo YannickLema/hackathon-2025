@@ -1,6 +1,5 @@
 <template>
   <div class="register-page-wrapper">
-    <Header />
     <div class="register-page">
       <div class="register-container">
         <h1 class="register-title">Inscription</h1>
@@ -546,15 +545,12 @@
         </form>
       </div>
     </div>
-    <Footer />
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import Header from './Header.vue'
-import Footer from './Footer.vue'
 
 const router = useRouter()
 const userType = ref('particulier')

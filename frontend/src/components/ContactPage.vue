@@ -1,6 +1,5 @@
 <template>
   <div class="contact-page-wrapper">
-    <Header />
     <div class="contact-page">
       <div class="contact-container">
         <h1 class="contact-title">Nous contacter</h1>
@@ -102,14 +101,11 @@
         </form>
       </div>
     </div>
-    <Footer />
   </div>
 </template>
 
 <script setup>
 import { ref, reactive } from 'vue'
-import Header from './Header.vue'
-import Footer from './Footer.vue'
 
 const form = reactive({
   firstName: '',

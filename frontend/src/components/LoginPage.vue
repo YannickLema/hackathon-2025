@@ -1,6 +1,5 @@
 <template>
   <div class="login-page-wrapper">
-    <Header />
     <div class="login-page">
     <div class="login-container">
       <h1 class="login-title">Connexion</h1>
@@ -75,15 +74,12 @@
       </form>
     </div>
   </div>
-    <Footer />
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import Header from './Header.vue'
-import Footer from './Footer.vue'
 
 const router = useRouter()
 const userType = ref('particulier')
@@ -151,8 +147,21 @@ const handleLogin = async () => {
     // Déclencher l'événement de mise à jour de l'authentification
     window.dispatchEvent(new Event('auth-changed'))
     
-    // Redirection après connexion réussie
-    router.push('/')
+    // Redirection selon le rôle de l'utilisateur
+    if (data.user && data.user.role) {
+      const role = data.user.role.toUpperCase()
+      if (role === 'PARTICULIER') {
+        router.push('/dashboard/particulier')
+      } else if (role === 'PROFESSIONNEL') {
+        router.push('/dashboard/professionnel')
+      } else {
+        // Rôle inconnu ou ADMIN, rediriger vers la page d'accueil
+        router.push('/')
+      }
+    } else {
+      // Pas de rôle, rediriger vers la page d'accueil
+      router.push('/')
+    }
   } catch (err) {
     error.value = err.message || 'Une erreur est survenue lors de la connexion'
     console.error('Erreur de connexion:', err)

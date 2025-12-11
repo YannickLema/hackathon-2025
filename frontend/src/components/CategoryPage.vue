@@ -1,6 +1,5 @@
 <template>
   <div class="category-page-wrapper">
-    <Header />
     <div class="category-page">
       <!-- Bouton retour catégories -->
       <div class="category-breadcrumb">
@@ -175,8 +174,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import Header from './Header.vue'
-import Footer from './Footer.vue'
 import NewsletterSection from './NewsletterSection.vue'
 
 const route = useRoute()

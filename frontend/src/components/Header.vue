@@ -16,14 +16,17 @@
           </button>
         </div>
         <div class="header-right">
-          <button class="header-icon-btn" @click="toggleWishlist" aria-label="Favoris">
-            <span class="material-symbols-outlined">favorite</span>
-            <span v-if="wishlistCount > 0" class="icon-badge">{{ wishlistCount }}</span>
-          </button>
-          <button class="header-icon-btn" @click="toggleCart" aria-label="Panier">
-            <span class="material-symbols-outlined">shopping_cart</span>
-            <span v-if="cartCount > 0" class="icon-badge">{{ cartCount }}</span>
-          </button>
+          <!-- Favoris et Panier uniquement pour les professionnels -->
+          <template v-if="user && (user.role === 'PROFESSIONNEL' || user.role === 'professionnel')">
+            <button class="header-icon-btn" @click="toggleWishlist" aria-label="Favoris">
+              <span class="material-symbols-outlined">favorite</span>
+              <span v-if="wishlistCount > 0" class="icon-badge">{{ wishlistCount }}</span>
+            </button>
+            <button class="header-icon-btn" @click="toggleCart" aria-label="Panier">
+              <span class="material-symbols-outlined">shopping_cart</span>
+              <span v-if="cartCount > 0" class="icon-badge">{{ cartCount }}</span>
+            </button>
+          </template>
           
           <!-- Menu utilisateur connecté -->
           <div v-if="isAuthenticated" class="user-menu-container">
@@ -33,11 +36,15 @@
               <span class="material-symbols-outlined dropdown-icon">arrow_drop_down</span>
             </button>
             <div v-if="isUserMenuOpen" class="user-menu-dropdown">
+              <router-link :to="getDashboardRoute()" class="user-menu-item" @click="closeUserMenu">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span>Tableau de bord</span>
+              </router-link>
               <router-link to="/profil" class="user-menu-item" @click="closeUserMenu">
                 <span class="material-symbols-outlined">person</span>
                 <span>Mon profil</span>
               </router-link>
-              <router-link to="/mes-annonces" class="user-menu-item" @click="closeUserMenu">
+              <router-link v-if="user?.role === 'PROFESSIONNEL' || user?.role === 'professionnel'" to="/mes-annonces" class="user-menu-item" @click="closeUserMenu">
                 <span class="material-symbols-outlined">inventory_2</span>
                 <span>Mes annonces</span>
               </router-link>
@@ -97,7 +104,8 @@
           </li>
         </ul>
         
-        <div class="menu-actions">
+        <!-- Menu actions uniquement pour les professionnels -->
+        <div v-if="user && (user.role === 'PROFESSIONNEL' || user.role === 'professionnel')" class="menu-actions">
           <button class="menu-action-btn" @click="openWishlistFromMenu" aria-label="Mes favoris">
             <span class="material-symbols-outlined menu-action-icon">favorite</span>
             <span class="menu-action-text">Mes favoris</span>
@@ -116,9 +124,17 @@
               <span class="material-symbols-outlined menu-auth-icon">account_circle</span>
               <span>{{ userFirstName }}</span>
             </div>
+            <router-link :to="getDashboardRoute()" class="menu-auth-link menu-auth-profile" @click="closeMenu">
+              <span class="material-symbols-outlined menu-auth-icon">dashboard</span>
+              <span>Tableau de bord</span>
+            </router-link>
             <router-link to="/profil" class="menu-auth-link menu-auth-profile" @click="closeMenu">
               <span class="material-symbols-outlined menu-auth-icon">person</span>
               <span>Mon profil</span>
+            </router-link>
+            <router-link v-if="user?.role === 'PROFESSIONNEL' || user?.role === 'professionnel'" to="/mes-annonces" class="menu-auth-link menu-auth-listings" @click="closeMenu">
+              <span class="material-symbols-outlined menu-auth-icon">list_alt</span>
+              <span>Mes annonces</span>
             </router-link>
             <button class="menu-auth-link menu-auth-logout" @click="handleLogoutFromMenu">
               <span class="material-symbols-outlined menu-auth-icon">logout</span>
@@ -247,11 +263,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import logo from '@/assets/Purple dog.svg'
 
 const router = useRouter()
+const route = useRoute()
 const isMenuOpen = ref(false)
 const isUserMenuOpen = ref(false)
 const isAuthenticated = ref(false)
@@ -422,6 +439,19 @@ const userFirstName = computed(() => {
   return user.value?.firstName || 'Utilisateur'
 })
 
+const getDashboardRoute = () => {
+  if (!user.value || !user.value.role) {
+    return '/'
+  }
+  const role = user.value.role.toUpperCase()
+  if (role === 'PARTICULIER') {
+    return '/dashboard/particulier'
+  } else if (role === 'PROFESSIONNEL') {
+    return '/dashboard/professionnel'
+  }
+  return '/'
+}
+
 const toggleUserMenu = () => {
   isUserMenuOpen.value = !isUserMenuOpen.value
 }
@@ -445,6 +475,11 @@ const handleClickOutside = (event) => {
     isUserMenuOpen.value = false
   }
 }
+
+// Vérifier l'authentification à chaque changement de route
+watch(() => route.path, () => {
+  checkAuth()
+}, { immediate: false })
 
 onMounted(() => {
   // Charger les données au montage du composant

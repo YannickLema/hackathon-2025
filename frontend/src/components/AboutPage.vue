@@ -1,6 +1,5 @@
 <template>
   <div class="about-page-wrapper">
-    <Header />
     <div class="about-page">
       <!-- Hero Section avec animation -->
       <div class="hero-section">
@@ -145,14 +144,11 @@
       <!-- Section Newsletter en pleine largeur -->
       <NewsletterSection />
     </div>
-    <Footer />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import Header from './Header.vue'
-import Footer from './Footer.vue'
 import NewsletterSection from './NewsletterSection.vue'
 import comeImage from '@/assets/come de drouas.jpeg'
 import thomasImage from '@/assets/thomas yardin.jpeg'

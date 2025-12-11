@@ -53,6 +53,16 @@ const routes = [
     name: 'Product',
     component: () => import('../components/CategoryPage.vue'), // Temporaire, à remplacer par ProductPage.vue
   },
+  {
+    path: '/dashboard/particulier',
+    name: 'DashboardParticulier',
+    component: () => import('../components/DashboardParticulier.vue'),
+  },
+  {
+    path: '/dashboard/professionnel',
+    name: 'DashboardProfessionnel',
+    component: () => import('../components/DashboardProfessionnel.vue'),
+  },
 ]
 
 const router = createRouter({
