@@ -1,10 +1,45 @@
 <template>
   <div class="profile-page-wrapper">
     <div class="profile-container">
-      <!-- En-tête -->
-      <div class="profile-header">
-        <h1 class="profile-title">Mon profil</h1>
-        <p class="profile-subtitle">Gérez vos informations personnelles</p>
+      <!-- En-tête avec photo en grand -->
+      <div class="profile-header-section">
+        <div class="profile-header-content">
+          <div class="profile-avatar-large">
+            <img 
+              v-if="profilePhotoUrl" 
+              :src="profilePhotoUrl" 
+              alt="Photo de profil" 
+              class="avatar-image"
+            />
+            <div v-else class="avatar-placeholder-large">
+              <span class="material-symbols-outlined">person</span>
+            </div>
+            <div class="avatar-overlay" @click="triggerPhotoInput">
+              <span class="material-symbols-outlined">camera_alt</span>
+              <span>Changer la photo</span>
+            </div>
+            <input
+              ref="photoInput"
+              id="photo-input"
+              type="file"
+              accept=".jpg,.jpeg,.png,.gif,.webp"
+              @change="handlePhotoChange"
+              class="file-input-hidden"
+            />
+          </div>
+          <div class="profile-header-info">
+            <h1 class="profile-title">{{ userProfile.firstName }} {{ userProfile.lastName }}</h1>
+            <p class="profile-subtitle">{{ userProfile.email }}</p>
+            <div v-if="userProfile.role === 'PROFESSIONNEL' || userProfile.role === 'professionnel'" class="profile-badge">
+              <span class="material-symbols-outlined">business</span>
+              Professionnel
+            </div>
+            <div v-else class="profile-badge">
+              <span class="material-symbols-outlined">person</span>
+              Particulier
+            </div>
+          </div>
+        </div>
       </div>
 
       <div v-if="loading" class="loading-state">
@@ -19,55 +54,57 @@
       </div>
 
       <div v-else class="profile-content">
-        <!-- Photo de profil -->
-        <div class="profile-section">
+        <!-- Photo de profil - Mode édition -->
+        <div v-if="isEditingPhoto" class="profile-section photo-edit-section">
           <div class="section-header">
             <h2 class="section-title">
               <span class="material-symbols-outlined section-icon">photo_camera</span>
-              Photo de profil
+              Modifier la photo de profil
             </h2>
+            <button @click="cancelEditingPhoto" class="btn-close">
+              <span class="material-symbols-outlined">close</span>
+            </button>
           </div>
-          <div class="profile-photo-section">
-            <div class="photo-container">
+          <div class="photo-edit-content">
+            <div class="photo-preview-container">
               <img 
                 v-if="profilePhotoUrl" 
                 :src="profilePhotoUrl" 
-                alt="Photo de profil" 
-                class="profile-photo"
+                alt="Aperçu" 
+                class="photo-preview"
               />
-              <div v-else class="profile-photo-placeholder">
-                <span class="material-symbols-outlined">person</span>
+              <div v-else class="photo-preview-placeholder">
+                <span class="material-symbols-outlined">image</span>
+                <p>Aucune photo sélectionnée</p>
               </div>
-              <button 
-                v-if="!isEditingPhoto" 
-                @click="startEditingPhoto" 
-                class="btn-edit-photo"
-                title="Modifier la photo"
-              >
-                <span class="material-symbols-outlined">edit</span>
-              </button>
             </div>
-            <div v-if="isEditingPhoto" class="photo-upload">
+            <div class="photo-upload-actions">
+              <label for="photo-input-edit" class="file-upload-btn">
+                <span class="material-symbols-outlined">upload</span>
+                Choisir une photo
+              </label>
               <input
-                ref="photoInput"
+                ref="photoInputEdit"
+                id="photo-input-edit"
                 type="file"
                 accept=".jpg,.jpeg,.png,.gif,.webp"
                 @change="handlePhotoChange"
                 class="file-input-hidden"
               />
-              <label for="photo-input" class="file-upload-label">
-                <span class="material-symbols-outlined">upload</span>
-                Choisir une photo
-              </label>
+              <p v-if="newPhotoFile" class="file-info">
+                <span class="material-symbols-outlined">check_circle</span>
+                {{ newPhotoFile.name }} ({{ formatFileSize(newPhotoFile.size) }})
+              </p>
               <div class="photo-actions">
-                <button @click="savePhoto" class="btn-save" :disabled="!newPhotoFile">
-                  Enregistrer
+                <button @click="savePhoto" class="btn-save" :disabled="!newPhotoFile || isSaving">
+                  <span class="material-symbols-outlined">check</span>
+                  {{ isSaving ? 'Enregistrement...' : 'Enregistrer' }}
                 </button>
                 <button @click="cancelEditingPhoto" class="btn-cancel">
+                  <span class="material-symbols-outlined">close</span>
                   Annuler
                 </button>
               </div>
-              <p v-if="newPhotoFile" class="file-name">{{ newPhotoFile.name }}</p>
             </div>
           </div>
         </div>
@@ -99,30 +136,77 @@
             </div>
           </div>
           <div class="section-content">
-            <div v-if="!isEditingPersonal" class="info-display">
-              <div class="info-row">
-                <span class="info-label">Prénom</span>
-                <span class="info-value">{{ userProfile.firstName || 'Non renseigné' }}</span>
+            <div v-if="!isEditingPersonal" class="info-list">
+              <div class="info-item">
+                <div class="info-item-header">
+                  <div class="info-icon-wrapper">
+                    <span class="material-symbols-outlined info-icon">badge</span>
+                  </div>
+                  <div class="info-item-content">
+                    <span class="info-label">Prénom</span>
+                    <span class="info-value">{{ userProfile.firstName || 'Non renseigné' }}</span>
+                  </div>
+                </div>
               </div>
-              <div class="info-row">
-                <span class="info-label">Nom</span>
-                <span class="info-value">{{ userProfile.lastName || 'Non renseigné' }}</span>
+              
+              <div class="info-item">
+                <div class="info-item-header">
+                  <div class="info-icon-wrapper">
+                    <span class="material-symbols-outlined info-icon">badge</span>
+                  </div>
+                  <div class="info-item-content">
+                    <span class="info-label">Nom</span>
+                    <span class="info-value">{{ userProfile.lastName || 'Non renseigné' }}</span>
+                  </div>
+                </div>
               </div>
-              <div class="info-row">
-                <span class="info-label">Email</span>
-                <span class="info-value">{{ userProfile.email || 'Non renseigné' }}</span>
+              
+              <div class="info-item">
+                <div class="info-item-header">
+                  <div class="info-icon-wrapper">
+                    <span class="material-symbols-outlined info-icon">mail</span>
+                  </div>
+                  <div class="info-item-content">
+                    <span class="info-label">Email</span>
+                    <span class="info-value">{{ userProfile.email || 'Non renseigné' }}</span>
+                  </div>
+                </div>
               </div>
-              <div class="info-row">
-                <span class="info-label">Adresse postale</span>
-                <span class="info-value">{{ userProfile.postalAddress || 'Non renseigné' }}</span>
+              
+              <div class="info-item">
+                <div class="info-item-header">
+                  <div class="info-icon-wrapper">
+                    <span class="material-symbols-outlined info-icon">home</span>
+                  </div>
+                  <div class="info-item-content">
+                    <span class="info-label">Adresse postale</span>
+                    <span class="info-value">{{ userProfile.postalAddress || 'Non renseigné' }}</span>
+                  </div>
+                </div>
               </div>
-              <div v-if="userProfile.birthDate" class="info-row">
-                <span class="info-label">Date de naissance</span>
-                <span class="info-value">{{ formatDate(userProfile.birthDate) }}</span>
+              
+              <div v-if="userProfile.birthDate" class="info-item">
+                <div class="info-item-header">
+                  <div class="info-icon-wrapper">
+                    <span class="material-symbols-outlined info-icon">cake</span>
+                  </div>
+                  <div class="info-item-content">
+                    <span class="info-label">Date de naissance</span>
+                    <span class="info-value">{{ formatDate(userProfile.birthDate) }}</span>
+                  </div>
+                </div>
               </div>
-              <div v-if="userProfile.age" class="info-row">
-                <span class="info-label">Âge</span>
-                <span class="info-value">{{ userProfile.age }} ans</span>
+              
+              <div v-if="userProfile.age" class="info-item">
+                <div class="info-item-header">
+                  <div class="info-icon-wrapper">
+                    <span class="material-symbols-outlined info-icon">calendar_today</span>
+                  </div>
+                  <div class="info-item-content">
+                    <span class="info-label">Âge</span>
+                    <span class="info-value">{{ userProfile.age }} ans</span>
+                  </div>
+                </div>
               </div>
             </div>
             <form v-else @submit.prevent="savePersonalInfo" class="info-form">
@@ -221,33 +305,72 @@
             </div>
           </div>
           <div class="section-content">
-            <div v-if="!isEditingProfessional" class="info-display">
-              <div class="info-row">
-                <span class="info-label">Dénomination de l'entreprise</span>
-                <span class="info-value">{{ userProfile.companyName || 'Non renseigné' }}</span>
-              </div>
-              <div class="info-row">
-                <span class="info-label">N. SIRET</span>
-                <span class="info-value">{{ userProfile.siret || 'Non renseigné' }}</span>
-              </div>
-              <div v-if="userProfile.website" class="info-row">
-                <span class="info-label">Site internet</span>
-                <a :href="userProfile.website" target="_blank" class="info-link">{{ userProfile.website }}</a>
-              </div>
-              <div v-if="userProfile.specialities && userProfile.specialities.length > 0" class="info-row">
-                <span class="info-label">Spécialités</span>
-                <div class="tags-list">
-                  <span v-for="(spec, index) in userProfile.specialities" :key="index" class="tag">
-                    {{ spec }}
-                  </span>
+            <div v-if="!isEditingProfessional" class="info-list">
+              <div class="info-item">
+                <div class="info-item-header">
+                  <div class="info-icon-wrapper">
+                    <span class="material-symbols-outlined info-icon">business</span>
+                  </div>
+                  <div class="info-item-content">
+                    <span class="info-label">Dénomination de l'entreprise</span>
+                    <span class="info-value">{{ userProfile.companyName || 'Non renseigné' }}</span>
+                  </div>
                 </div>
               </div>
-              <div v-if="userProfile.mostSearchedItems && userProfile.mostSearchedItems.length > 0" class="info-row">
-                <span class="info-label">Recherches principales</span>
-                <div class="tags-list">
-                  <span v-for="(item, index) in userProfile.mostSearchedItems" :key="index" class="tag">
-                    {{ item }}
-                  </span>
+              
+              <div class="info-item">
+                <div class="info-item-header">
+                  <div class="info-icon-wrapper">
+                    <span class="material-symbols-outlined info-icon">receipt_long</span>
+                  </div>
+                  <div class="info-item-content">
+                    <span class="info-label">N. SIRET</span>
+                    <span class="info-value">{{ userProfile.siret || 'Non renseigné' }}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div v-if="userProfile.website" class="info-item">
+                <div class="info-item-header">
+                  <div class="info-icon-wrapper">
+                    <span class="material-symbols-outlined info-icon">language</span>
+                  </div>
+                  <div class="info-item-content">
+                    <span class="info-label">Site internet</span>
+                    <a :href="userProfile.website" target="_blank" class="info-link">{{ userProfile.website }}</a>
+                  </div>
+                </div>
+              </div>
+              
+              <div v-if="userProfile.specialities && userProfile.specialities.length > 0" class="info-item">
+                <div class="info-item-header">
+                  <div class="info-icon-wrapper">
+                    <span class="material-symbols-outlined info-icon">star</span>
+                  </div>
+                  <div class="info-item-content">
+                    <span class="info-label">Spécialités</span>
+                    <div class="tags-list">
+                      <span v-for="(spec, index) in userProfile.specialities" :key="index" class="tag">
+                        {{ spec }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div v-if="userProfile.mostSearchedItems && userProfile.mostSearchedItems.length > 0" class="info-item">
+                <div class="info-item-header">
+                  <div class="info-icon-wrapper">
+                    <span class="material-symbols-outlined info-icon">search</span>
+                  </div>
+                  <div class="info-item-content">
+                    <span class="info-label">Recherches principales</span>
+                    <div class="tags-list">
+                      <span v-for="(item, index) in userProfile.mostSearchedItems" :key="index" class="tag">
+                        {{ item }}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -292,7 +415,7 @@
           <div class="section-header">
             <h2 class="section-title">
               <span class="material-symbols-outlined section-icon">lock</span>
-              Mot de passe
+              Sécurité
             </h2>
             <button 
               v-if="!isEditingPassword" 
@@ -350,23 +473,27 @@
                 </div>
               </div>
               <div v-if="passwordForm.newPassword && passwordForm.newPassword !== passwordForm.confirmPassword" class="form-error">
+                <span class="material-symbols-outlined">error</span>
                 Les mots de passe ne correspondent pas
               </div>
             </form>
           </div>
           <div v-else class="section-content">
-            <p class="info-note">Votre mot de passe est sécurisé. Cliquez sur "Modifier" pour le changer.</p>
+            <div class="security-info">
+              <span class="material-symbols-outlined security-icon">shield</span>
+              <p>Votre mot de passe est sécurisé. Cliquez sur "Modifier" pour le changer.</p>
+            </div>
           </div>
         </div>
 
         <!-- Messages de succès/erreur -->
-        <div v-if="successMessage" class="success-message">
+        <div v-if="successMessage" class="message-toast success-message">
           <span class="material-symbols-outlined">check_circle</span>
-          {{ successMessage }}
+          <span>{{ successMessage }}</span>
         </div>
-        <div v-if="errorMessage" class="error-message">
+        <div v-if="errorMessage" class="message-toast error-message">
           <span class="material-symbols-outlined">error</span>
-          {{ errorMessage }}
+          <span>{{ errorMessage }}</span>
         </div>
       </div>
     </div>
@@ -412,6 +539,7 @@ const isEditingPassword = ref(false)
 const profilePhotoUrl = ref('')
 const newPhotoFile = ref(null)
 const photoInput = ref(null)
+const photoInputEdit = ref(null)
 
 const editForm = reactive({
   firstName: '',
@@ -451,12 +579,6 @@ const loadProfile = async () => {
   
   try {
     // TODO: Remplacer par la vraie API call
-    // const response = await fetch(`${API_URL}/users/profile`, {
-    //   headers: { 'Authorization': `Bearer ${token}` }
-    // })
-    // const data = await response.json()
-    
-    // Pour l'instant, utiliser les données du localStorage
     const userData = JSON.parse(localStorage.getItem('user'))
     Object.assign(userProfile, {
       id: userData.id,
@@ -492,6 +614,14 @@ const formatDate = (dateString) => {
   return date.toLocaleDateString('fr-FR')
 }
 
+const formatFileSize = (bytes) => {
+  if (bytes === 0) return '0 Bytes'
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i]
+}
+
 const calculateAge = () => {
   if (editForm.birthDate) {
     const birth = new Date(editForm.birthDate)
@@ -507,16 +637,9 @@ const calculateAge = () => {
   }
 }
 
-const startEditingPhoto = () => {
-  isEditingPhoto.value = true
-  newPhotoFile.value = null
-}
-
-const cancelEditingPhoto = () => {
-  isEditingPhoto.value = false
-  newPhotoFile.value = null
+const triggerPhotoInput = () => {
   if (photoInput.value) {
-    photoInput.value.value = ''
+    photoInput.value.click()
   }
 }
 
@@ -525,15 +648,18 @@ const handlePhotoChange = (event) => {
   if (file) {
     if (file.size > 10 * 1024 * 1024) {
       errorMessage.value = 'Le fichier est trop volumineux. Taille maximale : 10MB'
+      setTimeout(() => { errorMessage.value = '' }, 5000)
       return
     }
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
     if (!allowedTypes.includes(file.type)) {
       errorMessage.value = 'Type de fichier non autorisé. Formats acceptés : JPG, PNG, GIF, WEBP'
+      setTimeout(() => { errorMessage.value = '' }, 5000)
       return
     }
     newPhotoFile.value = file
     errorMessage.value = ''
+    isEditingPhoto.value = true
     
     // Prévisualisation
     const reader = new FileReader()
@@ -541,6 +667,23 @@ const handlePhotoChange = (event) => {
       profilePhotoUrl.value = e.target.result
     }
     reader.readAsDataURL(file)
+  }
+}
+
+const cancelEditingPhoto = () => {
+  isEditingPhoto.value = false
+  newPhotoFile.value = null
+  if (photoInput.value) {
+    photoInput.value.value = ''
+  }
+  if (photoInputEdit.value) {
+    photoInputEdit.value.value = ''
+  }
+  // Restaurer l'ancienne photo si annulation
+  if (userProfile.profilePhoto) {
+    profilePhotoUrl.value = userProfile.profilePhoto
+  } else {
+    profilePhotoUrl.value = ''
   }
 }
 
@@ -565,6 +708,14 @@ const savePhoto = async () => {
     // const data = await response.json()
     
     // Simulation
+    userProfile.profilePhoto = profilePhotoUrl.value
+    const userData = JSON.parse(localStorage.getItem('user'))
+    userData.profilePhoto = profilePhotoUrl.value
+    localStorage.setItem('user', JSON.stringify(userData))
+    
+    // Déclencher l'événement de mise à jour pour que le header se mette à jour
+    window.dispatchEvent(new Event('auth-changed'))
+    
     successMessage.value = 'Photo de profil mise à jour avec succès'
     setTimeout(() => {
       successMessage.value = ''
@@ -573,6 +724,7 @@ const savePhoto = async () => {
   } catch (err) {
     console.error('Erreur lors de la mise à jour de la photo:', err)
     errorMessage.value = 'Erreur lors de la mise à jour de la photo'
+    setTimeout(() => { errorMessage.value = '' }, 5000)
   } finally {
     isSaving.value = false
   }
@@ -599,17 +751,6 @@ const savePersonalInfo = async () => {
   const token = localStorage.getItem('access_token')
   
   try {
-    // TODO: Remplacer par la vraie API call
-    // const response = await fetch(`${API_URL}/users/profile`, {
-    //   method: 'PUT',
-    //   headers: {
-    //     'Authorization': `Bearer ${token}`,
-    //     'Content-Type': 'application/json'
-    //   },
-    //   body: JSON.stringify(editForm)
-    // })
-    // const data = await response.json()
-    
     // Mise à jour locale
     Object.assign(userProfile, {
       firstName: editForm.firstName,
@@ -620,7 +761,6 @@ const savePersonalInfo = async () => {
       age: editForm.age
     })
     
-    // Mettre à jour le localStorage
     const userData = JSON.parse(localStorage.getItem('user'))
     Object.assign(userData, {
       firstName: editForm.firstName,
@@ -641,6 +781,7 @@ const savePersonalInfo = async () => {
   } catch (err) {
     console.error('Erreur lors de la mise à jour:', err)
     errorMessage.value = 'Erreur lors de la mise à jour des informations'
+    setTimeout(() => { errorMessage.value = '' }, 5000)
   } finally {
     isSaving.value = false
   }
@@ -664,15 +805,12 @@ const saveProfessionalInfo = async () => {
   const token = localStorage.getItem('access_token')
   
   try {
-    // TODO: Remplacer par la vraie API call
-    // Mise à jour locale
     Object.assign(userProfile, {
       companyName: editForm.companyName,
       siret: editForm.siret,
       website: editForm.website
     })
     
-    // Mettre à jour le localStorage
     const userData = JSON.parse(localStorage.getItem('user'))
     Object.assign(userData, {
       companyName: editForm.companyName,
@@ -689,6 +827,7 @@ const saveProfessionalInfo = async () => {
   } catch (err) {
     console.error('Erreur lors de la mise à jour:', err)
     errorMessage.value = 'Erreur lors de la mise à jour des informations'
+    setTimeout(() => { errorMessage.value = '' }, 5000)
   } finally {
     isSaving.value = false
   }
@@ -711,11 +850,13 @@ const cancelEditingPassword = () => {
 const savePassword = async () => {
   if (passwordForm.newPassword !== passwordForm.confirmPassword) {
     errorMessage.value = 'Les mots de passe ne correspondent pas'
+    setTimeout(() => { errorMessage.value = '' }, 5000)
     return
   }
   
   if (passwordForm.newPassword.length < 8) {
     errorMessage.value = 'Le mot de passe doit contenir au moins 8 caractères'
+    setTimeout(() => { errorMessage.value = '' }, 5000)
     return
   }
   
@@ -726,18 +867,6 @@ const savePassword = async () => {
   
   try {
     // TODO: Remplacer par la vraie API call
-    // const response = await fetch(`${API_URL}/users/profile/password`, {
-    //   method: 'PUT',
-    //   headers: {
-    //     'Authorization': `Bearer ${token}`,
-    //     'Content-Type': 'application/json'
-    //   },
-    //   body: JSON.stringify({
-    //     currentPassword: passwordForm.currentPassword,
-    //     newPassword: passwordForm.newPassword
-    //   })
-    // })
-    
     successMessage.value = 'Mot de passe modifié avec succès'
     setTimeout(() => {
       successMessage.value = ''
@@ -746,6 +875,7 @@ const savePassword = async () => {
   } catch (err) {
     console.error('Erreur lors de la modification du mot de passe:', err)
     errorMessage.value = 'Erreur lors de la modification du mot de passe'
+    setTimeout(() => { errorMessage.value = '' }, 5000)
   } finally {
     isSaving.value = false
   }
@@ -759,38 +889,132 @@ onMounted(() => {
 <style scoped>
 .profile-page-wrapper {
   min-height: 100vh;
-  background-color: #f5f5f5;
-  padding: 30px 0;
+  background: linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%);
+  padding: 0;
   width: 100%;
   overflow-x: hidden;
 }
 
 .profile-container {
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0;
   width: 100%;
   box-sizing: border-box;
 }
 
-.profile-header {
+/* En-tête avec photo */
+.profile-header-section {
+  background: linear-gradient(135deg, #645394 0%, #4F4670 100%);
+  padding: 60px 20px;
+  color: #ffffff;
   margin-bottom: 40px;
+}
+
+.profile-header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+.profile-avatar-large {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  flex-shrink: 0;
+}
+
+.avatar-image,
+.avatar-placeholder-large {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 5px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.avatar-placeholder-large {
+  background-color: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-placeholder-large .material-symbols-outlined {
+  font-size: 80px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.avatar-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  cursor: pointer;
+  color: #ffffff;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.profile-avatar-large:hover .avatar-overlay {
+  opacity: 1;
+}
+
+.avatar-overlay .material-symbols-outlined {
+  font-size: 32px;
+}
+
+.file-input-hidden {
+  display: none;
+}
+
+.profile-header-info {
+  flex: 1;
+  min-width: 0;
 }
 
 .profile-title {
   font-family: 'Georgia', serif;
   font-weight: 700;
   font-size: 2.5rem;
-  color: #213547;
+  color: #ffffff;
   margin: 0 0 10px 0;
 }
 
 .profile-subtitle {
   font-family: 'Be Vietnam Pro', sans-serif;
   font-weight: 400;
-  font-size: 1.1rem;
-  color: #666;
-  margin: 0;
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0 0 15px 0;
+}
+
+.profile-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #ffffff;
 }
 
 .loading-state,
@@ -830,6 +1054,7 @@ onMounted(() => {
 }
 
 .profile-content {
+  padding: 0 20px 40px;
   display: flex;
   flex-direction: column;
   gap: 30px;
@@ -837,19 +1062,25 @@ onMounted(() => {
 
 .profile-section {
   background-color: #ffffff;
-  border-radius: 16px;
-  padding: 30px;
+  border-radius: 20px;
+  padding: 35px;
   width: 100%;
   box-sizing: border-box;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.profile-section:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
 }
 
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 25px;
+  margin-bottom: 30px;
   padding-bottom: 20px;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 2px solid #f0f0f0;
   gap: 15px;
 }
 
@@ -859,7 +1090,7 @@ onMounted(() => {
   gap: 12px;
   font-family: 'Be Vietnam Pro', sans-serif;
   font-weight: 600;
-  font-size: 1.3rem;
+  font-size: 1.4rem;
   color: #213547;
   margin: 0;
   flex: 1;
@@ -867,12 +1098,13 @@ onMounted(() => {
 }
 
 .section-icon {
-  font-size: 24px;
+  font-size: 28px;
   color: #645394;
   flex-shrink: 0;
 }
 
-.btn-edit {
+.btn-edit,
+.btn-close {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -889,7 +1121,8 @@ onMounted(() => {
   white-space: nowrap;
 }
 
-.btn-edit:hover {
+.btn-edit:hover,
+.btn-close:hover {
   background-color: #645394;
   color: #ffffff;
 }
@@ -945,94 +1178,82 @@ onMounted(() => {
   background-color: #e0e0e0;
 }
 
-/* Photo de profil */
-.profile-photo-section {
+/* Photo edit section */
+.photo-edit-section {
+  background: linear-gradient(135deg, #fafafa 0%, #ffffff 100%);
+}
+
+.photo-edit-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+.photo-preview-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+}
+
+.photo-preview {
+  max-width: 100%;
+  max-height: 400px;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.photo-preview-placeholder {
+  text-align: center;
+  color: #999;
+  padding: 40px;
+}
+
+.photo-preview-placeholder .material-symbols-outlined {
+  font-size: 64px;
+  margin-bottom: 15px;
+}
+
+.photo-upload-actions {
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 20px;
 }
 
-.photo-container {
-  position: relative;
-  width: 150px;
-  height: 150px;
-}
-
-.profile-photo,
-.profile-photo-placeholder {
-  width: 150px;
-  height: 150px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 3px solid #e0e0e0;
-}
-
-.profile-photo-placeholder {
-  background-color: #f5f5f5;
+.file-upload-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.profile-photo-placeholder .material-symbols-outlined {
-  font-size: 64px;
-  color: #999;
-}
-
-.btn-edit-photo {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 40px;
-  height: 40px;
+  gap: 10px;
+  padding: 16px 24px;
   background-color: #645394;
   color: #ffffff;
-  border: 3px solid #ffffff;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.btn-edit-photo:hover {
-  background-color: #4F4670;
-}
-
-.photo-upload {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 15px;
-  width: 100%;
-  max-width: 400px;
-}
-
-.file-input-hidden {
-  display: none;
-}
-
-.file-upload-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 24px;
-  background-color: #f5f5f5;
-  color: #645394;
-  border: 1px solid #645394;
+  border: none;
   border-radius: 20px;
   font-family: 'Be Vietnam Pro', sans-serif;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 16px;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
-.file-upload-label:hover {
-  background-color: #645394;
-  color: #ffffff;
+.file-upload-btn:hover {
+  background-color: #4F4670;
+  transform: translateY(-2px);
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  border-radius: 8px;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 0.9rem;
+  margin: 0;
 }
 
 .photo-actions {
@@ -1040,58 +1261,132 @@ onMounted(() => {
   gap: 10px;
 }
 
-.file-name {
-  font-family: 'Be Vietnam Pro', sans-serif;
-  font-size: 0.9rem;
-  color: #666;
-  margin: 0;
-}
-
-/* Informations */
-.section-content {
-  width: 100%;
-}
-
-.info-display {
+/* Info list - Style professionnel */
+.info-list {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 0;
+  background-color: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e8e8e8;
 }
 
-.info-row {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding-bottom: 20px;
+.info-item {
+  padding: 0;
   border-bottom: 1px solid #f0f0f0;
+  transition: all 0.2s ease;
 }
 
-.info-row:last-child {
+.info-item:last-child {
   border-bottom: none;
-  padding-bottom: 0;
+}
+
+.info-item:hover {
+  background-color: #fafafa;
+}
+
+.info-item-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 24px 28px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.info-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(100, 83, 148, 0.1) 0%, rgba(100, 83, 148, 0.15) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.info-item:hover .info-icon-wrapper {
+  background: linear-gradient(135deg, rgba(100, 83, 148, 0.15) 0%, rgba(100, 83, 148, 0.2) 100%);
+  transform: scale(1.05);
+}
+
+.info-icon {
+  font-size: 24px;
+  color: #645394;
+}
+
+.info-item-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
 }
 
 .info-label {
   font-family: 'Be Vietnam Pro', sans-serif;
   font-weight: 600;
-  font-size: 0.9rem;
-  color: #666;
+  font-size: 0.75rem;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 2px;
 }
 
 .info-value {
   font-family: 'Be Vietnam Pro', sans-serif;
-  font-weight: 400;
-  font-size: 1rem;
+  font-weight: 500;
+  font-size: 1.05rem;
   color: #213547;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+/* Info grid pour les autres sections */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.info-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  padding: 20px;
+  background-color: #fafafa;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  border-left: 3px solid #645394;
+}
+
+.info-card:hover {
+  background-color: #f5f5f5;
+  transform: translateX(5px);
+}
+
+.info-card-full {
+  grid-column: 1 / -1;
+}
+
+.info-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
 }
 
 .info-link {
   font-family: 'Be Vietnam Pro', sans-serif;
   font-weight: 400;
-  font-size: 1rem;
+  font-size: 1.1rem;
   color: #645394;
   text-decoration: none;
   transition: color 0.3s ease;
+  word-break: break-all;
 }
 
 .info-link:hover {
@@ -1099,28 +1394,44 @@ onMounted(() => {
   text-decoration: underline;
 }
 
-.info-note {
-  font-family: 'Be Vietnam Pro', sans-serif;
-  font-weight: 400;
-  font-size: 0.95rem;
-  color: #666;
-  margin: 0;
-}
-
 .tags-list {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin-top: 5px;
 }
 
 .tag {
-  padding: 6px 12px;
-  background-color: #f5f5f5;
-  color: #645394;
-  border-radius: 12px;
+  padding: 6px 14px;
+  background-color: #645394;
+  color: #ffffff;
+  border-radius: 16px;
   font-family: 'Be Vietnam Pro', sans-serif;
   font-weight: 600;
   font-size: 0.85rem;
+}
+
+.security-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 20px;
+  background-color: #e8f5e9;
+  border-radius: 12px;
+}
+
+.security-icon {
+  font-size: 32px;
+  color: #4CAF50;
+  flex-shrink: 0;
+}
+
+.security-info p {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 400;
+  font-size: 1rem;
+  color: #2e7d32;
+  margin: 0;
 }
 
 /* Formulaire */
@@ -1172,6 +1483,7 @@ onMounted(() => {
   outline: none;
   border-color: #645394;
   background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(100, 83, 148, 0.1);
 }
 
 .form-input:read-only {
@@ -1180,50 +1492,89 @@ onMounted(() => {
 }
 
 .form-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-family: 'Be Vietnam Pro', sans-serif;
   font-weight: 600;
   font-size: 0.9rem;
   color: #d32f2f;
-  padding: 10px;
+  padding: 12px;
   background-color: #ffebee;
   border-radius: 8px;
 }
 
-/* Messages */
-.success-message,
-.error-message {
+/* Messages toast */
+.message-toast {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 15px 20px;
-  border-radius: 8px;
+  gap: 12px;
+  padding: 16px 24px;
+  border-radius: 12px;
   font-family: 'Be Vietnam Pro', sans-serif;
   font-weight: 600;
   font-size: 0.95rem;
-  margin-top: 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  animation: slideInUp 0.3s ease;
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .success-message {
-  background-color: #e8f5e9;
-  color: #2e7d32;
+  background-color: #4CAF50;
+  color: #ffffff;
 }
 
 .error-message {
-  background-color: #ffebee;
-  color: #d32f2f;
+  background-color: #d32f2f;
+  color: #ffffff;
 }
 
 @media (max-width: 768px) {
-  .profile-container {
-    padding: 0 15px;
+  .profile-header-section {
+    padding: 40px 15px;
+  }
+
+  .profile-header-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 30px;
+  }
+
+  .profile-avatar-large {
+    width: 150px;
+    height: 150px;
+  }
+
+  .avatar-image,
+  .avatar-placeholder-large {
+    width: 150px;
+    height: 150px;
   }
 
   .profile-title {
     font-size: 2rem;
   }
 
+  .profile-content {
+    padding: 0 15px 30px;
+  }
+
   .profile-section {
-    padding: 20px;
+    padding: 25px;
   }
 
   .section-header {
@@ -1244,20 +1595,40 @@ onMounted(() => {
     justify-content: center;
   }
 
+  .photo-edit-content {
+    grid-template-columns: 1fr;
+  }
+
+  .info-list {
+    border-radius: 8px;
+  }
+
+  .info-item-header {
+    padding: 20px;
+    gap: 15px;
+  }
+
+  .info-icon-wrapper {
+    width: 40px;
+    height: 40px;
+  }
+
+  .info-icon {
+    font-size: 20px;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+
   .form-row {
     grid-template-columns: 1fr;
   }
 
-  .photo-container {
-    width: 120px;
-    height: 120px;
-  }
-
-  .profile-photo,
-  .profile-photo-placeholder {
-    width: 120px;
-    height: 120px;
+  .message-toast {
+    bottom: 20px;
+    right: 20px;
+    left: 20px;
   }
 }
 </style>
-

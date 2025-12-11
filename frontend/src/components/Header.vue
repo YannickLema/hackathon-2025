@@ -31,7 +31,17 @@
           <!-- Menu utilisateur connecté -->
           <div v-if="isAuthenticated" class="user-menu-container">
             <button class="user-menu-btn" @click="toggleUserMenu" aria-label="Menu utilisateur">
-              <span class="material-symbols-outlined">account_circle</span>
+              <div class="user-avatar-small">
+                <img 
+                  v-if="userProfilePhoto" 
+                  :src="userProfilePhoto" 
+                  alt="Photo de profil" 
+                  class="user-avatar-img"
+                />
+                <div v-else class="user-avatar-placeholder-small">
+                  <span class="material-symbols-outlined">person</span>
+                </div>
+              </div>
               <span class="user-name">{{ userFirstName }}</span>
               <span class="material-symbols-outlined dropdown-icon">arrow_drop_down</span>
             </button>
@@ -120,26 +130,38 @@
         
         <div class="menu-auth">
           <template v-if="isAuthenticated">
-            <div class="menu-user-info">
-              <span class="material-symbols-outlined menu-auth-icon">account_circle</span>
-              <span>{{ userFirstName }}</span>
+            <div class="menu-user-header">
+              <div class="menu-user-avatar">
+                <img 
+                  v-if="userProfilePhoto" 
+                  :src="userProfilePhoto" 
+                  alt="Photo de profil" 
+                  class="menu-avatar-image"
+                />
+                <div v-else class="menu-avatar-placeholder">
+                  <span class="material-symbols-outlined">person</span>
+                </div>
+              </div>
+              <div class="menu-user-name">{{ userFirstName }}</div>
             </div>
-            <router-link :to="getDashboardRoute()" class="menu-auth-link menu-auth-profile" @click="closeMenu">
-              <span class="material-symbols-outlined menu-auth-icon">dashboard</span>
-              <span>Tableau de bord</span>
-            </router-link>
-            <router-link to="/profil" class="menu-auth-link menu-auth-profile" @click="closeMenu">
-              <span class="material-symbols-outlined menu-auth-icon">person</span>
-              <span>Mon profil</span>
-            </router-link>
-            <router-link v-if="user?.role === 'PROFESSIONNEL' || user?.role === 'professionnel'" to="/mes-annonces" class="menu-auth-link menu-auth-listings" @click="closeMenu">
-              <span class="material-symbols-outlined menu-auth-icon">list_alt</span>
-              <span>Mes annonces</span>
-            </router-link>
-            <button class="menu-auth-link menu-auth-logout" @click="handleLogoutFromMenu">
-              <span class="material-symbols-outlined menu-auth-icon">logout</span>
-              <span>Déconnexion</span>
-            </button>
+            <div class="menu-links">
+              <router-link :to="getDashboardRoute()" class="menu-auth-link menu-auth-profile" @click="closeMenu">
+                <span class="material-symbols-outlined menu-auth-icon">dashboard</span>
+                <span>Tableau de bord</span>
+              </router-link>
+              <router-link to="/profil" class="menu-auth-link menu-auth-profile" @click="closeMenu">
+                <span class="material-symbols-outlined menu-auth-icon">person</span>
+                <span>Mon profil</span>
+              </router-link>
+              <router-link v-if="user?.role === 'PROFESSIONNEL' || user?.role === 'professionnel'" to="/mes-annonces" class="menu-auth-link menu-auth-listings" @click="closeMenu">
+                <span class="material-symbols-outlined menu-auth-icon">list_alt</span>
+                <span>Mes annonces</span>
+              </router-link>
+              <button class="menu-auth-link menu-auth-logout" @click="handleLogoutFromMenu">
+                <span class="material-symbols-outlined menu-auth-icon">logout</span>
+                <span>Déconnexion</span>
+              </button>
+            </div>
           </template>
           <template v-else>
             <router-link to="/login" class="menu-auth-link menu-auth-login" @click="closeMenu">
@@ -437,6 +459,10 @@ const checkAuth = () => {
 
 const userFirstName = computed(() => {
   return user.value?.firstName || 'Utilisateur'
+})
+
+const userProfilePhoto = computed(() => {
+  return user.value?.profilePhoto || null
 })
 
 const getDashboardRoute = () => {
@@ -904,28 +930,94 @@ onUnmounted(() => {
 }
 
 .menu-auth {
-  padding: 20px 25px;
+  padding: 25px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0;
+}
+
+.menu-user-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 0 0 20px 0;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.menu-user-avatar {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.menu-avatar-image,
+.menu-avatar-placeholder {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #e0e0e0;
+}
+
+.menu-avatar-placeholder {
+  background-color: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu-avatar-placeholder .material-symbols-outlined {
+  font-size: 28px;
+  color: #999;
+}
+
+.menu-user-name {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  color: #213547;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menu-links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .menu-auth-link {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px 20px;
+  gap: 12px;
+  padding: 12px 16px;
   font-family: 'Be Vietnam Pro', sans-serif;
-  font-weight: 600;
-  font-size: 14px;
+  font-weight: 500;
+  font-size: 15px;
   text-decoration: none;
-  border-radius: 20px;
+  border-radius: 12px;
   transition: all 0.3s ease;
+  color: #645394;
+  background-color: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+
+.menu-auth-link:hover {
+  background-color: rgba(100, 83, 148, 0.1);
+  color: #645394;
 }
 
 .menu-auth-icon {
-  font-size: 20px;
+  font-size: 22px;
+  flex-shrink: 0;
 }
 
 .menu-auth-login {
@@ -948,6 +1040,18 @@ onUnmounted(() => {
 .menu-auth-signup:hover {
   background-color: #4F4670;
   transform: translateY(-1px);
+}
+
+.menu-auth-logout {
+  color: #d32f2f;
+  margin-top: 8px;
+  border-top: 1px solid #e8e8e8;
+  padding-top: 16px;
+}
+
+.menu-auth-logout:hover {
+  background-color: rgba(211, 47, 47, 0.1);
+  color: #d32f2f;
 }
 
 /* Panneaux latéraux (Favoris et Panier) */
@@ -1303,8 +1407,8 @@ onUnmounted(() => {
 .user-menu-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 15px;
+  gap: 10px;
+  padding: 6px 12px;
   background-color: #f5f5f5;
   border: 1px solid #e0e0e0;
   border-radius: 20px;
@@ -1322,15 +1426,39 @@ onUnmounted(() => {
   color: #645394;
 }
 
-.user-menu-btn .material-symbols-outlined {
+.user-avatar-small {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.user-avatar-img,
+.user-avatar-placeholder-small {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #e0e0e0;
+}
+
+.user-avatar-placeholder-small {
+  background-color: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-avatar-placeholder-small .material-symbols-outlined {
   font-size: 20px;
-  color: #645394;
+  color: #999;
 }
 
 .user-name {
   font-family: 'Be Vietnam Pro', sans-serif;
   font-weight: 600;
   font-size: 14px;
+  color: #213547;
 }
 
 .dropdown-icon {
