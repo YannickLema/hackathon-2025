@@ -12,7 +12,7 @@
           <p class="product-description">
             Découvrez les produits en vedette de Purple Dog, selectionnés pour leur qualité et leur valeur.
           </p>
-          <button class="cta-button">VOIR TOUS LES PRODUITS</button>
+          <router-link to="/produits" class="cta-button">VOIR TOUS LES PRODUITS</router-link>
         </div>
         
         <!-- Colonnes d'images à droite -->
@@ -23,7 +23,7 @@
               :alt="getCurrentImage(0).title"
               class="card-image"
             />
-            <div class="image-overlay">
+            <div class="image-overlay" @click="goToProduct(getCurrentImage(0).id)">
               <h3 class="overlay-title">{{ getCurrentImage(0).title }}</h3>
               <span class="overlay-link">EXPLORER ></span>
             </div>
@@ -34,7 +34,7 @@
               :alt="getCurrentImage(1).title"
               class="card-image"
             />
-            <div class="image-overlay">
+            <div class="image-overlay" @click="goToProduct(getCurrentImage(1).id)">
               <h3 class="overlay-title">{{ getCurrentImage(1).title }}</h3>
               <span class="overlay-link">EXPLORER ></span>
             </div>
@@ -46,54 +46,129 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const currentImage = ref(0)
+const isLoading = ref(false)
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
-// Exemples d'images - Remplacez par des URLs depuis Pixabay ou Catawiki
-// Pixabay: https://pixabay.com/fr/
-// Catawiki: https://www.catawiki.com/fr/
-const featuredImages = ref([
-  {
-    id: 1,
-    title: 'Bijoux de collection',
-    image: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&h=1200&fit=crop',
-    category: 'Bijoux & montres'
-  },
-  {
-    id: 2,
-    title: 'Objets d\'art précieux',
-    image: 'https://cdn.pixabay.com/photo/2018/11/30/18/53/church-3848348_1280.jpg',
-    category: 'Objets d\'art & tableaux'
-  },
-  {
-    id: 3,
-    title: 'Meubles anciens',
-    image: 'https://cdn.pixabay.com/photo/2017/07/11/12/11/chair-backrest-2493326_1280.jpg',
-    category: 'Meubles anciens'
-  },
-  {
-    id: 4,
-    title: 'Vins & spiritueux',
-    image: 'https://cdn.pixabay.com/photo/2023/10/28/06/40/wine-8346641_1280.jpg',
-    category: 'Vins & spiritueux de collection'
-  },
-  {
-    id: 5,
-    title: 'Instruments de musique',
-    image: 'https://cdn.pixabay.com/photo/2020/12/09/18/42/violin-5818267_1280.jpg',
-    category: 'Instruments de musique'
-  },
-  {
-    id: 6,
-    title: 'Livres anciens',
-    image: 'https://cdn.pixabay.com/photo/2014/09/05/18/32/old-books-436498_1280.jpg',
-    category: 'Livres anciens & manuscrits'
+// Produits en vedette chargés depuis l'API
+const featuredImages = ref([])
+
+// Charger les produits depuis l'API
+const loadFeaturedProducts = async () => {
+  isLoading.value = true
+  try {
+    const response = await fetch(`${API_URL}/listings?status=PUBLISHED&limit=6`)
+    
+    if (!response.ok) {
+      throw new Error('Erreur lors du chargement des produits')
+    }
+    
+    const data = await response.json()
+    
+    // Transformer les données backend en format frontend
+    if (data.listings && data.listings.length > 0) {
+      featuredImages.value = data.listings.map((listing) => ({
+        id: listing.id,
+        title: listing.title,
+        image: listing.photos && listing.photos.length > 0 
+          ? listing.photos[0].url 
+          : 'https://via.placeholder.com/800x1200?text=No+Image',
+        category: getCategoryName(listing.category)
+      }))
+    } else {
+      // Fallback vers des images statiques si aucun produit n'est disponible
+      featuredImages.value = [
+        {
+          id: 1,
+          title: 'Bijoux de collection',
+          image: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&h=1200&fit=crop',
+          category: 'Bijoux & montres'
+        },
+        {
+          id: 2,
+          title: 'Objets d\'art précieux',
+          image: 'https://cdn.pixabay.com/photo/2018/11/30/18/53/church-3848348_1280.jpg',
+          category: 'Objets d\'art & tableaux'
+        },
+        {
+          id: 3,
+          title: 'Meubles anciens',
+          image: 'https://cdn.pixabay.com/photo/2017/07/11/12/11/chair-backrest-2493326_1280.jpg',
+          category: 'Meubles anciens'
+        },
+        {
+          id: 4,
+          title: 'Vins & spiritueux',
+          image: 'https://cdn.pixabay.com/photo/2023/10/28/06/40/wine-8346641_1280.jpg',
+          category: 'Vins & spiritueux de collection'
+        },
+        {
+          id: 5,
+          title: 'Instruments de musique',
+          image: 'https://cdn.pixabay.com/photo/2020/12/09/18/42/violin-5818267_1280.jpg',
+          category: 'Instruments de musique'
+        },
+        {
+          id: 6,
+          title: 'Livres anciens',
+          image: 'https://cdn.pixabay.com/photo/2014/09/05/18/32/old-books-436498_1280.jpg',
+          category: 'Livres anciens & manuscrits'
+        }
+      ]
+    }
+  } catch (error) {
+    console.error('Erreur lors du chargement des produits en vedette:', error)
+    // En cas d'erreur, utiliser les images par défaut
+    featuredImages.value = [
+      {
+        id: 1,
+        title: 'Bijoux de collection',
+        image: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&h=1200&fit=crop',
+        category: 'Bijoux & montres'
+      },
+      {
+        id: 2,
+        title: 'Objets d\'art précieux',
+        image: 'https://cdn.pixabay.com/photo/2018/11/30/18/53/church-3848348_1280.jpg',
+        category: 'Objets d\'art & tableaux'
+      }
+    ]
+  } finally {
+    isLoading.value = false
   }
-])
+}
+
+const getCategoryName = (category) => {
+  const categoryNames = {
+    PEINTURE: 'Objets d\'art & tableaux',
+    SCULPTURE: 'Sculptures & objets decoratifs',
+    MONTRE: 'Bijoux & montres',
+    BIJOU: 'Bijoux & montres',
+    OBJET_ART: 'Objets d\'art & tableaux',
+    PHOTOGRAPHIE: 'Photographie anciennes',
+    VETEMENT: 'Accessoires de luxe',
+    ACCESSOIRE: 'Accessoires de luxe',
+    DESIGN: 'Meubles anciens',
+    AUTRE: 'Objets de collection'
+  }
+  return categoryNames[category] || 'Objets de collection'
+}
 
 // Fonction pour obtenir l'image à afficher selon l'index (0 ou 1) et currentImage
 const getCurrentImage = (index) => {
+  // Si aucune image n'est chargée, retourner une image par défaut
+  if (!featuredImages.value || featuredImages.value.length === 0) {
+    return {
+      id: 0,
+      title: 'Chargement...',
+      image: 'https://via.placeholder.com/800x1200?text=Chargement',
+      category: ''
+    }
+  }
   // On affiche 2 images à la fois, donc on calcule l'index réel
   const realIndex = (currentImage.value * 2 + index) % featuredImages.value.length
   return featuredImages.value[realIndex]
@@ -121,6 +196,14 @@ const previousImage = () => {
     currentImage.value = maxIndex
   }
 }
+
+const goToProduct = (productId) => {
+  router.push(`/produit/${productId}`)
+}
+
+onMounted(() => {
+  loadFeaturedProducts()
+})
 </script>
 
 <style scoped>
@@ -205,6 +288,8 @@ const previousImage = () => {
   cursor: pointer;
   transition: background-color 0.3s ease;
   align-self: flex-start;
+  text-decoration: none;
+  display: inline-block;
 }
 
 .cta-button:hover {
@@ -241,6 +326,7 @@ const previousImage = () => {
 }
 
 .image-overlay {
+  cursor: pointer;
   position: absolute;
   bottom: 0;
   left: 0;

@@ -6,6 +6,9 @@ import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { ListingsModule } from './listings/listings.module';
+import { StripeModule } from './stripe/stripe.module';
+import { BidsModule } from './bids/bids.module';
+import { PurchasesModule } from './purchases/purchases.module';
 
 @Module({
   imports: [
@@ -16,6 +19,9 @@ import { ListingsModule } from './listings/listings.module';
     PrismaModule,
     AuthModule,
     ListingsModule,
+    StripeModule,
+    BidsModule,
+    PurchasesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

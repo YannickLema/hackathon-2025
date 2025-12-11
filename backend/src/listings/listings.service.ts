@@ -22,8 +22,9 @@ export class ListingsService {
     if (!user) {
       throw new ForbiddenException('Authentification requise');
     }
-    if (user.role !== Role.PROFESSIONNEL) {
-      throw new ForbiddenException('Réservé aux professionnels');
+    // Les particuliers et professionnels peuvent créer des listings
+    if (user.role !== Role.PROFESSIONNEL && user.role !== Role.PARTICULIER) {
+      throw new ForbiddenException('Réservé aux particuliers et professionnels');
     }
 
     this.ensureValidPayload(dto);
@@ -133,6 +134,131 @@ export class ListingsService {
     const result = new Date(date);
     result.setDate(result.getDate() + days);
     return result;
+  }
+
+  async findAll(filters: {
+    category?: string;
+    status?: string;
+    search?: string;
+    minPrice?: number;
+    maxPrice?: number;
+    page?: number;
+    limit?: number;
+  }) {
+    const where: Prisma.ListingWhereInput = {
+      status: ListingStatus.PUBLISHED,
+    };
+
+    if (filters.category) {
+      where.category = filters.category as ListingCategory;
+    }
+
+    if (filters.search) {
+      where.OR = [
+        { title: { contains: filters.search, mode: 'insensitive' } },
+        { description: { contains: filters.search, mode: 'insensitive' } },
+      ];
+    }
+
+    if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
+      where.priceDesired = {};
+      if (filters.minPrice !== undefined) {
+        where.priceDesired.gte = new Prisma.Decimal(filters.minPrice);
+      }
+      if (filters.maxPrice !== undefined) {
+        where.priceDesired.lte = new Prisma.Decimal(filters.maxPrice);
+      }
+    }
+
+    const page = filters.page || 1;
+    const limit = filters.limit || 20;
+    const skip = (page - 1) * limit;
+
+    const [listings, total] = await Promise.all([
+      this.prisma.listing.findMany({
+        where,
+        include: {
+          photos: {
+            orderBy: { position: 'asc' },
+            take: 1, // Prendre seulement la première photo pour la liste
+          },
+          seller: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              professionnelProfile: {
+                select: {
+                  companyName: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.listing.count({ where }),
+    ]);
+
+    return {
+      listings,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  async findOne(id: string) {
+    const listing = await this.prisma.listing.findUnique({
+      where: { id },
+      include: {
+        photos: {
+          orderBy: { position: 'asc' },
+        },
+        documents: true,
+        seller: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            professionnelProfile: {
+              select: {
+                companyName: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!listing) {
+      throw new BadRequestException('Listing introuvable');
+    }
+
+    return listing;
+  }
+
+  async findMyListings(user: User | undefined) {
+    if (!user) {
+      throw new ForbiddenException('Authentification requise');
+    }
+
+    return this.prisma.listing.findMany({
+      where: { sellerId: user.id },
+      include: {
+        photos: {
+          orderBy: { position: 'asc' },
+          take: 1,
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 }
 

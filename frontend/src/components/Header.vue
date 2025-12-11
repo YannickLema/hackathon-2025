@@ -16,17 +16,15 @@
           </button>
         </div>
         <div class="header-right">
-          <!-- Favoris et Panier uniquement pour les professionnels -->
-          <template v-if="user && (user.role === 'PROFESSIONNEL' || user.role === 'professionnel')">
-            <button class="header-icon-btn" @click="toggleWishlist" aria-label="Favoris">
-              <span class="material-symbols-outlined">favorite</span>
-              <span v-if="wishlistCount > 0" class="icon-badge">{{ wishlistCount }}</span>
-            </button>
-            <button class="header-icon-btn" @click="toggleCart" aria-label="Panier">
-              <span class="material-symbols-outlined">shopping_cart</span>
-              <span v-if="cartCount > 0" class="icon-badge">{{ cartCount }}</span>
-            </button>
-          </template>
+          <!-- Favoris et Panier pour tous les utilisateurs -->
+          <button class="header-icon-btn" @click="toggleWishlist" aria-label="Favoris">
+            <span class="material-symbols-outlined">favorite</span>
+            <span v-if="wishlistCount > 0" class="icon-badge">{{ wishlistCount }}</span>
+          </button>
+          <button class="header-icon-btn" @click="toggleCart" aria-label="Panier">
+            <span class="material-symbols-outlined">shopping_cart</span>
+            <span v-if="cartCount > 0" class="icon-badge">{{ cartCount }}</span>
+          </button>
           
           <!-- Menu utilisateur connecté -->
           <div v-if="isAuthenticated" class="user-menu-container">
@@ -121,6 +119,12 @@
             </router-link>
           </li>
           <li class="menu-item">
+            <router-link to="/produits" class="menu-link" @click="closeMenu">
+              <span class="material-symbols-outlined menu-icon">store</span>
+              <span class="menu-link-text">Tous les produits</span>
+            </router-link>
+          </li>
+          <li class="menu-item">
             <router-link to="/a-propos" class="menu-link" @click="closeMenu">
               <span class="material-symbols-outlined menu-icon">info</span>
               <span class="menu-link-text">À propos</span>
@@ -140,17 +144,13 @@
           </li>
         </ul>
         
-        <!-- Menu actions uniquement pour les professionnels -->
-        <div v-if="user && (user.role === 'PROFESSIONNEL' || user.role === 'professionnel')" class="menu-actions">
-          <router-link to="/recherche" class="menu-action-btn" @click="closeMenu">
-            <span class="material-symbols-outlined menu-action-icon">search</span>
-            <span class="menu-action-text">Recherche d'objet</span>
-          </router-link>
-          <router-link to="/mes-favoris" class="menu-action-btn" @click="closeMenu">
+        <!-- Menu actions (Favoris et Panier pour tous) -->
+        <div class="menu-actions">
+          <button class="menu-action-btn" @click="openWishlistFromMenu" aria-label="Mes favoris">
             <span class="material-symbols-outlined menu-action-icon">favorite</span>
             <span class="menu-action-text">Mes favoris</span>
             <span v-if="wishlistCount > 0" class="menu-action-badge">{{ wishlistCount }}</span>
-          </router-link>
+          </button>
           <button class="menu-action-btn" @click="openCartFromMenu" aria-label="Mon panier">
             <span class="material-symbols-outlined menu-action-icon">shopping_cart</span>
             <span class="menu-action-text">Mon panier</span>
@@ -254,7 +254,7 @@
             class="panel-item wishlist-item"
           >
             <router-link 
-              :to="`/categorie/${item.categoryId}/produit/${item.id}`"
+              :to="`/produit/${item.id}`"
               class="panel-item-link-content"
               @click="closeWishlist"
             >
@@ -295,7 +295,7 @@
           <router-link 
             v-for="item in cartItems" 
             :key="item.id" 
-            :to="`/categorie/${item.categoryId}/produit/${item.id}`"
+            :to="`/produit/${item.id}`"
             class="panel-item-link"
             @click="closeCart"
           >
@@ -388,6 +388,7 @@ const toggleWishlist = () => {
     isMenuOpen.value = false
     document.body.style.overflow = 'hidden'
     loadWishlist()
+    window.dispatchEvent(new Event('wishlist-updated'))
   } else {
     document.body.style.overflow = ''
   }
@@ -405,6 +406,7 @@ const toggleCart = () => {
     isMenuOpen.value = false
     document.body.style.overflow = 'hidden'
     loadCart()
+    window.dispatchEvent(new Event('cart-updated'))
   } else {
     document.body.style.overflow = ''
   }
@@ -426,7 +428,15 @@ const loadWishlist = () => {
   // Charger depuis localStorage ou API
   const saved = localStorage.getItem('wishlist')
   if (saved) {
-    wishlistItems.value = JSON.parse(saved)
+    try {
+      wishlistItems.value = JSON.parse(saved)
+    } catch (e) {
+      console.error('Erreur lors du chargement des favoris:', e)
+      wishlistItems.value = []
+      localStorage.removeItem('wishlist')
+    }
+  } else {
+    wishlistItems.value = []
   }
 }
 
@@ -434,18 +444,28 @@ const loadCart = () => {
   // Charger depuis localStorage ou API
   const saved = localStorage.getItem('cart')
   if (saved) {
-    cartItems.value = JSON.parse(saved)
+    try {
+      cartItems.value = JSON.parse(saved)
+    } catch (e) {
+      console.error('Erreur lors du chargement du panier:', e)
+      cartItems.value = []
+      localStorage.removeItem('cart')
+    }
+  } else {
+    cartItems.value = []
   }
 }
 
 const removeFromWishlist = (itemId) => {
   wishlistItems.value = wishlistItems.value.filter(item => item.id !== itemId)
   localStorage.setItem('wishlist', JSON.stringify(wishlistItems.value))
+  window.dispatchEvent(new Event('wishlist-updated'))
 }
 
 const removeFromCart = (itemId) => {
   cartItems.value = cartItems.value.filter(item => item.id !== itemId)
   localStorage.setItem('cart', JSON.stringify(cartItems.value))
+  window.dispatchEvent(new Event('cart-updated'))
 }
 
 const increaseQuantity = (itemId) => {
@@ -453,6 +473,7 @@ const increaseQuantity = (itemId) => {
   if (item) {
     item.quantity++
     localStorage.setItem('cart', JSON.stringify(cartItems.value))
+    window.dispatchEvent(new Event('cart-updated'))
   }
 }
 
@@ -461,6 +482,7 @@ const decreaseQuantity = (itemId) => {
   if (item && item.quantity > 1) {
     item.quantity--
     localStorage.setItem('cart', JSON.stringify(cartItems.value))
+    window.dispatchEvent(new Event('cart-updated'))
   } else if (item && item.quantity === 1) {
     removeFromCart(itemId)
   }
@@ -474,14 +496,18 @@ const goToCheckout = () => {
 
 const openWishlistFromMenu = () => {
   closeMenu()
+  // Attendre que l'animation de fermeture du menu soit terminée
   setTimeout(() => {
+    loadWishlist() // Recharger les favoris avant d'ouvrir
     toggleWishlist()
   }, 300)
 }
 
 const openCartFromMenu = () => {
   closeMenu()
+  // Attendre que l'animation de fermeture du menu soit terminée
   setTimeout(() => {
+    loadCart() // Recharger le panier avant d'ouvrir
     toggleCart()
   }, 300)
 }
@@ -923,22 +949,23 @@ onUnmounted(() => {
 }
 
 .menu-actions {
-  padding: 15px 25px;
+  padding: 20px 25px;
   border-top: 1px solid #f0f0f0;
   border-bottom: 1px solid #f0f0f0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .menu-action-btn {
   display: flex;
   align-items: center;
-  gap: 15px;
-  padding: 12px 16px;
-  background: none;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  background-color: #ffffff;
   border: 1px solid #e0e0e0;
-  border-radius: 8px;
+  border-radius: 12px;
   font-family: 'Be Vietnam Pro', sans-serif;
   font-weight: 600;
   font-size: 15px;
@@ -949,12 +976,20 @@ onUnmounted(() => {
   text-align: left;
   text-decoration: none;
   width: 100%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .menu-action-btn:hover {
   background-color: #fafafa;
   border-color: #645394;
   color: #645394;
+  box-shadow: 0 2px 6px rgba(100, 83, 148, 0.15);
+  transform: translateY(-1px);
+}
+
+.menu-action-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .menu-action-btn.router-link-active {
@@ -964,9 +999,10 @@ onUnmounted(() => {
 }
 
 .menu-action-icon {
-  font-size: 24px;
+  font-size: 22px;
   color: #645394;
   transition: all 0.3s ease;
+  flex-shrink: 0;
 }
 
 .menu-action-btn:hover .menu-action-icon {
@@ -975,6 +1011,7 @@ onUnmounted(() => {
 
 .menu-action-text {
   flex: 1;
+  text-align: left;
 }
 
 .menu-action-badge {
@@ -983,14 +1020,16 @@ onUnmounted(() => {
   font-family: 'Be Vietnam Pro', sans-serif;
   font-weight: 600;
   font-size: 12px;
-  min-width: 20px;
-  height: 20px;
-  border-radius: 10px;
+  min-width: 22px;
+  height: 22px;
+  border-radius: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 6px;
+  padding: 0 7px;
   line-height: 1;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(100, 83, 148, 0.3);
 }
 
 .menu-auth {

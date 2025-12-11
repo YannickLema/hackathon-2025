@@ -49,9 +49,19 @@ const routes = [
     component: () => import('../components/CategoryPage.vue'),
   },
   {
-    path: '/categorie/:categoryId/produit/:id',
+    path: '/produits',
+    name: 'AllProducts',
+    component: () => import('../components/AllProductsPage.vue'),
+  },
+  {
+    path: '/produit/:id',
     name: 'Product',
-    component: () => import('../components/CategoryPage.vue'), // Temporaire, à remplacer par ProductPage.vue
+    component: () => import('../components/ProductPage.vue'),
+  },
+  {
+    path: '/categorie/:categoryId/produit/:id',
+    name: 'CategoryProduct',
+    component: () => import('../components/ProductPage.vue'),
   },
   {
     path: '/dashboard/particulier',

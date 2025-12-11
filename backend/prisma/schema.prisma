@@ -65,6 +65,8 @@ model User {
   emailVerification    EmailVerification?
   passwordReset        PasswordReset?
   listings             Listing[]
+  paymentMethod         PaymentMethod?
+  bids                  Bid[]
 
   @@map("users")
 }
@@ -165,6 +167,7 @@ model Listing {
   status           ListingStatus   @default(PUBLISHED)
   photos           ListingPhoto[]
   documents        ListingDocument[]
+  bids             Bid[]
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
 
@@ -194,4 +197,32 @@ model ListingDocument {
 
   @@index([listingId])
   @@map("listing_documents")
+}
+
+model PaymentMethod {
+  id                String   @id @default(uuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeCustomerId  String   @unique // ID du client Stripe
+  stripePaymentMethodId String? // ID de la méthode de paiement par défaut
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("payment_methods")
+}
+
+model Bid {
+  id            String   @id @default(uuid())
+  listingId     String
+  listing       Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  bidderId      String
+  bidder        User     @relation(fields: [bidderId], references: [id], onDelete: Cascade)
+  amount        Decimal  @db.Decimal(10, 2)
+  isWinning     Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  @@index([listingId])
+  @@index([bidderId])
+  @@map("bids")
 }
