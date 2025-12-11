@@ -408,7 +408,7 @@ const loadTrendingItems = async () => {
       { id: 2, name: 'Montres de collection', icon: 'watch', searchCount: 892 },
       { id: 3, name: 'Tableaux et œuvres d\'art', icon: 'palette', searchCount: 756 },
       { id: 4, name: 'Meubles anciens', icon: 'chair', searchCount: 634 },
-      { id: 5, name: 'Objets de collection', icon: 'collectibles', searchCount: 521 }
+      { id: 5, name: 'Objets de collection', icon: 'tag', searchCount: 521 }
     ]
   } catch (error) {
     console.error('Erreur lors du chargement des tendances:', error)

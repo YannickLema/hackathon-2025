@@ -208,11 +208,11 @@ const categoriesDatabase = {
       { id: 1, name: 'COUPS DE COEUR', icon: 'favorite' },
       { id: 2, name: 'MONTRES', icon: 'watch' },
       { id: 3, name: 'BIJOUX ANCIENS', icon: 'diamond' },
-      { id: 4, name: 'COLLIERS', icon: 'necklace' },
+      { id: 4, name: 'COLLIERS', icon: 'diamond' },
       { id: 5, name: 'BRACELETS', icon: 'watch' },
-      { id: 6, name: 'BAGUES', icon: 'ring' },
-      { id: 7, name: 'BOUCLES D\'OREILLES', icon: 'hearing' },
-      { id: 8, name: 'BROCHES', icon: 'pin' }
+      { id: 6, name: 'BAGUES', icon: 'diamond_shine' },
+      { id: 7, name: 'BOUCLES D\'OREILLES', icon: 'tune' },
+      { id: 8, name: 'BROCHES', icon: 'push_pin' }
     ]
   },
   2: {
@@ -224,8 +224,8 @@ const categoriesDatabase = {
       { id: 1, name: 'COUPS DE COEUR', icon: 'favorite' },
       { id: 2, name: 'CHAISES', icon: 'chair' },
       { id: 3, name: 'TABLES', icon: 'table_restaurant' },
-      { id: 4, name: 'ARMORES', icon: 'wardrobe' },
-      { id: 5, name: 'COMMODES', icon: 'dresser' },
+      { id: 4, name: 'ARMOIRES', icon: 'dresser' },
+      { id: 5, name: 'COMMODES', icon: 'inventory_2' },
       { id: 6, name: 'FAUTEUILS', icon: 'chair' },
       { id: 7, name: 'LITS', icon: 'bed' },
       { id: 8, name: 'BIBLIOTHEQUES', icon: 'library_books' }
@@ -239,7 +239,7 @@ const categoriesDatabase = {
     subcategories: [
       { id: 1, name: 'COUPS DE COEUR', icon: 'favorite' },
       { id: 2, name: 'PEINTURES', icon: 'palette' },
-      { id: 3, name: 'SCULPTURES', icon: 'sculpture' },
+      { id: 3, name: 'SCULPTURES', icon: 'palette' },
       { id: 4, name: 'GRAVURES', icon: 'brush' },
       { id: 5, name: 'AQUARELLES', icon: 'water_drop' },
       { id: 6, name: 'DESSINS', icon: 'edit' },
@@ -339,7 +339,7 @@ const categoriesDatabase = {
       { id: 4, name: 'MONTRE DE POCHE', icon: 'watch' },
       { id: 5, name: 'COMTOISES', icon: 'schedule' },
       { id: 6, name: 'CHEMINEE', icon: 'fireplace' },
-      { id: 7, name: 'MURALE', icon: 'wallpaper' },
+      { id: 7, name: 'MURALE', icon: 'schedule' },
       { id: 8, name: 'ANTIQUES', icon: 'history' }
     ]
   },
@@ -382,9 +382,9 @@ const categoriesDatabase = {
     image: 'https://cdn.pixabay.com/photo/2021/12/30/16/46/bells-6904308_1280.jpg',
     subcategories: [
       { id: 1, name: 'COUPS DE COEUR', icon: 'favorite' },
-      { id: 2, name: 'BRONZE', icon: 'sculpture' },
-      { id: 3, name: 'MARBRE', icon: 'sculpture' },
-      { id: 4, name: 'TERRE CUITE', icon: 'sculpture' },
+      { id: 2, name: 'BRONZE', icon: 'palette' },
+      { id: 3, name: 'MARBRE', icon: 'palette' },
+      { id: 4, name: 'TERRE CUITE', icon: 'palette' },
       { id: 5, name: 'CONTEMPORAIN', icon: 'auto_awesome' },
       { id: 6, name: 'CLASSIQUE', icon: 'museum' },
       { id: 7, name: 'DECORATIFS', icon: 'home' },
@@ -401,7 +401,7 @@ const categoriesDatabase = {
       { id: 2, name: 'VOITURES', icon: 'directions_car' },
       { id: 3, name: 'MOTOS', icon: 'two_wheeler' },
       { id: 4, name: 'VINTAGE', icon: 'history' },
-      { id: 5, name: 'SPORTIVES', icon: 'speed' },
+      { id: 5, name: 'SPORTIVES', icon: 'fast_forward' },
       { id: 6, name: 'CLASSIQUES', icon: 'star' },
       { id: 7, name: 'RESTAUREES', icon: 'build' },
       { id: 8, name: 'RARES', icon: 'workspace_premium' }
