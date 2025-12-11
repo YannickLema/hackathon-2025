@@ -68,6 +68,21 @@ const routes = [
     name: 'Profile',
     component: () => import('../components/ProfilePage.vue'),
   },
+  {
+    path: '/creer-annonce',
+    name: 'CreateListing',
+    component: () => import('../components/CreateListingPage.vue'),
+  },
+  {
+    path: '/mes-objets',
+    name: 'MyListings',
+    component: () => import('../components/MyListingsPage.vue'),
+  },
+  {
+    path: '/mes-annonces',
+    name: 'MyListingsAlt',
+    component: () => import('../components/MyListingsPage.vue'),
+  },
 ]
 
 const router = createRouter({
