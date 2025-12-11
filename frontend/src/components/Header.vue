@@ -54,10 +54,36 @@
                 <span class="material-symbols-outlined">person</span>
                 <span>Mon profil</span>
               </router-link>
-              <router-link v-if="user?.role === 'PROFESSIONNEL' || user?.role === 'professionnel'" to="/mes-annonces" class="user-menu-item" @click="closeUserMenu">
-                <span class="material-symbols-outlined">inventory_2</span>
-                <span>Mes annonces</span>
-              </router-link>
+              <!-- Liens spécifiques aux professionnels -->
+              <template v-if="user?.role === 'PROFESSIONNEL' || user?.role === 'professionnel'">
+                <router-link to="/recherche" class="user-menu-item" @click="closeUserMenu">
+                  <span class="material-symbols-outlined">search</span>
+                  <span>Recherche d'objet</span>
+                </router-link>
+                <router-link to="/mes-favoris" class="user-menu-item" @click="closeUserMenu">
+                  <span class="material-symbols-outlined">favorite</span>
+                  <span>Mes favoris & Historique</span>
+                </router-link>
+                <router-link to="/mes-annonces" class="user-menu-item" @click="closeUserMenu">
+                  <span class="material-symbols-outlined">inventory_2</span>
+                  <span>Mes objets en vente</span>
+                </router-link>
+                <router-link to="/creer-annonce" class="user-menu-item" @click="closeUserMenu">
+                  <span class="material-symbols-outlined">add_circle</span>
+                  <span>Vendre un objet</span>
+                </router-link>
+              </template>
+              <!-- Liens spécifiques aux particuliers -->
+              <template v-else-if="user?.role === 'PARTICULIER' || user?.role === 'particulier'">
+                <router-link to="/mes-objets" class="user-menu-item" @click="closeUserMenu">
+                  <span class="material-symbols-outlined">inventory_2</span>
+                  <span>Mes objets en vente</span>
+                </router-link>
+                <router-link to="/creer-annonce" class="user-menu-item" @click="closeUserMenu">
+                  <span class="material-symbols-outlined">add_circle</span>
+                  <span>Vendre un objet</span>
+                </router-link>
+              </template>
               <button class="user-menu-item user-menu-logout" @click="handleLogout">
                 <span class="material-symbols-outlined">logout</span>
                 <span>Déconnexion</span>
@@ -116,11 +142,15 @@
         
         <!-- Menu actions uniquement pour les professionnels -->
         <div v-if="user && (user.role === 'PROFESSIONNEL' || user.role === 'professionnel')" class="menu-actions">
-          <button class="menu-action-btn" @click="openWishlistFromMenu" aria-label="Mes favoris">
+          <router-link to="/recherche" class="menu-action-btn" @click="closeMenu">
+            <span class="material-symbols-outlined menu-action-icon">search</span>
+            <span class="menu-action-text">Recherche d'objet</span>
+          </router-link>
+          <router-link to="/mes-favoris" class="menu-action-btn" @click="closeMenu">
             <span class="material-symbols-outlined menu-action-icon">favorite</span>
             <span class="menu-action-text">Mes favoris</span>
             <span v-if="wishlistCount > 0" class="menu-action-badge">{{ wishlistCount }}</span>
-          </button>
+          </router-link>
           <button class="menu-action-btn" @click="openCartFromMenu" aria-label="Mon panier">
             <span class="material-symbols-outlined menu-action-icon">shopping_cart</span>
             <span class="menu-action-text">Mon panier</span>
@@ -153,10 +183,36 @@
                 <span class="material-symbols-outlined menu-auth-icon">person</span>
                 <span>Mon profil</span>
               </router-link>
-              <router-link v-if="user?.role === 'PROFESSIONNEL' || user?.role === 'professionnel'" to="/mes-annonces" class="menu-auth-link menu-auth-listings" @click="closeMenu">
-                <span class="material-symbols-outlined menu-auth-icon">list_alt</span>
-                <span>Mes annonces</span>
-              </router-link>
+              <!-- Liens spécifiques aux professionnels -->
+              <template v-if="user?.role === 'PROFESSIONNEL' || user?.role === 'professionnel'">
+                <router-link to="/recherche" class="menu-auth-link menu-auth-search" @click="closeMenu">
+                  <span class="material-symbols-outlined menu-auth-icon">search</span>
+                  <span>Recherche d'objet</span>
+                </router-link>
+                <router-link to="/mes-favoris" class="menu-auth-link menu-auth-favorites" @click="closeMenu">
+                  <span class="material-symbols-outlined menu-auth-icon">favorite</span>
+                  <span>Mes favoris & Historique</span>
+                </router-link>
+                <router-link to="/mes-annonces" class="menu-auth-link menu-auth-listings" @click="closeMenu">
+                  <span class="material-symbols-outlined menu-auth-icon">inventory_2</span>
+                  <span>Mes objets en vente</span>
+                </router-link>
+                <router-link to="/creer-annonce" class="menu-auth-link menu-auth-create" @click="closeMenu">
+                  <span class="material-symbols-outlined menu-auth-icon">add_circle</span>
+                  <span>Vendre un objet</span>
+                </router-link>
+              </template>
+              <!-- Liens spécifiques aux particuliers -->
+              <template v-else-if="user?.role === 'PARTICULIER' || user?.role === 'particulier'">
+                <router-link to="/mes-objets" class="menu-auth-link menu-auth-listings" @click="closeMenu">
+                  <span class="material-symbols-outlined menu-auth-icon">inventory_2</span>
+                  <span>Mes objets en vente</span>
+                </router-link>
+                <router-link to="/creer-annonce" class="menu-auth-link menu-auth-create" @click="closeMenu">
+                  <span class="material-symbols-outlined menu-auth-icon">add_circle</span>
+                  <span>Vendre un objet</span>
+                </router-link>
+              </template>
               <button class="menu-auth-link menu-auth-logout" @click="handleLogoutFromMenu">
                 <span class="material-symbols-outlined menu-auth-icon">logout</span>
                 <span>Déconnexion</span>
@@ -891,9 +947,17 @@ onUnmounted(() => {
   transition: all 0.3s ease;
   position: relative;
   text-align: left;
+  text-decoration: none;
+  width: 100%;
 }
 
 .menu-action-btn:hover {
+  background-color: #fafafa;
+  border-color: #645394;
+  color: #645394;
+}
+
+.menu-action-btn.router-link-active {
   background-color: #fafafa;
   border-color: #645394;
   color: #645394;

@@ -83,6 +83,16 @@ const routes = [
     name: 'MyListingsAlt',
     component: () => import('../components/MyListingsPage.vue'),
   },
+  {
+    path: '/recherche',
+    name: 'Search',
+    component: () => import('../components/SearchPage.vue'),
+  },
+  {
+    path: '/mes-favoris',
+    name: 'MyFavorites',
+    component: () => import('../components/MyFavoritesPage.vue'),
+  },
 ]
 
 const router = createRouter({

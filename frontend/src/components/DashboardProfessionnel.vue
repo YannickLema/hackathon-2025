@@ -11,7 +11,7 @@
           <div class="header-actions">
             <router-link to="/creer-annonce" class="btn-primary">
               <span class="material-symbols-outlined">add_circle</span>
-              Créer une annonce
+              Vendre un objet
             </router-link>
           </div>
         </div>
@@ -37,7 +37,7 @@
           <div class="stat-content">
             <p class="stat-label">Articles dans le panier</p>
             <p class="stat-value">{{ stats.cartItems }}</p>
-            <p class="stat-change">{{ stats.cartValue }}€</p>
+            <p class="stat-change">{{ formatCurrencyValue(stats.cartValue) }}</p>
           </div>
         </div>
 
@@ -64,201 +64,249 @@
         </div>
       </div>
 
-      <!-- Grille principale avec modules -->
-      <div class="dashboard-grid">
-        <!-- Colonne gauche -->
-        <div class="grid-column">
-          <!-- Mes annonces récentes -->
-          <div class="module-card">
-            <div class="module-header">
-              <h2 class="module-title">
-                <span class="material-symbols-outlined module-icon">inventory_2</span>
-                Mes annonces récentes
-              </h2>
-              <router-link to="/mes-annonces" class="module-link">
-                Voir tout <span class="material-symbols-outlined">arrow_forward</span>
-              </router-link>
+      <!-- Grille principale avec les 6 features -->
+      <div class="features-grid">
+        <!-- Feature 1: Mettre en vente un objet -->
+        <div class="feature-card feature-sell">
+          <div class="feature-header">
+            <div class="feature-icon-wrapper">
+              <span class="material-symbols-outlined feature-icon">add_circle</span>
             </div>
-            <div class="module-content">
-              <div v-if="recentListings.length === 0" class="empty-state">
-                <span class="material-symbols-outlined empty-icon">inventory_2</span>
-                <p>Aucune annonce pour le moment</p>
-                <router-link to="/creer-annonce" class="btn-secondary">Créer ma première annonce</router-link>
-              </div>
-              <div v-else class="listings-list">
-                <div v-for="listing in recentListings" :key="listing.id" class="listing-item">
-                  <img :src="listing.image" :alt="listing.title" class="listing-image" />
-                  <div class="listing-info">
-                    <h3 class="listing-title">{{ listing.title }}</h3>
-                    <p class="listing-price">{{ formatCurrency(listing.price) }}</p>
-                    <div class="listing-meta">
-                      <span class="listing-status" :class="listing.status">{{ getStatusLabel(listing.status) }}</span>
-                      <span class="listing-views">{{ listing.views }} vues</span>
-                    </div>
-                  </div>
-                  <div class="listing-actions">
-                    <button class="action-btn" @click="editListing(listing.id)" title="Modifier">
-                      <span class="material-symbols-outlined">edit</span>
-                    </button>
-                    <button class="action-btn" @click="viewListing(listing.id)" title="Voir">
-                      <span class="material-symbols-outlined">visibility</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
+            <div class="feature-title-section">
+              <h2 class="feature-title">Mettre en vente un objet</h2>
+              <p class="feature-description">Publiez vos objets avec formulaire complet</p>
             </div>
           </div>
-
-          <!-- Mes favoris -->
-          <div class="module-card">
-            <div class="module-header">
-              <h2 class="module-title">
-                <span class="material-symbols-outlined module-icon">favorite</span>
-                Mes favoris récents
-              </h2>
-              <router-link to="/mes-favoris" class="module-link">
-                Voir tout <span class="material-symbols-outlined">arrow_forward</span>
-              </router-link>
-            </div>
-            <div class="module-content">
-              <div v-if="favoriteItems.length === 0" class="empty-state">
-                <span class="material-symbols-outlined empty-icon">favorite_border</span>
-                <p>Aucun favori pour le moment</p>
-                <router-link to="/" class="btn-secondary">Découvrir les produits</router-link>
+          <div class="feature-content">
+            <router-link to="/creer-annonce" class="feature-action-btn">
+              <span class="material-symbols-outlined">add</span>
+              Créer une annonce
+            </router-link>
+            <div class="feature-info">
+              <div class="info-item">
+                <span class="material-symbols-outlined">photo_camera</span>
+                <span>10 photos minimum</span>
               </div>
-              <div v-else class="favorites-grid">
-                <div v-for="item in favoriteItems" :key="item.id" class="favorite-item">
-                  <router-link :to="`/categorie/${item.categoryId}/produit/${item.id}`" class="favorite-link">
-                    <img :src="item.image" :alt="item.title" class="favorite-image" />
-                    <div class="favorite-info">
-                      <h4 class="favorite-title">{{ item.title }}</h4>
-                      <p class="favorite-price">{{ formatCurrency(item.price) }}</p>
-                    </div>
-                  </router-link>
-                </div>
+              <div class="info-item">
+                <span class="material-symbols-outlined">smart_toy</span>
+                <span>IA pour estimation de prix</span>
+              </div>
+              <div class="info-item">
+                <span class="material-symbols-outlined">gavel</span>
+                <span>Enchères ou vente rapide</span>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Colonne droite -->
-        <div class="grid-column">
-          <!-- Graphique de performance -->
-          <div class="module-card">
-            <div class="module-header">
-              <h2 class="module-title">
-                <span class="material-symbols-outlined module-icon">trending_up</span>
-                Performance des ventes
-              </h2>
-              <select v-model="performancePeriod" class="period-select">
-                <option value="week">7 jours</option>
-                <option value="month">30 jours</option>
-                <option value="year">1 an</option>
-              </select>
+        <!-- Feature 2: Mes objets en vente -->
+        <div class="feature-card feature-listings">
+          <div class="feature-header">
+            <div class="feature-icon-wrapper">
+              <span class="material-symbols-outlined feature-icon">inventory_2</span>
+              <span v-if="notificationsCount > 0" class="notification-badge">{{ notificationsCount }}</span>
             </div>
-            <div class="module-content">
-              <div class="chart-container">
-                <div class="chart-placeholder">
-                  <span class="material-symbols-outlined chart-icon">bar_chart</span>
-                  <p>Graphique de performance</p>
-                  <p class="chart-note">Données des {{ performancePeriod === 'week' ? '7 derniers jours' : performancePeriod === 'month' ? '30 derniers jours' : '12 derniers mois' }}</p>
-                </div>
-              </div>
+            <div class="feature-title-section">
+              <h2 class="feature-title">Mes objets en vente</h2>
+              <p class="feature-description">Gérez vos annonces, offres et messages</p>
             </div>
           </div>
-
-          <!-- Mon panier -->
-          <div class="module-card">
-            <div class="module-header">
-              <h2 class="module-title">
-                <span class="material-symbols-outlined module-icon">shopping_cart</span>
-                Mon panier
-              </h2>
-              <router-link to="/mon-panier" class="module-link">
-                Voir tout <span class="material-symbols-outlined">arrow_forward</span>
-              </router-link>
+          <div class="feature-content">
+            <div class="listings-summary">
+              <div class="summary-item">
+                <span class="summary-label">En vente</span>
+                <span class="summary-value">{{ stats.activeListings }}</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">Offres reçues</span>
+                <span class="summary-value highlight">{{ stats.pendingOffers }}</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">Messages</span>
+                <span class="summary-value highlight">{{ stats.unreadMessages }}</span>
+              </div>
             </div>
-            <div class="module-content">
-              <div v-if="cartItems.length === 0" class="empty-state">
-                <span class="material-symbols-outlined empty-icon">shopping_cart</span>
-                <p>Votre panier est vide</p>
-                <router-link to="/" class="btn-secondary">Découvrir les produits</router-link>
-              </div>
-              <div v-else class="cart-summary">
-                <div class="cart-items-preview">
-                  <div v-for="item in cartItems.slice(0, 3)" :key="item.id" class="cart-item-preview">
-                    <img :src="item.image" :alt="item.title" class="cart-item-image" />
-                    <div class="cart-item-info">
-                      <p class="cart-item-title">{{ item.title }}</p>
-                      <p class="cart-item-price">{{ formatCurrency(item.price) }}</p>
-                    </div>
-                  </div>
-                </div>
-                <div class="cart-total">
-                  <p class="total-label">Total :</p>
-                  <p class="total-value">{{ formatCurrency(cartTotal) }}</p>
-                </div>
-                <router-link to="/mon-panier" class="btn-primary btn-full">
-                  Valider le panier
-                </router-link>
-              </div>
+            <router-link to="/mes-annonces" class="feature-link">
+              Voir tous mes objets <span class="material-symbols-outlined">arrow_forward</span>
+            </router-link>
+          </div>
+        </div>
+
+        <!-- Feature 3: Favoris/Historique -->
+        <div class="feature-card feature-history">
+          <div class="feature-header">
+            <div class="feature-icon-wrapper">
+              <span class="material-symbols-outlined feature-icon">history</span>
+            </div>
+            <div class="feature-title-section">
+              <h2 class="feature-title">Favoris & Historique</h2>
+              <p class="feature-description">Vos objets favoris, enchères et achats</p>
             </div>
           </div>
-
-          <!-- Actions rapides -->
-          <div class="module-card">
-            <div class="module-header">
-              <h2 class="module-title">
-                <span class="material-symbols-outlined module-icon">flash_on</span>
-                Actions rapides
-              </h2>
+          <div class="feature-content">
+            <div class="history-tabs">
+              <button
+                v-for="tab in historyTabs"
+                :key="tab.id"
+                @click="activeHistoryTab = tab.id"
+                class="history-tab"
+                :class="{ active: activeHistoryTab === tab.id }"
+              >
+                <span class="material-symbols-outlined">{{ tab.icon }}</span>
+                <span>{{ tab.label }}</span>
+                <span v-if="tab.count > 0" class="tab-count">{{ tab.count }}</span>
+              </button>
             </div>
-            <div class="module-content">
-              <div class="quick-actions">
-                <router-link to="/creer-annonce" class="quick-action-btn">
-                  <span class="material-symbols-outlined">add_circle</span>
-                  <span>Nouvelle annonce</span>
-                </router-link>
-                <router-link to="/mes-annonces" class="quick-action-btn">
-                  <span class="material-symbols-outlined">inventory_2</span>
-                  <span>Gérer mes annonces</span>
-                </router-link>
-                <router-link to="/statistiques" class="quick-action-btn">
-                  <span class="material-symbols-outlined">analytics</span>
-                  <span>Statistiques détaillées</span>
-                </router-link>
-                <router-link to="/profil" class="quick-action-btn">
+            <router-link to="/mes-favoris" class="feature-link">
+              Voir tout <span class="material-symbols-outlined">arrow_forward</span>
+            </router-link>
+          </div>
+        </div>
+
+        <!-- Feature 4: Recherche d'objet -->
+        <div class="feature-card feature-search">
+          <div class="feature-header">
+            <div class="feature-icon-wrapper">
+              <span class="material-symbols-outlined feature-icon">search</span>
+            </div>
+            <div class="feature-title-section">
+              <h2 class="feature-title">Recherche d'objet</h2>
+              <p class="feature-description">Trouvez les objets qui vous intéressent</p>
+            </div>
+          </div>
+          <div class="feature-content">
+            <div class="search-preview">
+              <div class="search-box-mini">
+                <span class="material-symbols-outlined">search</span>
+                <input
+                  v-model="quickSearch"
+                  type="text"
+                  placeholder="Rechercher un objet..."
+                  class="search-input-mini"
+                  @keyup.enter="goToSearch"
+                />
+              </div>
+              <div class="search-filters-preview">
+                <span class="filter-tag">Prix</span>
+                <span class="filter-tag">Catégorie</span>
+                <span class="filter-tag">Mode de vente</span>
+                <span class="filter-tag">Statut</span>
+              </div>
+            </div>
+            <router-link to="/recherche" class="feature-action-btn">
+              <span class="material-symbols-outlined">explore</span>
+              Rechercher des objets
+            </router-link>
+          </div>
+        </div>
+
+        <!-- Feature 5: Profil -->
+        <div class="feature-card feature-profile">
+          <div class="feature-header">
+            <div class="feature-icon-wrapper">
+              <span class="material-symbols-outlined feature-icon">person</span>
+            </div>
+            <div class="feature-title-section">
+              <h2 class="feature-title">Gestion du profil</h2>
+              <p class="feature-description">Modifiez vos informations personnelles</p>
+            </div>
+          </div>
+          <div class="feature-content">
+            <div class="profile-preview">
+              <div class="profile-avatar-mini">
+                <img 
+                  v-if="userProfilePhoto" 
+                  :src="userProfilePhoto" 
+                  alt="Photo de profil" 
+                  class="avatar-mini-img"
+                />
+                <div v-else class="avatar-mini-placeholder">
                   <span class="material-symbols-outlined">person</span>
-                  <span>Mon profil</span>
-                </router-link>
-              </div>
-            </div>
-          </div>
-
-          <!-- Activité récente -->
-          <div class="module-card">
-            <div class="module-header">
-              <h2 class="module-title">
-                <span class="material-symbols-outlined module-icon">history</span>
-                Activité récente
-              </h2>
-            </div>
-            <div class="module-content">
-              <div v-if="recentActivity.length === 0" class="empty-state">
-                <span class="material-symbols-outlined empty-icon">history</span>
-                <p>Aucune activité récente</p>
-              </div>
-              <div v-else class="activity-list">
-                <div v-for="activity in recentActivity" :key="activity.id" class="activity-item">
-                  <div class="activity-icon" :class="activity.type">
-                    <span class="material-symbols-outlined">{{ getActivityIcon(activity.type) }}</span>
-                  </div>
-                  <div class="activity-content">
-                    <p class="activity-text">{{ activity.message }}</p>
-                    <p class="activity-time">{{ formatTime(activity.date) }}</p>
-                  </div>
                 </div>
               </div>
+              <div class="profile-info-mini">
+                <p class="profile-name">{{ userFirstName }} {{ userLastName }}</p>
+                <p class="profile-email">{{ userEmail }}</p>
+                <p v-if="userCompanyName" class="profile-company">{{ userCompanyName }}</p>
+              </div>
+            </div>
+            <router-link to="/profil" class="feature-action-btn">
+              <span class="material-symbols-outlined">edit</span>
+              Modifier mon profil
+            </router-link>
+          </div>
+        </div>
+
+        <!-- Feature 6: Donner son avis -->
+        <div class="feature-card feature-feedback">
+          <div class="feature-header">
+            <div class="feature-icon-wrapper">
+              <span class="material-symbols-outlined feature-icon">rate_review</span>
+            </div>
+            <div class="feature-title-section">
+              <h2 class="feature-title">Donner son avis</h2>
+              <p class="feature-description">Partagez votre expérience avec nous</p>
+            </div>
+          </div>
+          <div class="feature-content">
+            <div v-if="!hasGivenFeedback" class="feedback-form">
+              <!-- Système d'étoiles -->
+              <div class="feedback-section">
+                <label class="feedback-label">Note globale</label>
+                <div class="stars-rating">
+                  <button
+                    v-for="star in 5"
+                    :key="star"
+                    @click="selectedStars = star"
+                    class="star-btn"
+                    :class="{ active: star <= selectedStars }"
+                  >
+                    <span class="material-symbols-outlined">star</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- NPS -->
+              <div class="feedback-section">
+                <label class="feedback-label">Notez-nous de 1 à 10</label>
+                <div class="nps-scale">
+                  <button
+                    v-for="score in 10"
+                    :key="score"
+                    @click="npsScore = score"
+                    class="nps-btn"
+                    :class="{ active: score === npsScore }"
+                  >
+                    {{ score }}
+                  </button>
+                </div>
+                <div class="nps-labels">
+                  <span>Pas du tout probable</span>
+                  <span>Très probable</span>
+                </div>
+              </div>
+
+              <!-- Commentaires -->
+              <div class="feedback-section">
+                <label for="feedback-comment" class="feedback-label">Commentaires / Suggestions</label>
+                <textarea
+                  id="feedback-comment"
+                  v-model="feedbackComment"
+                  class="feedback-textarea"
+                  placeholder="Partagez vos impressions, suggestions ou commentaires..."
+                  rows="4"
+                ></textarea>
+              </div>
+
+              <button @click="submitFeedback" class="btn-submit-feedback" :disabled="isSubmittingFeedback">
+                <span class="material-symbols-outlined">send</span>
+                {{ isSubmittingFeedback ? 'Envoi...' : 'Envoyer mon avis' }}
+              </button>
+            </div>
+            <div v-else class="feedback-thanks">
+              <span class="material-symbols-outlined thanks-icon">check_circle</span>
+              <p class="thanks-message">Merci pour votre avis !</p>
+              <p class="thanks-submessage">Votre retour nous aide à améliorer la plateforme.</p>
             </div>
           </div>
         </div>
@@ -273,7 +321,7 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const user = ref(null)
-const performancePeriod = ref('month')
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
 const stats = ref({
   activeListings: 0,
@@ -283,27 +331,55 @@ const stats = ref({
   totalSales: 0,
   salesThisMonth: 0,
   totalRevenue: 0,
-  revenueThisMonth: 0
+  revenueThisMonth: 0,
+  pendingOffers: 0,
+  unreadMessages: 0
 })
 
 const recentListings = ref([])
 const favoriteItems = ref([])
 const cartItems = ref([])
-const recentActivity = ref([])
+const notificationsCount = computed(() => stats.value.pendingOffers + stats.value.unreadMessages)
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+// Feature 3: Historique
+const activeHistoryTab = ref('favorites')
+const historyTabs = computed(() => [
+  { id: 'favorites', label: 'Favoris', icon: 'favorite', count: favoriteItems.value.length },
+  { id: 'bids', label: 'Mes enchères', icon: 'gavel', count: 3 },
+  { id: 'offers', label: 'Mes propositions', icon: 'local_offer', count: 2 },
+  { id: 'purchases', label: 'Achats', icon: 'shopping_bag', count: 5 },
+  { id: 'lost', label: 'Objets perdus', icon: 'cancel', count: 1 }
+])
+
+// Feature 4: Recherche
+const quickSearch = ref('')
+
+// Feature 6: Feedback
+const selectedStars = ref(0)
+const npsScore = ref(0)
+const feedbackComment = ref('')
+const hasGivenFeedback = ref(false)
+const isSubmittingFeedback = ref(false)
 
 const userFirstName = computed(() => {
   return user.value?.firstName || 'Utilisateur'
 })
 
-const cartTotal = computed(() => {
-  return cartItems.value.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+const userLastName = computed(() => {
+  return user.value?.lastName || ''
 })
 
-const formatCurrency = (amount) => {
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount)
-}
+const userEmail = computed(() => {
+  return user.value?.email || ''
+})
+
+const userCompanyName = computed(() => {
+  return user.value?.professionnelProfile?.companyName || null
+})
+
+const userProfilePhoto = computed(() => {
+  return user.value?.profilePhoto || null
+})
 
 const formatCurrencyValue = (amount) => {
   return new Intl.NumberFormat('fr-FR', { 
@@ -312,47 +388,12 @@ const formatCurrencyValue = (amount) => {
   }).format(amount) + ' €'
 }
 
-const formatTime = (date) => {
-  const now = new Date()
-  const activityDate = new Date(date)
-  const diffInHours = Math.floor((now - activityDate) / (1000 * 60 * 60))
-  
-  if (diffInHours < 1) return 'Il y a moins d\'une heure'
-  if (diffInHours < 24) return `Il y a ${diffInHours} heure${diffInHours > 1 ? 's' : ''}`
-  const diffInDays = Math.floor(diffInHours / 24)
-  if (diffInDays < 7) return `Il y a ${diffInDays} jour${diffInDays > 1 ? 's' : ''}`
-  return activityDate.toLocaleDateString('fr-FR')
-}
-
-const getStatusLabel = (status) => {
-  const labels = {
-    DRAFT: 'Brouillon',
-    PUBLISHED: 'Publiée',
-    ENDED: 'Terminée',
-    CANCELLED: 'Annulée'
-  }
-  return labels[status] || status
-}
-
-const getActivityIcon = (type) => {
-  const icons = {
-    view: 'visibility',
-    sale: 'sell',
-    purchase: 'shopping_bag',
-    listing: 'inventory_2',
-    message: 'mail',
-    favorite: 'favorite'
-  }
-  return icons[type] || 'info'
-}
-
 const loadStats = async () => {
   const token = localStorage.getItem('access_token')
   if (!token) return
 
   try {
     // TODO: Remplacer par les vraies API calls
-    // Données de démonstration
     stats.value = {
       activeListings: 8,
       newListingsThisMonth: 3,
@@ -361,111 +402,65 @@ const loadStats = async () => {
       totalSales: 12,
       salesThisMonth: 4,
       totalRevenue: 35000,
-      revenueThisMonth: 12000
+      revenueThisMonth: 12000,
+      pendingOffers: 5,
+      unreadMessages: 3
     }
   } catch (error) {
     console.error('Erreur lors du chargement des statistiques:', error)
   }
 }
 
-const loadRecentListings = async () => {
-  const token = localStorage.getItem('access_token')
-  if (!token) return
-
-  try {
-    // TODO: Remplacer par les vraies API calls
-    // Données de démonstration
-    recentListings.value = [
-      {
-        id: 1,
-        title: 'Montre ancienne de collection',
-        price: 2500,
-        image: 'https://cdn.pixabay.com/photo/2015/06/25/17/21/smart-watch-821557_1280.jpg',
-        status: 'PUBLISHED',
-        views: 45
-      },
-      {
-        id: 2,
-        title: 'Tableau impressionniste',
-        price: 8500,
-        image: 'https://cdn.pixabay.com/photo/2018/11/30/18/53/church-3848348_1280.jpg',
-        status: 'PUBLISHED',
-        views: 123
-      },
-      {
-        id: 3,
-        title: 'Bijou art déco',
-        price: 1200,
-        image: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop',
-        status: 'DRAFT',
-        views: 0
-      }
-    ]
-  } catch (error) {
-    console.error('Erreur lors du chargement des annonces:', error)
-  }
-}
-
 const loadFavorites = () => {
   const saved = localStorage.getItem('wishlist')
   if (saved) {
-    favoriteItems.value = JSON.parse(saved).slice(0, 4)
+    favoriteItems.value = JSON.parse(saved)
   }
 }
 
-const loadCart = () => {
-  const saved = localStorage.getItem('cart')
-  if (saved) {
-    cartItems.value = JSON.parse(saved)
-    stats.value.cartItems = cartItems.value.reduce((sum, item) => sum + item.quantity, 0)
-    stats.value.cartValue = cartTotal.value
+const goToSearch = () => {
+  if (quickSearch.value.trim()) {
+    router.push(`/recherche?q=${encodeURIComponent(quickSearch.value)}`)
+  } else {
+    router.push('/recherche')
   }
 }
 
-const loadRecentActivity = async () => {
+const checkFeedbackStatus = () => {
+  const feedback = localStorage.getItem('user_feedback_professionnel')
+  if (feedback) {
+    hasGivenFeedback.value = true
+  }
+}
+
+const submitFeedback = async () => {
+  if (selectedStars.value === 0 && npsScore.value === 0 && !feedbackComment.value.trim()) {
+    alert('Veuillez remplir au moins un champ')
+    return
+  }
+
+  isSubmittingFeedback.value = true
   const token = localStorage.getItem('access_token')
-  if (!token) return
 
   try {
-    // TODO: Remplacer par les vraies API calls
-    // Données de démonstration
-    recentActivity.value = [
-      {
-        id: 1,
-        type: 'view',
-        message: 'Votre annonce "Montre ancienne" a reçu 5 nouvelles vues',
-        date: new Date(Date.now() - 2 * 60 * 60 * 1000)
-      },
-      {
-        id: 2,
-        type: 'sale',
-        message: 'Vente réalisée : "Tableau impressionniste" pour 8500€',
-        date: new Date(Date.now() - 24 * 60 * 60 * 1000)
-      },
-      {
-        id: 3,
-        type: 'purchase',
-        message: 'Achat effectué : "Bijou art déco" pour 1200€',
-        date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
-      },
-      {
-        id: 4,
-        type: 'favorite',
-        message: 'Produit ajouté aux favoris : "Meuble ancien"',
-        date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
-      }
-    ]
+    // TODO: Remplacer par la vraie API call
+    localStorage.setItem('user_feedback_professionnel', JSON.stringify({
+      stars: selectedStars.value,
+      nps: npsScore.value,
+      comment: feedbackComment.value,
+      date: new Date().toISOString()
+    }))
+
+    hasGivenFeedback.value = true
+    selectedStars.value = 0
+    npsScore.value = 0
+    feedbackComment.value = ''
   } catch (error) {
-    console.error('Erreur lors du chargement de l\'activité:', error)
+    console.error('Erreur lors de l\'envoi du feedback:', error)
+    alert('Erreur lors de l\'envoi de votre avis. Veuillez réessayer.')
+  } finally {
+    isSubmittingFeedback.value = false
   }
-}
-
-const editListing = (id) => {
-  router.push(`/mes-annonces/${id}/edit`)
-}
-
-const viewListing = (id) => {
-  router.push(`/mes-annonces/${id}`)
 }
 
 const checkAuth = () => {
@@ -485,14 +480,12 @@ const checkAuth = () => {
 onMounted(() => {
   checkAuth()
   loadStats()
-  loadRecentListings()
   loadFavorites()
-  loadCart()
-  loadRecentActivity()
+  checkFeedbackStatus()
   
-  // Écouter les mises à jour du panier et des favoris
-  window.addEventListener('cart-updated', loadCart)
+  // Écouter les mises à jour
   window.addEventListener('wishlist-updated', loadFavorites)
+  window.addEventListener('auth-changed', checkAuth)
 })
 </script>
 
@@ -566,37 +559,12 @@ onMounted(() => {
   transform: translateY(-2px);
 }
 
-.btn-secondary {
-  display: inline-block;
-  padding: 10px 20px;
-  background-color: #f5f5f5;
-  color: #645394;
-  border: 1px solid #645394;
-  border-radius: 20px;
-  text-decoration: none;
-  font-family: 'Be Vietnam Pro', sans-serif;
-  font-weight: 600;
-  font-size: 14px;
-  transition: all 0.3s ease;
-}
-
-.btn-secondary:hover {
-  background-color: #645394;
-  color: #ffffff;
-}
-
-.btn-full {
-  width: 100%;
-  justify-content: center;
-  margin-top: 15px;
-}
-
 /* Statistiques */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 20px;
-  margin-bottom: 30px;
+  margin-bottom: 40px;
   width: 100%;
   box-sizing: border-box;
 }
@@ -613,8 +581,6 @@ onMounted(() => {
   width: 100%;
   box-sizing: border-box;
   min-width: 0;
-  position: relative;
-  overflow: hidden;
 }
 
 .stat-card:hover {
@@ -689,7 +655,6 @@ onMounted(() => {
   flex-direction: column;
   gap: 8px;
   flex: 1;
-  min-width: 0;
 }
 
 .stat-label {
@@ -698,8 +663,6 @@ onMounted(() => {
   font-size: 0.85rem;
   color: #999;
   margin: 0;
-  text-transform: none;
-  letter-spacing: 0;
 }
 
 .stat-value {
@@ -722,25 +685,16 @@ onMounted(() => {
   color: #4CAF50;
 }
 
-/* Grille principale */
-.dashboard-grid {
+/* Grille des features */
+.features-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 30px;
   width: 100%;
   box-sizing: border-box;
 }
 
-.grid-column {
-  display: flex;
-  flex-direction: column;
-  gap: 30px;
-  min-width: 0;
-  width: 100%;
-}
-
-/* Modules */
-.module-card {
+.feature-card {
   background-color: #ffffff;
   border-radius: 16px;
   padding: 30px;
@@ -748,486 +702,576 @@ onMounted(() => {
   width: 100%;
   box-sizing: border-box;
   overflow: hidden;
-}
-
-.module-card:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-}
-
-.module-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+}
+
+.feature-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  transform: translateY(-3px);
+}
+
+.feature-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
   margin-bottom: 25px;
   padding-bottom: 20px;
-  border-bottom: 1px solid #e0e0e0;
-  width: 100%;
-  box-sizing: border-box;
-  gap: 15px;
+  border-bottom: 1px solid #e8e8e8;
 }
 
-.module-title {
+.feature-icon-wrapper {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.feature-sell .feature-icon-wrapper {
+  background-color: rgba(100, 83, 148, 0.15);
+}
+
+.feature-listings .feature-icon-wrapper {
+  background-color: rgba(33, 150, 243, 0.15);
+}
+
+.feature-history .feature-icon-wrapper {
+  background-color: rgba(76, 175, 80, 0.15);
+}
+
+.feature-search .feature-icon-wrapper {
+  background-color: rgba(255, 152, 0, 0.15);
+}
+
+.feature-profile .feature-icon-wrapper {
+  background-color: rgba(156, 39, 176, 0.15);
+}
+
+.feature-feedback .feature-icon-wrapper {
+  background-color: rgba(255, 152, 0, 0.15);
+}
+
+.feature-icon {
+  font-size: 28px;
+}
+
+.feature-sell .feature-icon {
+  color: #645394;
+}
+
+.feature-listings .feature-icon {
+  color: #2196F3;
+}
+
+.feature-history .feature-icon {
+  color: #4CAF50;
+}
+
+.feature-search .feature-icon {
+  color: #FF9800;
+}
+
+.feature-profile .feature-icon {
+  color: #9C27B0;
+}
+
+.feature-feedback .feature-icon {
+  color: #FF9800;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: #d32f2f;
+  color: #ffffff;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-family: 'Be Vietnam Pro', sans-serif;
-  font-weight: 600;
-  font-size: 1.3rem;
-  color: #213547;
-  margin: 0;
-  min-width: 0;
+  font-weight: 700;
+  font-size: 0.7rem;
+  border: 2px solid #ffffff;
+}
+
+.feature-title-section {
   flex: 1;
+  min-width: 0;
 }
 
-.module-icon {
-  font-size: 24px;
-  color: #645394;
-}
-
-.module-link {
-  display: flex;
-  align-items: center;
-  gap: 5px;
+.feature-title {
   font-family: 'Be Vietnam Pro', sans-serif;
   font-weight: 600;
-  font-size: 0.9rem;
-  color: #645394;
-  text-decoration: none;
-  transition: all 0.3s ease;
-}
-
-.module-link:hover {
-  gap: 10px;
-  color: #4F4670;
-}
-
-.module-content {
-  /* Contenu spécifique défini dans chaque module */
-}
-
-.period-select {
-  padding: 8px 12px;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  font-family: 'Be Vietnam Pro', sans-serif;
-  font-size: 14px;
+  font-size: 1.4rem;
   color: #213547;
-  background-color: #ffffff;
+  margin: 0 0 5px 0;
+}
+
+.feature-description {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 400;
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0;
+}
+
+.feature-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.feature-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 24px;
+  background-color: #645394;
+  color: #ffffff;
+  border: none;
+  border-radius: 20px;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  text-decoration: none;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
-.period-select:hover {
-  border-color: #645394;
+.feature-action-btn:hover {
+  background-color: #4F4670;
+  transform: translateY(-2px);
 }
 
-.period-select:focus {
-  outline: none;
-  border-color: #645394;
-}
-
-/* Liste des annonces */
-.listings-list {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.listing-item {
+.feature-link {
   display: flex;
   align-items: center;
-  gap: 15px;
-  padding: 15px;
-  background-color: #fafafa;
-  border-radius: 12px;
-  transition: all 0.3s ease;
-  width: 100%;
-  box-sizing: border-box;
-  min-width: 0;
-}
-
-.listing-item:hover {
-  background-color: #f5f5f5;
-  transform: translateX(5px);
-}
-
-.listing-image {
-  width: 80px;
-  height: 80px;
-  object-fit: cover;
-  border-radius: 8px;
-  flex-shrink: 0;
-}
-
-.listing-info {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-}
-
-.listing-title {
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  color: #645394;
+  text-decoration: none;
   font-family: 'Be Vietnam Pro', sans-serif;
   font-weight: 600;
-  font-size: 1rem;
-  color: #213547;
-  margin: 0 0 5px 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-size: 14px;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+  margin-top: auto;
 }
 
-.listing-price {
-  font-family: 'Be Vietnam Pro', sans-serif;
-  font-weight: 700;
-  font-size: 1.1rem;
-  color: #645394;
-  margin: 0 0 8px 0;
+.feature-link:hover {
+  background-color: rgba(100, 83, 148, 0.1);
+  gap: 12px;
 }
 
-.listing-meta {
+/* Feature 1: Info items */
+.feature-info {
   display: flex;
-  gap: 15px;
+  flex-direction: column;
+  gap: 10px;
+  padding: 15px;
+  background-color: #fafafa;
+  border-radius: 10px;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 400;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.info-item .material-symbols-outlined {
+  font-size: 20px;
+  color: #645394;
+}
+
+/* Feature 2: Résumé des annonces */
+.listings-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  padding: 20px;
+  background-color: #fafafa;
+  border-radius: 12px;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  text-align: center;
+}
+
+.summary-label {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 400;
   font-size: 0.85rem;
   color: #666;
 }
 
-.listing-status {
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 0.75rem;
+.summary-value {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: #213547;
 }
 
-.listing-status.PUBLISHED {
-  background-color: rgba(76, 175, 80, 0.1);
-  color: #4CAF50;
+.summary-value.highlight {
+  color: #645394;
 }
 
-.listing-status.DRAFT {
-  background-color: rgba(255, 152, 0, 0.1);
-  color: #FF9800;
-}
-
-.listing-actions {
+/* Feature 3: Historique */
+.history-tabs {
   display: flex;
+  flex-direction: column;
   gap: 8px;
 }
 
-.action-btn {
-  width: 36px;
-  height: 36px;
-  border: 1px solid #e0e0e0;
-  background-color: #ffffff;
-  border-radius: 8px;
+.history-tab {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 10px;
+  padding: 12px 15px;
+  background-color: #fafafa;
+  border: none;
+  border-radius: 10px;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 400;
+  font-size: 0.9rem;
+  color: #666;
   cursor: pointer;
   transition: all 0.3s ease;
+  text-align: left;
 }
 
-.action-btn:hover {
-  border-color: #645394;
+.history-tab:hover {
   background-color: #f5f5f5;
-  color: #645394;
 }
 
-.action-btn .material-symbols-outlined {
-  font-size: 18px;
+.history-tab.active {
+  background-color: #645394;
+  color: #ffffff;
 }
 
-/* Favoris */
-.favorites-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 15px;
+.history-tab .material-symbols-outlined {
+  font-size: 20px;
 }
 
-.favorite-item {
-  background-color: #fafafa;
+.tab-count {
+  margin-left: auto;
+  background-color: rgba(255, 255, 255, 0.2);
+  padding: 2px 8px;
   border-radius: 12px;
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-
-.favorite-item:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.favorite-link {
-  display: block;
-  text-decoration: none;
-  color: inherit;
-}
-
-.favorite-image {
-  width: 100%;
-  height: 120px;
-  object-fit: cover;
-}
-
-.favorite-info {
-  padding: 12px;
-}
-
-.favorite-title {
-  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 0.8rem;
   font-weight: 600;
-  font-size: 0.9rem;
-  color: #213547;
-  margin: 0 0 5px 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
-.favorite-price {
-  font-family: 'Be Vietnam Pro', sans-serif;
-  font-weight: 700;
-  font-size: 1rem;
-  color: #645394;
-  margin: 0;
+.history-tab.active .tab-count {
+  background-color: rgba(255, 255, 255, 0.3);
 }
 
-/* Panier */
-.cart-summary {
+/* Feature 4: Recherche */
+.search-preview {
   display: flex;
   flex-direction: column;
   gap: 15px;
 }
 
-.cart-items-preview {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.cart-item-preview {
+.search-box-mini {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px;
-  background-color: #fafafa;
-  border-radius: 8px;
+  gap: 10px;
+  padding: 12px 16px;
+  background-color: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 20px;
 }
 
-.cart-item-image {
-  width: 50px;
-  height: 50px;
-  object-fit: cover;
-  border-radius: 6px;
+.search-box-mini .material-symbols-outlined {
+  color: #999;
+  font-size: 20px;
+}
+
+.search-input-mini {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 0.95rem;
+  color: #213547;
+  outline: none;
+}
+
+.search-filters-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filter-tag {
+  padding: 6px 12px;
+  background-color: #f5f5f5;
+  border-radius: 12px;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 400;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+/* Feature 5: Profil */
+.profile-preview {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 20px;
+  background-color: #fafafa;
+  border-radius: 12px;
+  margin-bottom: 15px;
+}
+
+.profile-avatar-mini {
+  width: 56px;
+  height: 56px;
   flex-shrink: 0;
 }
 
-.cart-item-info {
-  flex: 1;
+.avatar-mini-img,
+.avatar-mini-placeholder {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #e0e0e0;
 }
 
-.cart-item-title {
+.avatar-mini-placeholder {
+  background-color: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-mini-placeholder .material-symbols-outlined {
+  font-size: 28px;
+  color: #999;
+}
+
+.profile-info-mini {
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-name {
   font-family: 'Be Vietnam Pro', sans-serif;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 1rem;
   color: #213547;
+  margin: 0 0 3px 0;
+}
+
+.profile-email {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 400;
+  font-size: 0.85rem;
+  color: #666;
   margin: 0 0 3px 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.cart-item-price {
+.profile-company {
   font-family: 'Be Vietnam Pro', sans-serif;
-  font-weight: 700;
+  font-weight: 600;
   font-size: 0.85rem;
   color: #645394;
   margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.cart-total {
+/* Feature 6: Feedback */
+.feedback-form {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px;
-  background-color: #f5f5f5;
-  border-radius: 8px;
-  margin-top: 5px;
+  flex-direction: column;
+  gap: 25px;
 }
 
-.total-label {
+.feedback-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.feedback-label {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #213547;
+}
+
+.stars-rating {
+  display: flex;
+  gap: 8px;
+}
+
+.star-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #e0e0e0;
+}
+
+.star-btn:hover {
+  transform: scale(1.1);
+}
+
+.star-btn.active {
+  color: #FFD700;
+}
+
+.star-btn .material-symbols-outlined {
+  font-size: 32px;
+}
+
+.nps-scale {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.nps-btn {
+  width: 40px;
+  height: 40px;
+  border: 2px solid #e0e0e0;
+  background-color: #ffffff;
+  border-radius: 8px;
   font-family: 'Be Vietnam Pro', sans-serif;
   font-weight: 600;
   font-size: 1rem;
-  color: #213547;
-  margin: 0;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-.total-value {
-  font-family: 'Be Vietnam Pro', sans-serif;
-  font-weight: 700;
-  font-size: 1.2rem;
-  color: #645394;
-  margin: 0;
-}
-
-/* Activité récente */
-.activity-list {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.activity-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 15px;
-  padding: 15px;
-  background-color: #fafafa;
-  border-radius: 12px;
-}
-
-.activity-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.activity-icon.view {
-  background-color: rgba(33, 150, 243, 0.1);
-  color: #2196F3;
-}
-
-.activity-icon.sale {
-  background-color: rgba(76, 175, 80, 0.1);
-  color: #4CAF50;
-}
-
-.activity-icon.purchase {
-  background-color: rgba(100, 83, 148, 0.1);
+.nps-btn:hover {
+  border-color: #645394;
   color: #645394;
 }
 
-.activity-icon.listing {
-  background-color: rgba(100, 83, 148, 0.1);
-  color: #645394;
+.nps-btn.active {
+  background-color: #645394;
+  border-color: #645394;
+  color: #ffffff;
 }
 
-.activity-icon.favorite {
-  background-color: rgba(244, 67, 54, 0.1);
-  color: #F44336;
-}
-
-.activity-content {
-  flex: 1;
-}
-
-.activity-text {
-  font-family: 'Be Vietnam Pro', sans-serif;
-  font-weight: 400;
-  font-size: 0.95rem;
-  color: #213547;
-  margin: 0 0 5px 0;
-}
-
-.activity-time {
+.nps-labels {
+  display: flex;
+  justify-content: space-between;
   font-family: 'Be Vietnam Pro', sans-serif;
   font-weight: 400;
   font-size: 0.8rem;
   color: #999;
-  margin: 0;
+  margin-top: 5px;
 }
 
-/* Graphique */
-.chart-container {
-  height: 250px;
+.feedback-textarea {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 400;
+  font-size: 0.95rem;
+  padding: 12px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: #f5f5f5;
+  color: #213547;
+  resize: vertical;
+  transition: all 0.3s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.feedback-textarea:focus {
+  outline: none;
+  border-color: #645394;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(100, 83, 148, 0.1);
+}
+
+.btn-submit-feedback {
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.chart-placeholder {
-  text-align: center;
-  color: #999;
-}
-
-.chart-icon {
-  font-size: 64px;
-  color: #e0e0e0;
-  margin-bottom: 15px;
-}
-
-.chart-note {
+  gap: 8px;
+  padding: 14px 24px;
+  background-color: #645394;
+  color: #ffffff;
+  border: none;
+  border-radius: 20px;
   font-family: 'Be Vietnam Pro', sans-serif;
-  font-size: 0.85rem;
-  color: #999;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
   margin-top: 10px;
 }
 
-/* Actions rapides */
-.quick-actions {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 15px;
+.btn-submit-feedback:hover:not(:disabled) {
+  background-color: #4F4670;
+  transform: translateY(-2px);
 }
 
-.quick-action-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  padding: 20px;
-  background-color: #fafafa;
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
-  text-decoration: none;
-  color: #213547;
-  transition: all 0.3s ease;
+.btn-submit-feedback:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
-.quick-action-btn:hover {
-  background-color: #f5f5f5;
-  border-color: #645394;
-  color: #645394;
-  transform: translateY(-3px);
-}
-
-.quick-action-btn .material-symbols-outlined {
-  font-size: 32px;
-}
-
-.quick-action-btn span:last-child {
-  font-family: 'Be Vietnam Pro', sans-serif;
-  font-weight: 600;
-  font-size: 0.9rem;
-  text-align: center;
-}
-
-/* État vide */
-.empty-state {
+.feedback-thanks {
   text-align: center;
   padding: 40px 20px;
-  color: #999;
 }
 
-.empty-icon {
+.thanks-icon {
   font-size: 64px;
-  color: #e0e0e0;
+  color: #4CAF50;
   margin-bottom: 15px;
 }
 
-.empty-state p {
+.thanks-message {
   font-family: 'Be Vietnam Pro', sans-serif;
-  font-size: 1rem;
-  margin-bottom: 20px;
+  font-weight: 600;
+  font-size: 1.2rem;
+  color: #213547;
+  margin: 0 0 8px 0;
+}
+
+.thanks-submessage {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 400;
+  font-size: 0.95rem;
+  color: #666;
+  margin: 0;
 }
 
 @media (max-width: 1200px) {
-  .dashboard-grid {
-    grid-template-columns: 1fr;
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
@@ -1249,21 +1293,16 @@ onMounted(() => {
     grid-template-columns: 1fr;
   }
 
-  .quick-actions {
+  .features-grid {
     grid-template-columns: 1fr;
   }
 
-  .favorites-grid {
+  .listings-summary {
     grid-template-columns: 1fr;
   }
 
-  .listing-item {
-    flex-wrap: wrap;
-  }
-
-  .listing-image {
-    width: 100%;
-    height: 200px;
+  .nps-scale {
+    justify-content: center;
   }
 }
 </style>
