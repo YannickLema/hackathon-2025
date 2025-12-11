@@ -24,29 +24,64 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 type AuthenticatedRequest = Request & { user?: User };
 
 @Controller('listings')
-@UseGuards(JwtAuthGuard)
 export class ListingsController {
   constructor(private readonly listingsService: ListingsService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   create(@Req() req: AuthenticatedRequest, @Body() dto: CreateListingDto) {
     return this.listingsService.createListing(req.user, dto);
   }
 
+  @Get()
+  findAll(
+    @Query('category') category?: string,
+    @Query('status') status?: string,
+    @Query('search') search?: string,
+    @Query('minPrice') minPrice?: string,
+    @Query('maxPrice') maxPrice?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.listingsService.findAll({
+      category,
+      status,
+      search,
+      minPrice: minPrice ? Number(minPrice) : undefined,
+      maxPrice: maxPrice ? Number(maxPrice) : undefined,
+      page: page ? Number(page) : 1,
+      limit: limit ? Number(limit) : 20,
+    });
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.listingsService.findOne(id);
+  }
+
+  @Get('seller/my')
+  @UseGuards(JwtAuthGuard)
+  findMyListings(@Req() req: AuthenticatedRequest) {
+    return this.listingsService.findMyListings(req.user);
+  }
+
   @Get('me')
+  @UseGuards(JwtAuthGuard)
   findMine(
     @Req() req: AuthenticatedRequest,
     @Query('status') status?: string,
   ) {
-    return this.listingsService.findMyListings(req.user, status);
+    return this.listingsService.findMyListingsWithStatus(req.user, status);
   }
 
   @Get('me/unread-counts')
+  @UseGuards(JwtAuthGuard)
   getUnreadCounts(@Req() req: AuthenticatedRequest) {
     return this.listingsService.getUnreadCounts(req.user);
   }
 
   @Get('search')
+  @UseGuards(JwtAuthGuard)
   search(
     @Req() req: AuthenticatedRequest,
     @Query('priceMin') priceMin?: string,
@@ -67,11 +102,13 @@ export class ListingsController {
   }
 
   @Patch(':id/offers/read')
+  @UseGuards(JwtAuthGuard)
   markOffersRead(@Req() req: AuthenticatedRequest, @Param('id') id: string) {
     return this.listingsService.markOffersRead(req.user, id);
   }
 
   @Post(':id/offers')
+  @UseGuards(JwtAuthGuard)
   createOffer(
     @Req() req: AuthenticatedRequest,
     @Param('id') id: string,
@@ -81,6 +118,7 @@ export class ListingsController {
   }
 
   @Patch(':id/messages/read')
+  @UseGuards(JwtAuthGuard)
   markMessagesRead(
     @Req() req: AuthenticatedRequest,
     @Param('id') id: string,
@@ -89,6 +127,7 @@ export class ListingsController {
   }
 
   @Post(':id/messages')
+  @UseGuards(JwtAuthGuard)
   createMessage(
     @Req() req: AuthenticatedRequest,
     @Param('id') id: string,
@@ -98,6 +137,7 @@ export class ListingsController {
   }
 
   @Post(':id/bids')
+  @UseGuards(JwtAuthGuard)
   createBid(
     @Req() req: AuthenticatedRequest,
     @Param('id') id: string,
@@ -107,6 +147,7 @@ export class ListingsController {
   }
 
   @Patch(':id/sale-mode')
+  @UseGuards(JwtAuthGuard)
   updateSaleMode(
     @Req() req: AuthenticatedRequest,
     @Param('id') id: string,
@@ -116,6 +157,7 @@ export class ListingsController {
   }
 
   @Patch(':id/price')
+  @UseGuards(JwtAuthGuard)
   updatePrice(
     @Req() req: AuthenticatedRequest,
     @Param('id') id: string,
@@ -125,38 +167,44 @@ export class ListingsController {
   }
 
   @Post(':id/favorite')
+  @UseGuards(JwtAuthGuard)
   addFavorite(@Req() req: AuthenticatedRequest, @Param('id') id: string) {
     return this.listingsService.setFavorite(req.user, id, true);
   }
 
   @Delete(':id/favorite')
+  @UseGuards(JwtAuthGuard)
   removeFavorite(@Req() req: AuthenticatedRequest, @Param('id') id: string) {
     return this.listingsService.setFavorite(req.user, id, false);
   }
 
   @Get('me/favorites')
+  @UseGuards(JwtAuthGuard)
   getFavorites(@Req() req: AuthenticatedRequest) {
     return this.listingsService.getFavorites(req.user);
   }
 
   @Get('me/bids')
+  @UseGuards(JwtAuthGuard)
   getMyBids(@Req() req: AuthenticatedRequest) {
     return this.listingsService.getMyBids(req.user);
   }
 
   @Get('me/purchases')
+  @UseGuards(JwtAuthGuard)
   getMyPurchases(@Req() req: AuthenticatedRequest) {
     return this.listingsService.getMyPurchases(req.user);
   }
 
   @Get('me/offers')
+  @UseGuards(JwtAuthGuard)
   getMyInstantOffers(@Req() req: AuthenticatedRequest) {
     return this.listingsService.getMyInstantOffers(req.user);
   }
 
   @Get('me/lost')
+  @UseGuards(JwtAuthGuard)
   getMyLostAuctions(@Req() req: AuthenticatedRequest) {
     return this.listingsService.getMyLostAuctions(req.user);
   }
 }
-

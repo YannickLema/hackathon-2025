@@ -49,9 +49,19 @@ const routes = [
     component: () => import('../components/CategoryPage.vue'),
   },
   {
-    path: '/categorie/:categoryId/produit/:id',
+    path: '/produits',
+    name: 'AllProducts',
+    component: () => import('../components/AllProductsPage.vue'),
+  },
+  {
+    path: '/produit/:id',
     name: 'Product',
-    component: () => import('../components/CategoryPage.vue'), // Temporaire, à remplacer par ProductPage.vue
+    component: () => import('../components/ProductPage.vue'),
+  },
+  {
+    path: '/categorie/:categoryId/produit/:id',
+    name: 'CategoryProduct',
+    component: () => import('../components/ProductPage.vue'),
   },
   {
     path: '/dashboard/particulier',
@@ -92,6 +102,11 @@ const routes = [
     path: '/mes-favoris',
     name: 'MyFavorites',
     component: () => import('../components/MyFavoritesPage.vue'),
+  },
+  {
+    path: '/paiement',
+    name: 'PaymentMethod',
+    component: () => import('../components/PaymentMethodPage.vue'),
   },
 ]
 

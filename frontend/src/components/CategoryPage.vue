@@ -125,11 +125,17 @@
             </div>
           </div>
 
-          <div class="products-grid">
+          <div v-if="isLoading" class="products-loading">
+            <p>Chargement des produits...</p>
+          </div>
+          <div v-else-if="filteredProducts.length === 0" class="products-empty">
+            <p>Aucun produit trouvé dans cette catégorie.</p>
+          </div>
+          <div v-else class="products-grid">
             <router-link 
               v-for="product in filteredProducts" 
               :key="product.id"
-              :to="`/categorie/${route.params.id}/produit/${product.id}`"
+              :to="`/produit/${product.id}`"
               class="product-card-link"
             >
               <div class="product-card">
@@ -167,12 +173,11 @@
       <!-- Newsletter -->
       <NewsletterSection />
     </div>
-    <Footer />
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import NewsletterSection from './NewsletterSection.vue'
 
@@ -182,6 +187,25 @@ const selectedSubcategory = ref(null)
 const showFilterModal = ref(false)
 const showSortModal = ref(false)
 const sortBy = ref('default')
+const isLoading = ref(false)
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+
+// Mapping entre les catégories frontend et backend
+const categoryMapping = {
+  1: 'BIJOU', // Bijoux & montres
+  2: 'DESIGN', // Meubles anciens
+  3: 'PEINTURE', // Objets d'art & tableaux
+  4: 'OBJET_ART', // Objets de collection
+  5: 'AUTRE', // Vins & spiritueux
+  6: 'AUTRE', // Instruments de musique
+  7: 'AUTRE', // Livres anciens
+  8: 'ACCESSOIRE', // Accessoires de luxe
+  9: 'MONTRE', // Horlogerie & pendules
+  10: 'PHOTOGRAPHIE', // Photographie anciennes
+  11: 'OBJET_ART', // Vaisselle, argenterie
+  12: 'SCULPTURE', // Sculptures & objets decoratifs
+  13: 'AUTRE' // Vehicules de collection
+}
 
 const filters = ref({
   minPrice: null,
@@ -417,120 +441,79 @@ const categoryData = ref({
   subcategories: []
 })
 
-// Produits (à remplacer par un appel API)
-const products = ref([
-  {
-    id: 1,
-    title: 'Titre produit',
-    description: 'Description du produit',
-    price: 150,
-    image: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop',
-    isWishlisted: false,
-    subcategoryId: 1
-  },
-  {
-    id: 2,
-    title: 'Titre produit',
-    description: 'Description du produit',
-    price: 200,
-    image: 'https://cdn.pixabay.com/photo/2018/11/30/18/53/church-3848348_1280.jpg',
-    isWishlisted: false,
-    subcategoryId: 2
-  },
-  {
-    id: 3,
-    title: 'Titre produit',
-    description: 'Description du produit',
-    price: 175,
-    image: 'https://cdn.pixabay.com/photo/2017/07/11/12/11/chair-backrest-2493326_1280.jpg',
-    isWishlisted: false,
-    subcategoryId: 3
-  },
-  {
-    id: 4,
-    title: 'Titre produit',
-    description: 'Description du produit',
-    price: 300,
-    image: 'https://cdn.pixabay.com/photo/2023/10/28/06/40/wine-8346641_1280.jpg',
-    isWishlisted: false,
-    subcategoryId: 1
-  },
-  {
-    id: 5,
-    title: 'Titre produit',
-    description: 'Description du produit',
-    price: 250,
-    image: 'https://cdn.pixabay.com/photo/2020/12/09/18/42/violin-5818267_1280.jpg',
-    isWishlisted: false,
-    subcategoryId: 2
-  },
-  {
-    id: 6,
-    title: 'Titre produit',
-    description: 'Description du produit',
-    price: 180,
-    image: 'https://cdn.pixabay.com/photo/2014/09/05/18/32/old-books-436498_1280.jpg',
-    isWishlisted: false,
-    subcategoryId: 4
-  },
-  {
-    id: 7,
-    title: 'Titre produit',
-    description: 'Description du produit',
-    price: 220,
-    image: 'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=400&h=400&fit=crop',
-    isWishlisted: false,
-    subcategoryId: 1
-  },
-  {
-    id: 8,
-    title: 'Titre produit',
-    description: 'Description du produit',
-    price: 190,
-    image: 'https://cdn.pixabay.com/photo/2021/09/28/14/21/clocks-6664622_1280.jpg',
-    isWishlisted: false,
-    subcategoryId: 3
-  },
-  {
-    id: 9,
-    title: 'Titre produit',
-    description: 'Description du produit',
-    price: 160,
-    image: 'https://cdn.pixabay.com/photo/2015/04/07/14/34/camera-711040_1280.jpg',
-    isWishlisted: false,
-    subcategoryId: 2
+// Produits chargés depuis l'API
+const products = ref([])
+
+// Charger les produits depuis l'API
+const loadProducts = async () => {
+  isLoading.value = true
+  try {
+    const categoryId = parseInt(route.params.id)
+    const backendCategory = categoryMapping[categoryId] || 'AUTRE'
+    
+    // Construire les paramètres de requête
+    const params = new URLSearchParams({
+      category: backendCategory,
+      status: 'PUBLISHED',
+    })
+    
+    if (searchQuery.value) {
+      params.append('search', searchQuery.value)
+    }
+    
+    if (filters.value.minPrice !== null && filters.value.minPrice !== '') {
+      params.append('minPrice', filters.value.minPrice.toString())
+    }
+    
+    if (filters.value.maxPrice !== null && filters.value.maxPrice !== '') {
+      params.append('maxPrice', filters.value.maxPrice.toString())
+    }
+    
+    const response = await fetch(`${API_URL}/listings?${params.toString()}`)
+    
+    if (!response.ok) {
+      throw new Error('Erreur lors du chargement des produits')
+    }
+    
+    const data = await response.json()
+    
+    // Charger les favoris depuis localStorage
+    const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]')
+    const wishlistIds = new Set(wishlist.map(item => item.id))
+    
+    // Transformer les données backend en format frontend
+    products.value = data.listings.map((listing) => ({
+      id: listing.id,
+      title: listing.title,
+      description: listing.description,
+      price: parseFloat(listing.priceDesired),
+      image: listing.photos && listing.photos.length > 0 
+        ? listing.photos[0].url 
+        : 'https://via.placeholder.com/400x400?text=No+Image',
+      isWishlisted: wishlistIds.has(listing.id),
+      subcategoryId: null, // Les sous-catégories ne sont pas gérées côté backend pour l'instant
+      saleMode: listing.saleMode,
+      auctionStartPrice: listing.auctionStartPrice ? parseFloat(listing.auctionStartPrice) : null,
+      auctionEndAt: listing.auctionEndAt,
+      categoryId: categoryId
+    }))
+  } catch (error) {
+    console.error('Erreur lors du chargement des produits:', error)
+    products.value = []
+  } finally {
+    isLoading.value = false
   }
-])
+}
 
 const filteredProducts = computed(() => {
   let filtered = [...products.value]
 
-  // Filtre par recherche textuelle
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter(product => 
-      product.title.toLowerCase().includes(query) ||
-      product.description.toLowerCase().includes(query)
-    )
-  }
+  // Note: La recherche textuelle est déjà gérée côté serveur via l'API
+  // On peut garder un filtre local pour les sous-catégories si nécessaire
+  // (mais les sous-catégories ne sont pas encore implémentées côté backend)
 
-  // Filtre par sous-catégorie sélectionnée
-  if (selectedSubcategory.value) {
-    filtered = filtered.filter(product => product.subcategoryId === selectedSubcategory.value)
-  }
-
-  // Filtre par sous-catégorie depuis le modal
-  if (filters.value.subcategory) {
-    filtered = filtered.filter(product => product.subcategoryId === filters.value.subcategory)
-  }
-
-  // Filtre par prix
-  if (filters.value.minPrice !== null && filters.value.minPrice !== '') {
-    filtered = filtered.filter(product => product.price >= filters.value.minPrice)
-  }
-  if (filters.value.maxPrice !== null && filters.value.maxPrice !== '') {
-    filtered = filtered.filter(product => product.price <= filters.value.maxPrice)
-  }
+  // Filtre par prix (déjà géré côté serveur, mais on peut aussi filtrer localement)
+  // Les filtres de prix sont envoyés à l'API, donc on ne les refiltre pas ici
 
   // Tri
   if (sortBy.value === 'price-asc') {
@@ -598,6 +581,8 @@ const applyFilters = () => {
     selectedSubcategory.value = null
   }
   closeFilterModal()
+  // Recharger les produits avec les nouveaux filtres
+  loadProducts()
 }
 
 const resetFilters = () => {
@@ -607,6 +592,8 @@ const resetFilters = () => {
     subcategory: null
   }
   selectedSubcategory.value = null
+  // Recharger les produits sans filtres
+  loadProducts()
 }
 
 const toggleWishlist = (productId) => {
@@ -663,6 +650,34 @@ const addToCart = (productId) => {
   }
 }
 
+// Watcher pour recharger les produits quand la recherche change
+let searchTimeout = null
+watch(searchQuery, () => {
+  // Debounce pour éviter trop d'appels API
+  if (searchTimeout) {
+    clearTimeout(searchTimeout)
+  }
+  searchTimeout = setTimeout(() => {
+    loadProducts()
+  }, 500)
+})
+
+// Watcher pour recharger quand la catégorie change
+watch(() => route.params.id, () => {
+  const categoryId = parseInt(route.params.id)
+  
+  // Charger les données de la catégorie
+  if (categoriesDatabase[categoryId]) {
+    categoryData.value = categoriesDatabase[categoryId]
+  } else {
+    // Catégorie par défaut si l'ID n'existe pas
+    categoryData.value = categoriesDatabase[1]
+  }
+  
+  // Recharger les produits pour la nouvelle catégorie
+  loadProducts()
+})
+
 onMounted(() => {
   // Récupérer l'ID de la catégorie depuis l'URL
   const categoryId = parseInt(route.params.id)
@@ -674,6 +689,9 @@ onMounted(() => {
     // Catégorie par défaut si l'ID n'existe pas
     categoryData.value = categoriesDatabase[1]
   }
+  
+  // Charger les produits depuis l'API
+  loadProducts()
 })
 </script>
 
@@ -890,6 +908,32 @@ onMounted(() => {
 .filter-btn .material-symbols-outlined,
 .sort-btn .material-symbols-outlined {
   font-size: 20px;
+}
+
+.products-loading,
+.products-empty {
+  text-align: center;
+  padding: 60px 20px;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  color: #666;
+}
+
+.products-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+}
+
+.products-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .products-grid {
@@ -1247,7 +1291,33 @@ onMounted(() => {
     gap: 20px;
   }
 
-  .products-grid {
+  .products-loading,
+.products-empty {
+  text-align: center;
+  padding: 60px 20px;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  color: #666;
+}
+
+.products-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+}
+
+.products-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.products-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
   }
@@ -1492,7 +1562,33 @@ onMounted(() => {
     gap: 20px;
   }
 
-  .products-grid {
+  .products-loading,
+.products-empty {
+  text-align: center;
+  padding: 60px 20px;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  color: #666;
+}
+
+.products-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+}
+
+.products-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.products-grid {
     grid-template-columns: 1fr;
   }
 

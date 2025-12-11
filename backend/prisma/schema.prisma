@@ -37,6 +37,8 @@ enum ListingStatus {
   PUBLISHED
   SOLD
   ARCHIVED
+  ENDED
+  CANCELLED
 }
 
 enum OfferStatus {
@@ -75,12 +77,13 @@ model User {
   professionnelProfile  ProfessionnelProfile?
   emailVerification    EmailVerification?
   passwordReset        PasswordReset?
-  listings             Listing[]              @relation("SellerListings")      // Annonces créées (vendeur)
-  offers               Offer[]                @relation("BuyerOffers")        // Offres faites (acheteur)
-  listingMessages      ListingMessage[]       @relation("MessageSender")      // Messages envoyés
-  favorites            Favorite[]             @relation("UserFavorites")      // Objets likés
-  bids                 Bid[]                  @relation("UserBids")           // Enchères placées
-  feedbacks            Feedback[]             @relation("UserFeedbacks")      // Avis laissés
+  listings             Listing[]              @relation("SellerListings")
+  offers               Offer[]                @relation("BuyerOffers")
+  listingMessages      ListingMessage[]       @relation("MessageSender")
+  favorites            Favorite[]             @relation("UserFavorites")
+  bids                 Bid[]                  @relation("UserBids")
+  feedbacks            Feedback[]             @relation("UserFeedbacks")
+  paymentMethod         PaymentMethod?
 
   @@map("users")
 }
@@ -91,8 +94,8 @@ model ParticulierProfile {
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   // Informations personnelles
-  profilePhoto    String?  // URL ou chemin vers la photo
-  postalAddress   String   // Adresse postale complète
+  profilePhoto    String?
+  postalAddress   String
   
   // Validation âge
   isOver18        Boolean  @default(false)
@@ -114,21 +117,21 @@ model ProfessionnelProfile {
   user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   // Informations entreprise
-  companyName           String   // Dénomination de l'entreprise
-  siret                 String   @unique // Numéro SIRET
-  officialDocument      String   // URL ou chemin vers le document (K-Bis, avis INSEE, etc.)
-  postalAddress         String   // Adresse postale
+  companyName           String
+  siret                 String   @unique
+  officialDocument      String
+  postalAddress         String
   
   // Marketing
-  website               String?  // Site internet (optionnel)
-  specialities          String[] // Spécialités (obligatoire, tableau)
-  mostSearchedItems    String[] // Objets recherchés (obligatoire, tableau)
-  socialNetworks       Json?    // Réseaux sociaux (optionnel, format JSON flexible)
+  website               String?
+  specialities          String[]
+  mostSearchedItems    String[]
+  socialNetworks       Json?
   
   // Documents légaux
   cgvAccepted           Boolean  @default(false)
   cgvAcceptedAt        DateTime?
-  mandateAccepted      Boolean  @default(false) // Mandat d'apport d'affaire
+  mandateAccepted      Boolean  @default(false)
   mandateAcceptedAt     DateTime?
   
   // Consentements
@@ -216,6 +219,19 @@ model ListingDocument {
   @@map("listing_documents")
 }
 
+model PaymentMethod {
+  id                String   @id @default(uuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeCustomerId  String   @unique
+  stripePaymentMethodId String?
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("payment_methods")
+}
+
 model Offer {
   id           String       @id @default(uuid())
   listingId    String
@@ -263,13 +279,14 @@ model Favorite {
 }
 
 model Bid {
-  id        String   @id @default(uuid())
-  listingId String
-  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  bidderId  String
-  bidder    User     @relation("UserBids", fields: [bidderId], references: [id], onDelete: Cascade)
-  amount    Decimal  @db.Decimal(10, 2)
-  createdAt DateTime @default(now())
+  id            String   @id @default(uuid())
+  listingId     String
+  listing       Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  bidderId      String
+  bidder        User     @relation("UserBids", fields: [bidderId], references: [id], onDelete: Cascade)
+  amount        Decimal  @db.Decimal(10, 2)
+  isWinning     Boolean  @default(false)
+  createdAt     DateTime @default(now())
 
   @@index([listingId])
   @@index([bidderId])

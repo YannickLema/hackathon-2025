@@ -230,10 +230,16 @@
                 <p v-if="userCompanyName" class="profile-company">{{ userCompanyName }}</p>
               </div>
             </div>
-            <router-link to="/profil" class="feature-action-btn">
-              <span class="material-symbols-outlined">edit</span>
-              Modifier mon profil
-            </router-link>
+            <div class="profile-actions">
+              <router-link to="/profil" class="feature-action-btn">
+                <span class="material-symbols-outlined">edit</span>
+                Modifier mon profil
+              </router-link>
+              <router-link to="/paiement" class="feature-action-btn btn-payment">
+                <span class="material-symbols-outlined">credit_card</span>
+                Méthode de paiement
+              </router-link>
+            </div>
           </div>
         </div>
 
@@ -852,6 +858,14 @@ onMounted(() => {
   transform: translateY(-2px);
 }
 
+.btn-payment {
+  background-color: #FF9800;
+}
+
+.btn-payment:hover {
+  background-color: #F57C00;
+}
+
 .feature-link {
   display: flex;
   align-items: center;
@@ -1081,6 +1095,12 @@ onMounted(() => {
   font-size: 1rem;
   color: #213547;
   margin: 0 0 3px 0;
+}
+
+.profile-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .profile-email {

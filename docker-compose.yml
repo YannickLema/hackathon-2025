@@ -41,8 +41,10 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+    env_file:
+      - ./.env
     environment:
-      VITE_API_URL: http://backend:3000
+      VITE_API_URL: http://localhost:3000
     ports:
       - "5173:5173"
     depends_on:
