@@ -30,18 +30,12 @@ export class ListingsService {
   ) {}
 
   async createListing(user: User | undefined, dto: CreateListingDto) {
-<<<<<<< HEAD
     if (!user) {
       throw new ForbiddenException('Authentification requise');
     }
     // Les particuliers et professionnels peuvent créer des listings
     if (user.role !== Role.PROFESSIONNEL && user.role !== Role.PARTICULIER) {
       throw new ForbiddenException('Réservé aux particuliers et professionnels');
-=======
-    if (!user) throw new ForbiddenException('Authentification requise');
-    if (!this.isSeller(user)) {
-      throw new ForbiddenException('Réservé aux vendeurs (professionnels ou particuliers)');
->>>>>>> feature/dashboard_particulier
     }
     this.ensureValidPayload(dto);
 
@@ -759,10 +753,10 @@ export class ListingsService {
     }
 
     return listing;
-=======
+  }
+
   private isSeller(user: User) {
     return user.role === Role.PROFESSIONNEL || user.role === Role.PARTICULIER;
->>>>>>> feature/dashboard_particulier
   }
 
   private async ensureListingOwnership(userId: string, listingId: string) {
