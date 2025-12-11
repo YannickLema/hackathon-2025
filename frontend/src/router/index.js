@@ -103,6 +103,11 @@ const routes = [
     name: 'MyFavorites',
     component: () => import('../components/MyFavoritesPage.vue'),
   },
+  {
+    path: '/paiement',
+    name: 'PaymentMethod',
+    component: () => import('../components/PaymentMethodPage.vue'),
+  },
 ]
 
 const router = createRouter({
