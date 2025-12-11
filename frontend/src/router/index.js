@@ -63,6 +63,11 @@ const routes = [
     name: 'DashboardProfessionnel',
     component: () => import('../components/DashboardProfessionnel.vue'),
   },
+  {
+    path: '/profil',
+    name: 'Profile',
+    component: () => import('../components/ProfilePage.vue'),
+  },
 ]
 
 const router = createRouter({
