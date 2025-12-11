@@ -93,8 +93,14 @@ export class EmailService {
 
     try {
       await this.transporter.sendMail(mailOptions);
-    } catch (error) {
-      console.error('Erreur lors de l\'envoi de l\'email:', error);
+    } catch (error: any) {
+      // En développement, ne pas logger l'erreur si les credentials SMTP ne sont pas configurés
+      if (error?.code === 'EAUTH' && !this.configService.get<string>('MAILTRAP_USER') && !this.configService.get<string>('SMTP_USER')) {
+        // Mode développement sans SMTP configuré - ne pas logger comme erreur
+        console.warn('SMTP non configuré - email non envoyé (mode développement)');
+      } else {
+        console.error('Erreur lors de l\'envoi de l\'email:', error);
+      }
       throw new Error('Impossible d\'envoyer l\'email de vérification');
     }
   }
@@ -148,8 +154,14 @@ export class EmailService {
 
     try {
       await this.transporter.sendMail(mailOptions);
-    } catch (error) {
-      console.error('Erreur lors de l\'envoi de l\'email:', error);
+    } catch (error: any) {
+      // En développement, ne pas logger l'erreur si les credentials SMTP ne sont pas configurés
+      if (error?.code === 'EAUTH' && !this.configService.get<string>('MAILTRAP_USER') && !this.configService.get<string>('SMTP_USER')) {
+        // Mode développement sans SMTP configuré - ne pas logger comme erreur
+        console.warn('SMTP non configuré - email non envoyé (mode développement)');
+      } else {
+        console.error('Erreur lors de l\'envoi de l\'email:', error);
+      }
       throw new Error('Impossible d\'envoyer l\'email de réinitialisation');
     }
   }

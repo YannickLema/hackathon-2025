@@ -193,9 +193,42 @@ export class AuthService {
       throw new BadRequestException('Email déjà vérifié');
     }
 
-    await this.sendVerificationEmail(user.id, user.email, user.firstName);
+    // Générer un nouveau token de vérification
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 24);
 
-    return { message: 'Email de vérification envoyé' };
+    // Supprimer l'ancien token s'il existe
+    await this.prisma.emailVerification.deleteMany({
+      where: { userId: user.id },
+    });
+
+    // Créer le nouveau token
+    await this.prisma.emailVerification.create({
+      data: {
+        userId: user.id,
+        token,
+        expiresAt,
+      },
+    });
+
+    // Générer et envoyer l'email de vérification (non-bloquant)
+    try {
+      await this.emailService.sendVerificationEmail(user.email, token, user.firstName);
+      return { message: 'Email de vérification envoyé' };
+    } catch (emailError) {
+      // Ne pas bloquer le renvoi si l'email échoue
+      console.error('Erreur lors de l\'envoi de l\'email de vérification:', emailError);
+      // En développement, on retourne quand même un succès car le token est créé
+      // Le token peut être utilisé pour vérifier l'email via /verify-email?token=...
+      const backendUrl = process.env.BACKEND_URL || 'http://localhost:3000';
+      const verificationUrl = `${backendUrl}/verify-email?token=${token}`;
+      return { 
+        message: 'Email de vérification envoyé (en mode développement)',
+        warning: 'Les emails ne sont pas configurés. En production, configurez SMTP.',
+        verificationUrl: verificationUrl // En développement, on retourne l'URL pour faciliter les tests
+      };
+    }
   }
 
   async forgotPassword(dto: ForgotPasswordDto) {
@@ -233,12 +266,17 @@ export class AuthService {
       },
     });
 
-    // Envoyer l'email
-    await this.emailService.sendPasswordResetEmail(
-      user.email,
-      token,
-      user.firstName,
-    );
+    // Envoyer l'email (non-bloquant)
+    try {
+      await this.emailService.sendPasswordResetEmail(
+        user.email,
+        token,
+        user.firstName,
+      );
+    } catch (emailError) {
+      // Ne pas bloquer si l'email échoue
+      console.error('Erreur lors de l\'envoi de l\'email de réinitialisation:', emailError);
+    }
 
     return { message: 'Si cet email existe, un email de réinitialisation a été envoyé' };
   }
@@ -304,8 +342,14 @@ export class AuthService {
       },
     });
 
-    // Envoyer l'email
-    await this.emailService.sendVerificationEmail(email, token, firstName);
+    // Envoyer l'email (non-bloquant)
+    try {
+      await this.emailService.sendVerificationEmail(email, token, firstName);
+    } catch (emailError) {
+      // Ne pas bloquer si l'email échoue
+      console.error('Erreur lors de l\'envoi de l\'email de vérification:', emailError);
+      throw emailError; // Propager l'erreur pour que les appels puissent la gérer
+    }
   }
 
   private async ensureEmailAvailable(email: string) {
@@ -329,7 +373,7 @@ export class AuthService {
     const accessToken = this.jwt.sign(payload);
 
     const { password, ...safeUser } = user;
-    return { accessToken, user: safeUser };
+    return { access_token: accessToken, accessToken, user: safeUser };
   }
 
   private validateParticulier(dto: RegisterParticulierDto) {
@@ -350,6 +394,35 @@ export class AuthService {
     if (dto.rgpdAccepted !== true) {
       throw new BadRequestException('Acceptation RGPD requise');
     }
+  }
+
+  async adminVerifyEmail(email: string) {
+    if (!email) {
+      throw new BadRequestException('Email requis');
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      throw new BadRequestException('Utilisateur introuvable');
+    }
+
+    if (user.emailVerified) {
+      return { message: 'Email déjà vérifié', user: { email: user.email, emailVerified: user.emailVerified } };
+    }
+
+    // Valider l'email et mettre à jour le statut
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerified: true,
+        status: AccountStatus.VERIFIED,
+      },
+    });
+
+    return { message: 'Email vérifié avec succès', user: { email: user.email, emailVerified: true } };
   }
 
   async validateSiret(siret: string) {

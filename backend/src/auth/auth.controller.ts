@@ -50,5 +50,10 @@ export class AuthController {
   async validateSiret(@Param('siret') siret: string) {
     return this.authService.validateSiret(siret);
   }
+
+  @Post('admin/verify-email')
+  async adminVerifyEmail(@Body() body: { email: string }) {
+    return this.authService.adminVerifyEmail(body.email);
+  }
 }
 

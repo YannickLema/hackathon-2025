@@ -24,8 +24,35 @@
             <span class="material-symbols-outlined">shopping_cart</span>
             <span v-if="cartCount > 0" class="icon-badge">{{ cartCount }}</span>
           </button>
-          <router-link to="/login" class="btn-action btn-login">Connexion</router-link>
-          <router-link to="/register" class="btn-action btn-signup">Inscription</router-link>
+          
+          <!-- Menu utilisateur connecté -->
+          <div v-if="isAuthenticated" class="user-menu-container">
+            <button class="user-menu-btn" @click="toggleUserMenu" aria-label="Menu utilisateur">
+              <span class="material-symbols-outlined">account_circle</span>
+              <span class="user-name">{{ userFirstName }}</span>
+              <span class="material-symbols-outlined dropdown-icon">arrow_drop_down</span>
+            </button>
+            <div v-if="isUserMenuOpen" class="user-menu-dropdown">
+              <router-link to="/profil" class="user-menu-item" @click="closeUserMenu">
+                <span class="material-symbols-outlined">person</span>
+                <span>Mon profil</span>
+              </router-link>
+              <router-link to="/mes-annonces" class="user-menu-item" @click="closeUserMenu">
+                <span class="material-symbols-outlined">inventory_2</span>
+                <span>Mes annonces</span>
+              </router-link>
+              <button class="user-menu-item user-menu-logout" @click="handleLogout">
+                <span class="material-symbols-outlined">logout</span>
+                <span>Déconnexion</span>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Boutons de connexion/inscription si non connecté -->
+          <template v-else>
+            <router-link to="/login" class="btn-action btn-login">Connexion</router-link>
+            <router-link to="/register" class="btn-action btn-signup">Inscription</router-link>
+          </template>
         </div>
       </div>
     </div>
@@ -84,14 +111,30 @@
         </div>
         
         <div class="menu-auth">
-          <router-link to="/login" class="menu-auth-link menu-auth-login" @click="closeMenu">
-            <span class="material-symbols-outlined menu-auth-icon">login</span>
-            <span>Connexion</span>
-          </router-link>
-          <router-link to="/register" class="menu-auth-link menu-auth-signup" @click="closeMenu">
-            <span class="material-symbols-outlined menu-auth-icon">person_add</span>
-            <span>Inscription</span>
-          </router-link>
+          <template v-if="isAuthenticated">
+            <div class="menu-user-info">
+              <span class="material-symbols-outlined menu-auth-icon">account_circle</span>
+              <span>{{ userFirstName }}</span>
+            </div>
+            <router-link to="/profil" class="menu-auth-link menu-auth-profile" @click="closeMenu">
+              <span class="material-symbols-outlined menu-auth-icon">person</span>
+              <span>Mon profil</span>
+            </router-link>
+            <button class="menu-auth-link menu-auth-logout" @click="handleLogoutFromMenu">
+              <span class="material-symbols-outlined menu-auth-icon">logout</span>
+              <span>Déconnexion</span>
+            </button>
+          </template>
+          <template v-else>
+            <router-link to="/login" class="menu-auth-link menu-auth-login" @click="closeMenu">
+              <span class="material-symbols-outlined menu-auth-icon">login</span>
+              <span>Connexion</span>
+            </router-link>
+            <router-link to="/register" class="menu-auth-link menu-auth-signup" @click="closeMenu">
+              <span class="material-symbols-outlined menu-auth-icon">person_add</span>
+              <span>Inscription</span>
+            </router-link>
+          </template>
         </div>
       </div>
     </nav>
@@ -204,10 +247,15 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import logo from '@/assets/Purple dog.svg'
 
+const router = useRouter()
 const isMenuOpen = ref(false)
+const isUserMenuOpen = ref(false)
+const isAuthenticated = ref(false)
+const user = ref(null)
 
 const toggleMenu = () => {
   isMenuOpen.value = !isMenuOpen.value
@@ -343,14 +391,79 @@ const openCartFromMenu = () => {
   }, 300)
 }
 
+const handleLogoutFromMenu = () => {
+  closeMenu()
+  handleLogout()
+}
+
+const checkAuth = () => {
+  const token = localStorage.getItem('access_token')
+  const userData = localStorage.getItem('user')
+  
+  if (token && userData) {
+    try {
+      user.value = JSON.parse(userData)
+      isAuthenticated.value = true
+      console.log('✅ Utilisateur authentifié:', user.value?.firstName, user.value?.email)
+    } catch (e) {
+      console.error('Erreur lors du parsing des données utilisateur:', e)
+      localStorage.removeItem('access_token')
+      localStorage.removeItem('user')
+      isAuthenticated.value = false
+    }
+  } else {
+    isAuthenticated.value = false
+    user.value = null
+    console.log('❌ Utilisateur non authentifié')
+  }
+}
+
+const userFirstName = computed(() => {
+  return user.value?.firstName || 'Utilisateur'
+})
+
+const toggleUserMenu = () => {
+  isUserMenuOpen.value = !isUserMenuOpen.value
+}
+
+const closeUserMenu = () => {
+  isUserMenuOpen.value = false
+}
+
+const handleLogout = () => {
+  localStorage.removeItem('access_token')
+  localStorage.removeItem('user')
+  isAuthenticated.value = false
+  user.value = null
+  isUserMenuOpen.value = false
+  router.push('/')
+}
+
+// Fermer le menu utilisateur si on clique en dehors
+const handleClickOutside = (event) => {
+  if (isUserMenuOpen.value && !event.target.closest('.user-menu-container')) {
+    isUserMenuOpen.value = false
+  }
+}
+
 onMounted(() => {
   // Charger les données au montage du composant
   loadWishlist()
   loadCart()
+  checkAuth()
   
   // Écouter les événements de mise à jour depuis d'autres composants
   window.addEventListener('wishlist-updated', loadWishlist)
   window.addEventListener('cart-updated', loadCart)
+  window.addEventListener('auth-changed', checkAuth)
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('wishlist-updated', loadWishlist)
+  window.removeEventListener('cart-updated', loadCart)
+  window.removeEventListener('auth-changed', checkAuth)
+  document.removeEventListener('click', handleClickOutside)
 })
 </script>
 
@@ -1144,6 +1257,115 @@ onMounted(() => {
 .panel-checkout-btn:hover {
   background-color: #1a1a1a;
   transform: translateY(-1px);
+}
+
+/* Menu utilisateur */
+.user-menu-container {
+  position: relative;
+  display: inline-block;
+}
+
+.user-menu-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 15px;
+  background-color: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 20px;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  color: #213547;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.user-menu-btn:hover {
+  background-color: #e0e0e0;
+  border-color: #645394;
+  color: #645394;
+}
+
+.user-menu-btn .material-symbols-outlined {
+  font-size: 20px;
+  color: #645394;
+}
+
+.user-name {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.dropdown-icon {
+  font-size: 18px;
+  transition: transform 0.3s ease;
+}
+
+.user-menu-btn:hover .dropdown-icon {
+  transform: rotate(180deg);
+}
+
+.user-menu-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  margin-top: 8px;
+  z-index: 10;
+  overflow: hidden;
+}
+
+.user-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 15px;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  color: #213547;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  background-color: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+
+.user-menu-item:hover {
+  background-color: #f5f5f5;
+  color: #645394;
+}
+
+.user-menu-item .material-symbols-outlined {
+  font-size: 20px;
+  color: #645394;
+}
+
+.user-menu-logout {
+  color: #d32f2f;
+  font-weight: 600;
+  border-top: 1px solid #f0f0f0;
+  margin-top: 5px;
+  padding-top: 12px;
+}
+
+.user-menu-logout:hover {
+  background-color: #ffebee;
+  color: #d32f2f;
+}
+
+.user-menu-logout .material-symbols-outlined {
+  color: #d32f2f;
 }
 
 @media (max-width: 768px) {

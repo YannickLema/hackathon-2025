@@ -958,6 +958,9 @@ const handleRegisterParticulier = async () => {
       alert('Inscription réussie ! Veuillez vérifier votre email avant de vous connecter.')
     }
 
+    // Déclencher l'événement de mise à jour de l'authentification
+    window.dispatchEvent(new Event('auth-changed'))
+    
     // Redirection après inscription réussie
     router.push('/')
   } catch (err) {
@@ -1041,6 +1044,9 @@ const handleRegisterProfessionnel = async () => {
       alert('Inscription réussie ! Veuillez vérifier votre email avant de vous connecter.')
     }
 
+    // Déclencher l'événement de mise à jour de l'authentification
+    window.dispatchEvent(new Event('auth-changed'))
+    
     // Redirection après inscription réussie
     router.push('/')
   } catch (err) {

@@ -47,9 +47,19 @@
           />
         </div>
 
-              <router-link to="/forgot-password" class="forgot-password">
-                J'ai oublié mon mot de passe
-              </router-link>
+              <div class="form-links">
+                <router-link to="/forgot-password" class="forgot-password">
+                  J'ai oublié mon mot de passe
+                </router-link>
+                <button 
+                  type="button" 
+                  class="resend-verification" 
+                  @click="handleResendVerification"
+                  v-if="showResendVerification"
+                >
+                  Renvoyer l'email de vérification
+                </button>
+              </div>
 
         <button type="submit" class="login-button" :disabled="isLoading">
           {{ isLoading ? 'Connexion...' : 'Se connecter' }}
@@ -57,6 +67,10 @@
 
         <div v-if="error" class="error-message">
           {{ error }}
+        </div>
+
+        <div v-if="resendSuccess" class="success-message">
+          Email de vérification envoyé avec succès ! Vérifiez votre boîte de réception.
         </div>
       </form>
     </div>
@@ -77,6 +91,8 @@ const email = ref('')
 const password = ref('')
 const isLoading = ref(false)
 const error = ref('')
+const showResendVerification = ref(false)
+const resendSuccess = ref(false)
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
@@ -108,20 +124,33 @@ const handleLogin = async () => {
       if (response.status === 401) {
         throw new Error(data.message || 'Email ou mot de passe incorrect')
       } else if (response.status === 403) {
-        throw new Error(data.message || 'Compte non vérifié ou suspendu')
+        // Vérifier si c'est un problème de vérification d'email
+        const errorMessage = data.message || ''
+        if (errorMessage.includes('vérifier') || errorMessage.includes('vérification') || errorMessage.includes('email')) {
+          showResendVerification.value = true
+          throw new Error('Veuillez vérifier votre email avant de vous connecter. Un lien de vérification vous a été envoyé lors de l\'inscription.')
+        } else if (errorMessage.includes('suspendu')) {
+          throw new Error('Votre compte a été suspendu. Veuillez contacter le support.')
+        } else {
+          throw new Error(data.message || 'Compte non vérifié ou suspendu')
+        }
       } else {
         throw new Error(data.message || `Erreur de connexion (${response.status})`)
       }
     }
 
     // Stocker le token et les informations utilisateur
-    if (data.access_token) {
-      localStorage.setItem('access_token', data.access_token)
+    const token = data.access_token || data.accessToken
+    if (token) {
+      localStorage.setItem('access_token', token)
       if (data.user) {
         localStorage.setItem('user', JSON.stringify(data.user))
       }
     }
 
+    // Déclencher l'événement de mise à jour de l'authentification
+    window.dispatchEvent(new Event('auth-changed'))
+    
     // Redirection après connexion réussie
     router.push('/')
   } catch (err) {
@@ -129,6 +158,53 @@ const handleLogin = async () => {
     console.error('Erreur de connexion:', err)
   } finally {
     isLoading.value = false
+  }
+}
+
+const handleResendVerification = async () => {
+  if (!email.value.trim()) {
+    error.value = 'Veuillez entrer votre adresse email'
+    return
+  }
+
+  resendSuccess.value = false
+  error.value = ''
+
+  try {
+    const response = await fetch(`${API_URL}/auth/resend-verification`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email: email.value.trim() }),
+    })
+
+    let data
+    try {
+      data = await response.json()
+    } catch (parseError) {
+      throw new Error('Erreur lors de la lecture de la réponse du serveur')
+    }
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Erreur lors de l\'envoi de l\'email de vérification')
+    }
+
+    // Afficher le message de succès (même s'il y a un warning en développement)
+    resendSuccess.value = true
+    error.value = ''
+    
+    // Afficher un message d'information si on est en mode développement
+    if (data.warning) {
+      console.warn('Mode développement:', data.warning)
+    }
+    
+    setTimeout(() => {
+      resendSuccess.value = false
+    }, 5000)
+  } catch (err) {
+    error.value = err.message || 'Une erreur est survenue lors de l\'envoi de l\'email'
+    console.error('Erreur renvoi vérification:', err)
   }
 }
 
@@ -258,19 +334,42 @@ const handleLogin = async () => {
   color: #999;
 }
 
+.form-links {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+}
+
 .forgot-password {
   font-family: 'Be Vietnam Pro', sans-serif;
   font-weight: 600;
   font-size: 14px;
   color: #000000;
   text-decoration: underline;
-  align-self: flex-start;
   cursor: pointer;
   transition: color 0.3s ease;
 }
 
 .forgot-password:hover {
   color: #645394;
+}
+
+.resend-verification {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  color: #645394;
+  text-decoration: underline;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.3s ease;
+}
+
+.resend-verification:hover {
+  color: #4F4670;
 }
 
 .login-button {
@@ -306,6 +405,18 @@ const handleLogin = async () => {
   background-color: #ffebee;
   border-radius: 8px;
   text-align: center;
+}
+
+.success-message {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  color: #2e7d32;
+  padding: 12px;
+  background-color: #e8f5e9;
+  border-radius: 8px;
+  text-align: center;
+  margin-top: 10px;
 }
 
 @media (max-width: 768px) {
