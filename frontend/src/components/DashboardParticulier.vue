@@ -20,7 +20,7 @@
       <!-- Statistiques principales -->
       <div class="stats-grid">
         <div class="stat-card stat-primary">
-          <div class="stat-icon-wrapper">
+          <div class="stat-icon-square">
             <span class="material-symbols-outlined stat-icon">inventory_2</span>
           </div>
           <div class="stat-content">
@@ -31,7 +31,7 @@
         </div>
 
         <div class="stat-card stat-secondary">
-          <div class="stat-icon-wrapper">
+          <div class="stat-icon-square">
             <span class="material-symbols-outlined stat-icon">visibility</span>
           </div>
           <div class="stat-content">
@@ -42,7 +42,7 @@
         </div>
 
         <div class="stat-card stat-success">
-          <div class="stat-icon-wrapper">
+          <div class="stat-icon-square">
             <span class="material-symbols-outlined stat-icon">sell</span>
           </div>
           <div class="stat-content">
@@ -53,13 +53,13 @@
         </div>
 
         <div class="stat-card stat-info">
-          <div class="stat-icon-wrapper">
+          <div class="stat-icon-square">
             <span class="material-symbols-outlined stat-icon">euro</span>
           </div>
           <div class="stat-content">
             <p class="stat-label">Chiffre d'affaires</p>
-            <p class="stat-value">{{ formatCurrency(stats.totalRevenue) }}</p>
-            <p class="stat-change positive">{{ formatCurrency(stats.revenueThisMonth) }} ce mois</p>
+            <p class="stat-value">{{ formatCurrencyValue(stats.totalRevenue) }}</p>
+            <p class="stat-change positive">{{ formatCurrencyValue(stats.revenueThisMonth) }} ce mois</p>
           </div>
         </div>
       </div>
@@ -228,6 +228,13 @@ const userFirstName = computed(() => {
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amount)
+}
+
+const formatCurrencyValue = (amount) => {
+  return new Intl.NumberFormat('fr-FR', { 
+    minimumFractionDigits: 2, 
+    maximumFractionDigits: 2 
+  }).format(amount) + ' €'
 }
 
 const formatTime = (date) => {
@@ -495,21 +502,23 @@ onMounted(() => {
 
 .stat-card {
   background-color: #ffffff;
-  border-radius: 16px;
-  padding: 25px;
+  border-radius: 12px;
+  padding: 24px;
   display: flex;
-  align-items: flex-start;
-  gap: 20px;
+  flex-direction: column;
+  gap: 16px;
   transition: all 0.3s ease;
-  border-left: 4px solid;
+  border-left: 3px solid;
   width: 100%;
   box-sizing: border-box;
   min-width: 0;
+  position: relative;
+  overflow: hidden;
 }
 
 .stat-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .stat-primary {
@@ -528,34 +537,34 @@ onMounted(() => {
   border-left-color: #FF9800;
 }
 
-.stat-icon-wrapper {
-  width: 56px;
-  height: 56px;
-  border-radius: 12px;
+.stat-icon-square {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-.stat-primary .stat-icon-wrapper {
-  background-color: rgba(100, 83, 148, 0.1);
+.stat-primary .stat-icon-square {
+  background-color: rgba(100, 83, 148, 0.15);
 }
 
-.stat-secondary .stat-icon-wrapper {
-  background-color: rgba(33, 150, 243, 0.1);
+.stat-secondary .stat-icon-square {
+  background-color: rgba(33, 150, 243, 0.15);
 }
 
-.stat-success .stat-icon-wrapper {
-  background-color: rgba(76, 175, 80, 0.1);
+.stat-success .stat-icon-square {
+  background-color: rgba(76, 175, 80, 0.15);
 }
 
-.stat-info .stat-icon-wrapper {
-  background-color: rgba(255, 152, 0, 0.1);
+.stat-info .stat-icon-square {
+  background-color: rgba(255, 152, 0, 0.15);
 }
 
 .stat-icon {
-  font-size: 28px;
+  font-size: 24px;
 }
 
 .stat-primary .stat-icon {
@@ -575,31 +584,36 @@ onMounted(() => {
 }
 
 .stat-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   flex: 1;
   min-width: 0;
-  overflow: hidden;
 }
 
 .stat-label {
   font-family: 'Be Vietnam Pro', sans-serif;
   font-weight: 400;
-  font-size: 0.9rem;
-  color: #666;
-  margin: 0 0 8px 0;
+  font-size: 0.85rem;
+  color: #999;
+  margin: 0;
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 .stat-value {
   font-family: 'Be Vietnam Pro', sans-serif;
   font-weight: 700;
-  font-size: 2rem;
+  font-size: 2.2rem;
   color: #213547;
-  margin: 0 0 5px 0;
+  margin: 0;
+  line-height: 1.2;
 }
 
 .stat-change {
   font-family: 'Be Vietnam Pro', sans-serif;
-  font-weight: 600;
-  font-size: 0.85rem;
+  font-weight: 500;
+  font-size: 0.9rem;
   margin: 0;
 }
 
