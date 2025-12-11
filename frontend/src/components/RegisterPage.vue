@@ -745,40 +745,45 @@ const validateSiret = async () => {
   siretError.value = ''
   siretValid.value = false
 
-  try {
-    // Utiliser l'endpoint backend pour valider le SIRET
-    const response = await fetch(`${API_URL}/auth/validate-siret/${siret}`, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-      },
-    })
+      try {
+        // Utiliser l'endpoint backend pour valider le SIRET
+        const response = await fetch(`${API_URL}/auth/validate-siret/${siret}`, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+          },
+        })
 
-    if (response.ok) {
-      const data = await response.json()
-      if (data.valid) {
-        siretValid.value = true
-        siretError.value = ''
-        // Pré-remplir le nom de l'entreprise si disponible et si le champ est vide
-        if (data.companyName && !professionnelForm.companyName) {
-          professionnelForm.companyName = data.companyName
+        let data
+        try {
+          data = await response.json()
+        } catch (parseError) {
+          throw new Error('Erreur lors de la lecture de la réponse du serveur')
         }
-      } else {
-        siretError.value = data.error || 'SIRET invalide'
+
+        if (response.ok) {
+          if (data.valid) {
+            siretValid.value = true
+            siretError.value = ''
+            // Pré-remplir le nom de l'entreprise si disponible et si le champ est vide
+            if (data.companyName && !professionnelForm.companyName) {
+              professionnelForm.companyName = data.companyName
+            }
+          } else {
+            siretError.value = data.error || 'SIRET invalide'
+            siretValid.value = false
+          }
+        } else {
+          siretError.value = data.error || 'Erreur lors de la vérification du SIRET'
+          siretValid.value = false
+        }
+      } catch (err) {
+        console.error('Erreur lors de la vérification du SIRET:', err)
+        siretError.value = err.message || 'Erreur réseau. Veuillez réessayer.'
         siretValid.value = false
+      } finally {
+        isValidatingSiret.value = false
       }
-    } else {
-      const data = await response.json().catch(() => ({}))
-      siretError.value = data.error || 'Erreur lors de la vérification du SIRET'
-      siretValid.value = false
-    }
-  } catch (err) {
-    console.error('Erreur lors de la vérification du SIRET:', err)
-    siretError.value = 'Erreur réseau. Veuillez réessayer.'
-    siretValid.value = false
-  } finally {
-    isValidatingSiret.value = false
-  }
 }
 
 const addSpeciality = () => {
@@ -903,42 +908,61 @@ const handleRegisterParticulier = async () => {
   isLoading.value = true
 
   try {
-    // Créer FormData pour envoyer le fichier photo si présent
-    const formData = new FormData()
-    formData.append('firstName', particulierForm.firstName)
-    formData.append('lastName', particulierForm.lastName)
-    formData.append('email', particulierForm.email)
-    formData.append('password', particulierForm.password)
-    if (profilePhotoFile.value) {
-      formData.append('profilePhoto', profilePhotoFile.value)
+    // Le backend ne gère pas encore le multipart : envoi en JSON (nom de fichier si fourni)
+    const payload = {
+      firstName: particulierForm.firstName,
+      lastName: particulierForm.lastName,
+      email: particulierForm.email,
+      password: particulierForm.password,
+      postalAddress: particulierForm.postalAddress,
+      isOver18: particulierForm.isOver18,
+      newsletter: particulierForm.newsletter || false,
+      rgpdAccepted: particulierForm.rgpdAccepted,
+      profilePhoto: profilePhotoFile.value ? profilePhotoFile.value.name : undefined,
     }
-    formData.append('postalAddress', particulierForm.postalAddress)
-    formData.append('isOver18', particulierForm.isOver18.toString())
-    formData.append('newsletter', (particulierForm.newsletter || false).toString())
-    formData.append('rgpdAccepted', particulierForm.rgpdAccepted.toString())
 
     const response = await fetch(`${API_URL}/auth/register/particulier`, {
       method: 'POST',
-      // Ne pas définir Content-Type, le navigateur le fera automatiquement avec la boundary pour FormData
-      body: formData,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
     })
 
-    const data = await response.json()
-
-    if (!response.ok) {
-      throw new Error(data.message || 'Erreur lors de l\'inscription')
+    let data
+    try {
+      data = await response.json()
+    } catch (parseError) {
+      throw new Error('Erreur lors de la lecture de la réponse du serveur')
     }
 
-    // Stocker le token si présent
+    if (!response.ok) {
+      // Gérer les différents types d'erreurs
+      if (response.status === 400) {
+        throw new Error(data.message || 'Données invalides')
+      } else if (response.status === 409) {
+        throw new Error(data.message || 'Cet email est déjà utilisé')
+      } else {
+        throw new Error(data.message || `Erreur lors de l'inscription (${response.status})`)
+      }
+    }
+
+    // Stocker le token et les informations utilisateur
     if (data.access_token) {
       localStorage.setItem('access_token', data.access_token)
-      localStorage.setItem('user', JSON.stringify(data.user || {}))
+      if (data.user) {
+        localStorage.setItem('user', JSON.stringify(data.user))
+      }
+    }
+
+    // Afficher un message de succès si l'email doit être vérifié
+    if (data.message && data.message.includes('vérification')) {
+      alert('Inscription réussie ! Veuillez vérifier votre email avant de vous connecter.')
     }
 
     // Redirection après inscription réussie
     router.push('/')
   } catch (err) {
     error.value = err.message || 'Une erreur est survenue lors de l\'inscription'
+    console.error('Erreur d\'inscription:', err)
   } finally {
     isLoading.value = false
   }
@@ -960,49 +984,68 @@ const handleRegisterProfessionnel = async () => {
   isLoading.value = true
 
   try {
-    // Créer FormData pour envoyer le fichier
-    const formData = new FormData()
-    formData.append('firstName', professionnelForm.firstName)
-    formData.append('lastName', professionnelForm.lastName)
-    formData.append('email', professionnelForm.email)
-    formData.append('password', professionnelForm.password)
-    formData.append('companyName', professionnelForm.companyName)
-    formData.append('siret', professionnelForm.siret.replace(/\s/g, ''))
-    formData.append('officialDocument', officialDocumentFile.value)
-    formData.append('postalAddress', professionnelForm.postalAddress)
-    if (professionnelForm.website) {
-      formData.append('website', professionnelForm.website)
+    // Le backend ne gère pas encore le multipart : envoi en JSON (nom de fichier pour le doc)
+    const payload = {
+      firstName: professionnelForm.firstName,
+      lastName: professionnelForm.lastName,
+      email: professionnelForm.email,
+      password: professionnelForm.password,
+      companyName: professionnelForm.companyName,
+      siret: professionnelForm.siret.replace(/\s/g, ''),
+      officialDocument: officialDocumentFile.value ? officialDocumentFile.value.name : 'document.pdf',
+      postalAddress: professionnelForm.postalAddress,
+      website: professionnelForm.website || undefined,
+      specialities: professionnelForm.specialities,
+      mostSearchedItems: professionnelForm.mostSearchedItems,
+      socialNetworks: buildSocialNetworksObject(),
+      cgvAccepted: professionnelForm.cgvAccepted,
+      mandateAccepted: professionnelForm.mandateAccepted,
+      newsletter: professionnelForm.newsletter || false,
+      rgpdAccepted: professionnelForm.rgpdAccepted,
     }
-    formData.append('specialities', JSON.stringify(professionnelForm.specialities))
-    formData.append('mostSearchedItems', JSON.stringify(professionnelForm.mostSearchedItems))
-    formData.append('socialNetworks', JSON.stringify(buildSocialNetworksObject()))
-    formData.append('cgvAccepted', professionnelForm.cgvAccepted.toString())
-    formData.append('mandateAccepted', professionnelForm.mandateAccepted.toString())
-    formData.append('newsletter', professionnelForm.newsletter.toString())
-    formData.append('rgpdAccepted', professionnelForm.rgpdAccepted.toString())
 
     const response = await fetch(`${API_URL}/auth/register/professionnel`, {
       method: 'POST',
-      // Ne pas définir Content-Type, le navigateur le fera automatiquement avec la boundary pour FormData
-      body: formData,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
     })
 
-    const data = await response.json()
-
-    if (!response.ok) {
-      throw new Error(data.message || 'Erreur lors de l\'inscription')
+    let data
+    try {
+      data = await response.json()
+    } catch (parseError) {
+      throw new Error('Erreur lors de la lecture de la réponse du serveur')
     }
 
-    // Stocker le token si présent
+    if (!response.ok) {
+      // Gérer les différents types d'erreurs
+      if (response.status === 400) {
+        throw new Error(data.message || 'Données invalides')
+      } else if (response.status === 409) {
+        throw new Error(data.message || 'Cet email est déjà utilisé')
+      } else {
+        throw new Error(data.message || `Erreur lors de l'inscription (${response.status})`)
+      }
+    }
+
+    // Stocker le token et les informations utilisateur
     if (data.access_token) {
       localStorage.setItem('access_token', data.access_token)
-      localStorage.setItem('user', JSON.stringify(data.user || {}))
+      if (data.user) {
+        localStorage.setItem('user', JSON.stringify(data.user))
+      }
+    }
+
+    // Afficher un message de succès si l'email doit être vérifié
+    if (data.message && data.message.includes('vérification')) {
+      alert('Inscription réussie ! Veuillez vérifier votre email avant de vous connecter.')
     }
 
     // Redirection après inscription réussie
     router.push('/')
   } catch (err) {
     error.value = err.message || 'Une erreur est survenue lors de l\'inscription'
+    console.error('Erreur d\'inscription professionnel:', err)
   } finally {
     isLoading.value = false
   }

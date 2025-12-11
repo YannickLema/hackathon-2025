@@ -67,9 +67,11 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import Header from './Header.vue'
 import Footer from './Footer.vue'
 
+const router = useRouter()
 const userType = ref('particulier')
 const email = ref('')
 const password = ref('')
@@ -89,27 +91,42 @@ const handleLogin = async () => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        email: email.value,
+        email: email.value.trim(),
         password: password.value,
       }),
     })
 
-    const data = await response.json()
-
-    if (!response.ok) {
-      throw new Error(data.message || 'Erreur de connexion')
+    let data
+    try {
+      data = await response.json()
+    } catch (parseError) {
+      throw new Error('Erreur lors de la lecture de la réponse du serveur')
     }
 
-    // Stocker le token si présent
+    if (!response.ok) {
+      // Gérer les différents types d'erreurs
+      if (response.status === 401) {
+        throw new Error(data.message || 'Email ou mot de passe incorrect')
+      } else if (response.status === 403) {
+        throw new Error(data.message || 'Compte non vérifié ou suspendu')
+      } else {
+        throw new Error(data.message || `Erreur de connexion (${response.status})`)
+      }
+    }
+
+    // Stocker le token et les informations utilisateur
     if (data.access_token) {
       localStorage.setItem('access_token', data.access_token)
-      localStorage.setItem('user', JSON.stringify(data.user || {}))
+      if (data.user) {
+        localStorage.setItem('user', JSON.stringify(data.user))
+      }
     }
 
     // Redirection après connexion réussie
-    window.location.href = '/'
+    router.push('/')
   } catch (err) {
     error.value = err.message || 'Une erreur est survenue lors de la connexion'
+    console.error('Erreur de connexion:', err)
   } finally {
     isLoading.value = false
   }

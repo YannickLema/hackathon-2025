@@ -67,21 +67,29 @@ const handleForgotPassword = async () => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        email: email.value,
-      }),
+      body: JSON.stringify({ email: email.value.trim() }),
     })
 
-    const data = await response.json()
-
-    if (!response.ok) {
-      throw new Error(data.message || 'Erreur lors de l\'envoi de l\'email')
+    let data
+    try {
+      data = await response.json()
+    } catch (parseError) {
+      throw new Error('Erreur lors de la lecture de la réponse du serveur')
     }
 
-    success.value = 'Un email de réinitialisation a été envoyé à votre adresse email.'
-    email.value = ''
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error(data.message || 'Aucun compte trouvé avec cet email')
+      } else {
+        throw new Error(data.message || 'Erreur lors de l\'envoi du lien de réinitialisation')
+      }
+    }
+
+    success.value = data.message || 'Un lien de réinitialisation a été envoyé à votre adresse email.'
+    email.value = '' // Effacer le champ après succès
   } catch (err) {
-    error.value = err.message || 'Une erreur est survenue. Veuillez réessayer.'
+    error.value = err.message || 'Une erreur est survenue.'
+    console.error('Erreur mot de passe oublié:', err)
   } finally {
     isLoading.value = false
   }

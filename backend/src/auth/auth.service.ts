@@ -53,8 +53,13 @@ export class AuthService {
       include: { particulierProfile: true },
     });
 
-    // Générer et envoyer l'email de vérification
-    await this.sendVerificationEmail(user.id, user.email, user.firstName);
+    // Générer et envoyer l'email de vérification (non-bloquant)
+    try {
+      await this.sendVerificationEmail(user.id, user.email, user.firstName);
+    } catch (emailError) {
+      // Ne pas bloquer l'inscription si l'email échoue
+      console.error('Erreur lors de l\'envoi de l\'email de vérification:', emailError);
+    }
 
     return this.buildAuthResponse(user);
   }
@@ -96,8 +101,13 @@ export class AuthService {
       include: { professionnelProfile: true },
     });
 
-    // Générer et envoyer l'email de vérification
-    await this.sendVerificationEmail(user.id, user.email, user.firstName);
+    // Générer et envoyer l'email de vérification (non-bloquant)
+    try {
+      await this.sendVerificationEmail(user.id, user.email, user.firstName);
+    } catch (emailError) {
+      // Ne pas bloquer l'inscription si l'email échoue
+      console.error('Erreur lors de l\'envoi de l\'email de vérification:', emailError);
+    }
 
     return this.buildAuthResponse(user);
   }

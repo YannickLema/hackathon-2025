@@ -24,6 +24,9 @@ services:
       dockerfile: Dockerfile
     env_file:
       - ./.env 
+    environment:
+      - DOCKER=true
+      - DATABASE_URL=postgresql://purple:purple@db:5432/purpledog
     ports:
       - "3000:3000"
     depends_on:
@@ -39,7 +42,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     environment:
-      VITE_API_URL: http://localhost:3000
+      VITE_API_URL: http://backend:3000
     ports:
       - "5173:5173"
     depends_on:
