@@ -3,28 +3,12 @@
 
 generator client {
   provider = "prisma-client-js"
+  binaryTargets = ["linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-}
-
-enum ListingCategory {
-  BIJOUX_MONTRES
-  MEUBLES_ANCIENS
-  OBJETS_ART_TABLEAUX
-  OBJETS_COLLECTION
-  VINS_SPIRITUEUX
-  INSTRUMENTS_MUSIQUE
-  LIVRES_MANUSCRITS
-  MODE_ACCESSOIRES_LUXE
-  HORLOGERIE_PENDULES
-  PHOTOGRAPHIES
-  VAISSELLE_ARGENTERIE_CRISTALLERIE
-  SCULPTURES_DECORATION
-  VEHICULES_COLLECTION
-  AUTRE
 }
 
 enum SaleMode {
@@ -172,7 +156,8 @@ model Listing {
   sellerId          String
   seller            User              @relation("SellerListings", fields: [sellerId], references: [id], onDelete: Cascade)
   title             String
-  category          ListingCategory
+  categoryId        String
+  category          Category          @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   dimensions        String
   weightKg          Decimal           @db.Decimal(10, 2)
   description       String
@@ -192,6 +177,7 @@ model Listing {
   updatedAt         DateTime          @updatedAt
 
   @@index([sellerId])
+  @@index([categoryId])
   @@map("listings")
 }
 
@@ -304,4 +290,47 @@ model Feedback {
   updatedAt DateTime @updatedAt
 
   @@map("feedbacks")
+}
+
+model PlatformCommission {
+  id         String            @id @default(uuid())
+  isGlobal   Boolean           @default(false)
+  categoryId String?
+  category   Category?         @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  buyerRate  Decimal           @db.Decimal(5, 4)
+  sellerRate Decimal           @db.Decimal(5, 4)
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  @@unique([isGlobal])
+  @@unique([categoryId])
+  @@map("platform_commissions")
+}
+
+model Category {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  label     String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  listings  Listing[]
+  commissions PlatformCommission[]
+  formConfigs ListingFormConfig[]
+
+  @@map("categories")
+}
+
+model ListingFormConfig {
+  id         String    @id @default(uuid())
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  saleMode   SaleMode?
+  fields     Json
+  isActive   Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@unique([categoryId, saleMode])
+  @@map("listing_form_configs")
 }

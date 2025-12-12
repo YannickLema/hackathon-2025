@@ -1,4 +1,4 @@
-import { ListingCategory, SaleMode } from '@prisma/client';
+import { SaleMode } from '@prisma/client';
 
 export type ListingPhotoInput = {
   url: string;
@@ -12,7 +12,7 @@ export type ListingDocumentInput = {
 
 export class CreateListingDto {
   title!: string;
-  category!: ListingCategory;
+  categoryId!: string;
   dimensions!: string;
   weightKg!: number;
   description!: string;

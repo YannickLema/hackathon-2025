@@ -194,5 +194,22 @@ export class StripeService {
 
     return paymentIntent;
   }
+
+  async checkHealth(): Promise<boolean> {
+    try {
+      await this.stripe.balance.retrieve();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async getCustomerRaw(customerId: string) {
+    try {
+      return await this.stripe.customers.retrieve(customerId);
+    } catch (e) {
+      return null;
+    }
+  }
 }
 

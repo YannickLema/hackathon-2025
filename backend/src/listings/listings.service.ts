@@ -4,15 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import {
-  ListingCategory,
-  ListingStatus,
-  OfferStatus,
-  Prisma,
-  Role,
-  SaleMode,
-  User,
-} from '@prisma/client';
+import { ListingStatus, OfferStatus, Prisma, Role, SaleMode, User } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import { CreateListingDto } from './dto/create-listing.dto';
@@ -30,18 +22,12 @@ export class ListingsService {
   ) {}
 
   async createListing(user: User | undefined, dto: CreateListingDto) {
-<<<<<<< HEAD
     if (!user) {
       throw new ForbiddenException('Authentification requise');
     }
     // Les particuliers et professionnels peuvent créer des listings
     if (user.role !== Role.PROFESSIONNEL && user.role !== Role.PARTICULIER) {
       throw new ForbiddenException('Réservé aux particuliers et professionnels');
-=======
-    if (!user) throw new ForbiddenException('Authentification requise');
-    if (!this.isSeller(user)) {
-      throw new ForbiddenException('Réservé aux vendeurs (professionnels ou particuliers)');
->>>>>>> feature/dashboard_particulier
     }
     this.ensureValidPayload(dto);
 
@@ -50,6 +36,19 @@ export class ListingsService {
     const now = new Date();
     let auctionStartPrice: Prisma.Decimal | null = null;
     let auctionEndAt: Date | null = null;
+
+    const category = await this.prisma.category.findFirst({
+      where: { id: dto.categoryId, isActive: true },
+    });
+    if (!category) {
+      throw new BadRequestException('Catégorie introuvable ou inactive');
+    }
+
+    // Valider par rapport à la configuration de formulaire (si présente)
+    const formConfig = await this.resolveFormConfig(dto.categoryId, dto.saleMode);
+    if (formConfig) {
+      this.validateAgainstFormConfig(dto, formConfig.fields as Record<string, any>);
+    }
 
     if (dto.saleMode === SaleMode.AUCTION) {
       const startNumber =
@@ -80,7 +79,7 @@ export class ListingsService {
       data: {
         sellerId: user.id,
         title: dto.title.trim(),
-        category: dto.category,
+        categoryId: category.id,
         dimensions: dto.dimensions.trim(),
         weightKg,
         description: dto.description.trim(),
@@ -197,8 +196,16 @@ export class ListingsService {
     if (saleMode && Object.values(SaleMode).includes(saleMode as SaleMode)) {
       where.saleMode = saleMode as SaleMode;
     }
-    if (category && Object.values(ListingCategory).includes(category as ListingCategory)) {
-      where.category = category as ListingCategory;
+    if (category && category.trim()) {
+      const foundCategory = await this.prisma.category.findFirst({
+        where: {
+          OR: [{ id: category }, { code: category }],
+          isActive: true,
+        },
+      });
+      if (foundCategory) {
+        where.categoryId = foundCategory.id;
+      }
     }
     if (priceMin || priceMax) {
       const min = priceMin ? Number(priceMin) : undefined;
@@ -609,8 +616,8 @@ export class ListingsService {
     if (!dto?.title?.trim()) throw new BadRequestException('Le nom de l’objet est requis');
     if (!dto?.dimensions?.trim()) throw new BadRequestException('Les dimensions sont requises');
     if (!dto?.description?.trim()) throw new BadRequestException('La description est requise');
-    if (!dto?.category || !Object.values(ListingCategory).includes(dto.category)) {
-      throw new BadRequestException('Catégorie invalide');
+    if (!dto?.categoryId?.trim()) {
+      throw new BadRequestException('Catégorie requise');
     }
     if (!dto?.saleMode || !Object.values(SaleMode).includes(dto.saleMode)) {
       throw new BadRequestException('Mode de vente invalide');
@@ -634,13 +641,57 @@ export class ListingsService {
     }
   }
 
+  private validateAgainstFormConfig(dto: CreateListingDto, fields: Record<string, any>) {
+    if (!fields || typeof fields !== 'object') return;
+
+    const missing: string[] = [];
+    for (const [key, cfg] of Object.entries(fields)) {
+      const required = !!(cfg && typeof cfg === 'object' && cfg.required);
+      if (!required) continue;
+      const val = (dto as any)[key];
+      const isEmpty =
+        val === undefined ||
+        val === null ||
+        (typeof val === 'string' && !val.trim()) ||
+        (Array.isArray(val) && val.length === 0);
+      if (isEmpty) {
+        missing.push(key);
+      }
+    }
+
+    if (missing.length > 0) {
+      throw new BadRequestException(
+        `Champs obligatoires manquants selon le formulaire: ${missing.join(', ')}`,
+      );
+    }
+  }
+
+  private async resolveFormConfig(categoryId?: string, saleMode?: SaleMode) {
+    const items = await this.prisma.listingFormConfig.findMany({
+      where: {
+        isActive: true,
+        OR: [
+          { categoryId: categoryId ?? undefined, saleMode: saleMode ?? undefined },
+          { categoryId: categoryId ?? undefined, saleMode: null },
+          { categoryId: null, saleMode: null },
+        ],
+      },
+      orderBy: [
+        { categoryId: 'desc' },
+        { saleMode: 'desc' },
+        { updatedAt: 'desc' },
+      ],
+      take: 1,
+    });
+    return items[0] ?? null;
+  }
+
   private addDays(date: Date, days: number) {
     const result = new Date(date);
     result.setDate(result.getDate() + days);
     return result;
   }
 
-<<<<<<< HEAD
   async findAll(filters: {
     category?: string;
     status?: string;
@@ -655,7 +706,15 @@ export class ListingsService {
     };
 
     if (filters.category) {
-      where.category = filters.category as ListingCategory;
+      const foundCategory = await this.prisma.category.findFirst({
+        where: {
+          OR: [{ id: filters.category }, { code: filters.category }],
+          isActive: true,
+        },
+      });
+      if (foundCategory) {
+        where.categoryId = foundCategory.id;
+      }
     }
 
     if (filters.search) {
@@ -759,10 +818,6 @@ export class ListingsService {
     }
 
     return listing;
-=======
-  private isSeller(user: User) {
-    return user.role === Role.PROFESSIONNEL || user.role === Role.PARTICULIER;
->>>>>>> feature/dashboard_particulier
   }
 
   private async ensureListingOwnership(userId: string, listingId: string) {
@@ -780,6 +835,10 @@ export class ListingsService {
     if (!found) {
       throw new NotFoundException('Annonce introuvable');
     }
+  }
+
+  private isSeller(user: User) {
+    return user.role === Role.PROFESSIONNEL || user.role === Role.PARTICULIER;
   }
 }
 
