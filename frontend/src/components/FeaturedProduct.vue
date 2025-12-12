@@ -144,6 +144,7 @@ const loadFeaturedProducts = async () => {
 
 const getCategoryName = (category) => {
   const categoryNames = {
+    // Anciennes catégories (pour compatibilité)
     PEINTURE: 'Objets d\'art & tableaux',
     SCULPTURE: 'Sculptures & objets decoratifs',
     MONTRE: 'Bijoux & montres',
@@ -153,7 +154,17 @@ const getCategoryName = (category) => {
     VETEMENT: 'Accessoires de luxe',
     ACCESSOIRE: 'Accessoires de luxe',
     DESIGN: 'Meubles anciens',
-    AUTRE: 'Objets de collection'
+    AUTRE: 'Objets de collection',
+    // Nouvelles catégories du backend
+    OBJETS_ART_TABLEAUX: 'Objets d\'art & tableaux',
+    BIJOUX_MONTRES: 'Bijoux & montres',
+    SCULPTURES_DECORATION: 'Sculptures & objets decoratifs',
+    MODE_ACCESSOIRES_LUXE: 'Accessoires de luxe',
+    MEUBLES_ANCIENS: 'Meubles anciens',
+    VINS_SPIRITUEUX: 'Vins & spiritueux',
+    INSTRUMENTS_MUSIQUE: 'Instruments de musique',
+    LIVRES_MANUSCRITS: 'Livres anciens & manuscrits',
+    PHOTOGRAPHIES_ANCIENNES: 'Photographie anciennes'
   }
   return categoryNames[category] || 'Objets de collection'
 }
