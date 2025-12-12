@@ -14,16 +14,21 @@
                 class="email-input"
                 required
               />
-              <button type="submit" class="btn-rect submit-btn">S'abonner</button>
+              <button type="submit" class="btn-rect submit-btn" :disabled="isLoading">
+                {{ isLoading ? 'Envoi...' : 'S\'abonner' }}
+              </button>
             </div>
             <label class="checkbox-label">
               <input 
                 type="checkbox" 
                 v-model="acceptTerms"
+                :disabled="isLoading"
                 required
               />
               <span>J'ai lu et j'accepte que mes donnees soit utillisees</span>
             </label>
+            <div v-if="error" class="newsletter-error">{{ error }}</div>
+            <div v-if="success" class="newsletter-success">{{ success }}</div>
           </form>
         </div>
       </div>
@@ -200,8 +205,35 @@ const handleSubmit = async () => {
   flex-shrink: 0;
 }
 
-.submit-btn:hover {
+.submit-btn:hover:not(:disabled) {
   background-color: #4F4670;
+}
+
+.submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.newsletter-error {
+  color: #ffebee;
+  background-color: rgba(211, 47, 47, 0.8);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-top: 10px;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600;
+}
+
+.newsletter-success {
+  color: #e8f5e9;
+  background-color: rgba(46, 125, 50, 0.8);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-top: 10px;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-weight: 600;
 }
 
 @media (max-width: 768px) {
