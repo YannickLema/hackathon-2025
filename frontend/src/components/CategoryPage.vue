@@ -192,19 +192,19 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
 // Mapping entre les catégories frontend et backend
 const categoryMapping = {
-  1: 'BIJOU', // Bijoux & montres
-  2: 'DESIGN', // Meubles anciens
-  3: 'PEINTURE', // Objets d'art & tableaux
-  4: 'OBJET_ART', // Objets de collection
-  5: 'AUTRE', // Vins & spiritueux
-  6: 'AUTRE', // Instruments de musique
-  7: 'AUTRE', // Livres anciens
-  8: 'ACCESSOIRE', // Accessoires de luxe
-  9: 'MONTRE', // Horlogerie & pendules
-  10: 'PHOTOGRAPHIE', // Photographie anciennes
-  11: 'OBJET_ART', // Vaisselle, argenterie
-  12: 'SCULPTURE', // Sculptures & objets decoratifs
-  13: 'AUTRE' // Vehicules de collection
+  1: 'BIJOUX_MONTRES', // Bijoux & montres
+  2: 'MEUBLES_ANCIENS', // Meubles anciens
+  3: 'OBJETS_ART_TABLEAUX', // Objets d'art & tableaux
+  4: 'OBJETS_ART_TABLEAUX', // Objets de collection
+  5: 'VINS_SPIRITUEUX', // Vins & spiritueux
+  6: 'INSTRUMENTS_MUSIQUE', // Instruments de musique
+  7: 'LIVRES_MANUSCRITS', // Livres anciens
+  8: 'MODE_ACCESSOIRES_LUXE', // Accessoires de luxe
+  9: 'BIJOUX_MONTRES', // Horlogerie & pendules
+  10: 'PHOTOGRAPHIES_ANCIENNES', // Photographie anciennes
+  11: 'OBJETS_ART_TABLEAUX', // Vaisselle, argenterie
+  12: 'SCULPTURES_DECORATION', // Sculptures & objets decoratifs
+  13: 'OBJETS_ART_TABLEAUX' // Vehicules de collection
 }
 
 const filters = ref({

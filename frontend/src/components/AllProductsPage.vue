@@ -60,14 +60,15 @@
                     <label for="filterCategory">Catégorie</label>
                     <select id="filterCategory" v-model="filters.category" class="form-select">
                       <option :value="null">Toutes les catégories</option>
-                      <option value="PEINTURE">Peinture</option>
-                      <option value="SCULPTURE">Sculpture</option>
-                      <option value="MONTRE">Montre</option>
-                      <option value="BIJOU">Bijou</option>
-                      <option value="OBJET_ART">Objet d'art</option>
-                      <option value="PHOTOGRAPHIE">Photographie</option>
-                      <option value="VETEMENT">Vêtement</option>
-                      <option value="ACCESSOIRE">Accessoire</option>
+                      <option value="OBJETS_ART_TABLEAUX">Objets d'art & tableaux</option>
+                      <option value="SCULPTURES_DECORATION">Sculptures & décoration</option>
+                      <option value="BIJOUX_MONTRES">Bijoux & montres</option>
+                      <option value="MODE_ACCESSOIRES_LUXE">Mode & accessoires de luxe</option>
+                      <option value="MEUBLES_ANCIENS">Meubles anciens</option>
+                      <option value="VINS_SPIRITUEUX">Vins & spiritueux</option>
+                      <option value="INSTRUMENTS_MUSIQUE">Instruments de musique</option>
+                      <option value="LIVRES_MANUSCRITS">Livres & manuscrits</option>
+                      <option value="PHOTOGRAPHIES_ANCIENNES">Photographies anciennes</option>
                       <option value="DESIGN">Design</option>
                       <option value="AUTRE">Autre</option>
                     </select>
