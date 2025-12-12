@@ -34,15 +34,51 @@
 <script setup>
 import { ref } from 'vue'
 
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+
 const email = ref('')
 const acceptTerms = ref(false)
+const isLoading = ref(false)
+const error = ref('')
+const success = ref('')
 
-const handleSubmit = () => {
-  if (acceptTerms.value && email.value) {
-    console.log('Newsletter subscription:', email.value)
-    // Logique d'abonnement à la newsletter
+const handleSubmit = async () => {
+  if (!acceptTerms.value) {
+    error.value = 'Veuillez accepter les conditions d\'utilisation'
+    return
+  }
+  
+  if (!email.value || !email.value.includes('@')) {
+    error.value = 'Veuillez entrer une adresse email valide'
+    return
+  }
+
+  isLoading.value = true
+  error.value = ''
+  success.value = ''
+
+  try {
+    // Pour l'instant, on simule l'abonnement
+    // TODO: Créer un endpoint backend pour la newsletter
+    await new Promise(resolve => setTimeout(resolve, 500))
+    
+    success.value = 'Vous êtes maintenant abonné à notre newsletter !'
     email.value = ''
     acceptTerms.value = false
+    
+    setTimeout(() => {
+      success.value = ''
+    }, 5000)
+  } catch (err) {
+    error.value = 'Une erreur est survenue. Veuillez réessayer.'
+    setTimeout(() => {
+      error.value = ''
+    }, 5000)
+  } finally {
+    isLoading.value = false
   }
 }
 </script>

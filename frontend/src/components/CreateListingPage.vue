@@ -44,15 +44,9 @@
                 required
               >
                 <option value="">Sélectionner une catégorie</option>
-                <option value="OBJETS_ART_TABLEAUX">Objets d'art & tableaux</option>
-                <option value="SCULPTURES_DECORATION">Sculptures & décoration</option>
-                <option value="BIJOUX_MONTRES">Bijoux & montres</option>
-                <option value="MODE_ACCESSOIRES_LUXE">Mode & accessoires de luxe</option>
-                <option value="MEUBLES_ANCIENS">Meubles anciens</option>
-                <option value="VINS_SPIRITUEUX">Vins & spiritueux</option>
-                <option value="INSTRUMENTS_MUSIQUE">Instruments de musique</option>
-                <option value="LIVRES_MANUSCRITS">Livres & manuscrits</option>
-                <option value="PHOTOGRAPHIES_ANCIENNES">Photographies anciennes</option>
+                <option v-for="cat in categories" :key="cat.id" :value="cat.code">
+                  {{ cat.label }}
+                </option>
               </select>
             </div>
             <div class="form-group">
@@ -437,9 +431,18 @@ const handleSubmit = async () => {
         label: d.label || null
       }))
 
+    // Trouver la catégorie par code ou ID
+    let categoryId = form.category
+    if (categories.value.length > 0) {
+      const foundCategory = categories.value.find(c => c.code === form.category || c.id === form.category)
+      if (foundCategory) {
+        categoryId = foundCategory.id
+      }
+    }
+
     const payload = {
       title: form.title,
-      category: form.category,
+      categoryId: categoryId,
       description: form.description,
       priceDesired: form.priceDesired,
       saleMode: form.saleMode,

@@ -3,6 +3,7 @@ import { AppService } from './app.service';
 import { AuthService } from './auth/auth.service';
 import { EmailService } from './email/email.service';
 import { ResetPasswordDto } from './auth/dto/reset-password.dto';
+import { PrismaService } from './prisma/prisma.service';
 
 @Controller()
 export class AppController {
@@ -10,6 +11,7 @@ export class AppController {
     private readonly appService: AppService,
     private readonly authService: AuthService,
     private readonly emailService: EmailService,
+    private readonly prisma: PrismaService,
   ) {}
 
   @Get()
@@ -62,5 +64,19 @@ export class AppController {
         success: true 
       };
     }
+  }
+
+  @Get('categories')
+  async getCategories() {
+    return this.prisma.category.findMany({
+      where: { isActive: true },
+      orderBy: { label: 'asc' },
+      select: {
+        id: true,
+        code: true,
+        label: true,
+        isActive: true,
+      },
+    });
   }
 }

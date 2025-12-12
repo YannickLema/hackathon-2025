@@ -152,18 +152,7 @@ const handleSubmit = async () => {
     form.message = ''
     form.rgpdAccepted = false
   } catch (err) {
-    // En cas d'erreur réseau ou si l'endpoint n'existe pas encore, afficher un message de succès simulé
-    if (err.message.includes('Failed to fetch') || err.message.includes('404')) {
-      success.value = 'Votre message a été envoyé avec succès. Nous vous répondrons dans les plus brefs délais.'
-      form.firstName = ''
-      form.lastName = ''
-      form.email = ''
-      form.subject = ''
-      form.message = ''
-      form.rgpdAccepted = false
-    } else {
-      error.value = err.message || 'Une erreur est survenue lors de l\'envoi du message.'
-    }
+    error.value = err.message || 'Une erreur est survenue lors de l\'envoi du message.'
   } finally {
     isLoading.value = false
   }

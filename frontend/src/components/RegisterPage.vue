@@ -954,6 +954,17 @@ const handleRegisterProfessionnel = async () => {
   isLoading.value = true
 
   try {
+    // Convertir le document officiel en base64 si présent
+    let officialDocumentBase64 = null
+    if (officialDocumentFile.value) {
+      officialDocumentBase64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result)
+        reader.onerror = reject
+        reader.readAsDataURL(officialDocumentFile.value)
+      })
+    }
+
     await registerProfessionnel({
       firstName: professionnelForm.firstName,
       lastName: professionnelForm.lastName,
@@ -961,14 +972,16 @@ const handleRegisterProfessionnel = async () => {
       password: professionnelForm.password,
       companyName: professionnelForm.companyName,
       siret: professionnelForm.siret.replace(/\s/g, ''),
-      officialDocument: officialDocumentFile.value ? officialDocumentFile.value.name : 'document.pdf',
+      officialDocument: officialDocumentBase64 || (officialDocumentFile.value ? officialDocumentFile.value.name : 'document.pdf'),
       postalAddress: professionnelForm.postalAddress,
       website: professionnelForm.website || undefined,
-      specialities: professionnelForm.specialities,
-      mostSearchedItems: professionnelForm.mostSearchedItems,
+      specialities: professionnelForm.specialities.length > 0 ? professionnelForm.specialities : ['Général'],
+      mostSearchedItems: professionnelForm.mostSearchedItems.length > 0 ? professionnelForm.mostSearchedItems : ['Objets divers'],
+      socialNetworks: buildSocialNetworksObject(),
       newsletter: professionnelForm.newsletter || false,
       cgvAccepted: professionnelForm.cgvAccepted,
       mandateAccepted: professionnelForm.mandateAccepted,
+      rgpdAccepted: professionnelForm.rgpdAccepted,
     })
 
     success.value = 'Inscription réussie ! Vérifie ton email pour valider le compte.'
