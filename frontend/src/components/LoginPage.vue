@@ -106,13 +106,23 @@ const handleLogin = async () => {
       throw new Error('Profil utilisateur introuvable');
     }
 
+    // Sauvegarder le token et les données utilisateur
+    if (data?.access_token || data?.accessToken) {
+      localStorage.setItem('access_token', data.access_token || data.accessToken);
+    }
+    if (profile) {
+      localStorage.setItem('user', JSON.stringify(profile));
+    }
+
     // Déclencher un event si nécessaire
     window.dispatchEvent(new Event('auth-changed'));
 
     const role = profile.role?.toUpperCase?.() || '';
-    if (role === 'PARTICULIER') {
+    if (role === 'ADMIN' || role === 'admin') {
+      router.push('/admin');
+    } else if (role === 'PARTICULIER' || role === 'particulier') {
       router.push('/dashboard/particulier');
-    } else if (role === 'PROFESSIONNEL') {
+    } else if (role === 'PROFESSIONNEL' || role === 'professionnel') {
       router.push('/dashboard/professionnel');
     } else {
       router.push('/');
