@@ -110,6 +110,18 @@ const routes = [
     meta: { requiresAuth: true, requiresRole: ['PROFESSIONNEL'] },
   },
   {
+    path: '/checkout/:id',
+    name: 'Checkout',
+    component: () => import('../components/CheckoutPage.vue'),
+    meta: { requiresAuth: true, requiresRole: ['PROFESSIONNEL'] },
+  },
+  {
+    path: '/achat-confirme/:id',
+    name: 'PurchaseSuccess',
+    component: () => import('../components/PurchaseSuccessPage.vue'),
+    meta: { requiresAuth: true, requiresRole: ['PROFESSIONNEL'] },
+  },
+  {
     path: '/admin',
     name: 'DashboardAdmin',
     component: () => import('../components/DashboardAdmin.vue'),

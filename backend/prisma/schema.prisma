@@ -68,6 +68,9 @@ model User {
   bids                 Bid[]                  @relation("UserBids")
   feedbacks            Feedback[]             @relation("UserFeedbacks")
   paymentMethod         PaymentMethod?
+  purchases            Purchase[]             @relation("BuyerPurchases")
+  sellerCommissions    AdminCommission[]      @relation("SellerCommissions")
+  buyerCommissions     AdminCommission[]      @relation("BuyerCommissions")
 
   @@map("users")
 }
@@ -173,6 +176,8 @@ model Listing {
   messages          ListingMessage[]
   bids              Bid[]
   favorites         Favorite[]
+  purchases         Purchase[]
+  commissions       AdminCommission[]
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
@@ -317,6 +322,7 @@ model Category {
   listings  Listing[]
   commissions PlatformCommission[]
   formConfigs ListingFormConfig[]
+  adminCommissions AdminCommission[]
 
   @@map("categories")
 }
@@ -333,4 +339,55 @@ model ListingFormConfig {
 
   @@unique([categoryId, saleMode])
   @@map("listing_form_configs")
+}
+
+enum PurchaseStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+model Purchase {
+  id              String          @id @default(uuid())
+  listingId      String
+  listing         Listing         @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  buyerId         String
+  buyer           User            @relation("BuyerPurchases", fields: [buyerId], references: [id], onDelete: Cascade)
+  amount          Decimal         @db.Decimal(10, 2)
+  paymentIntentId String
+  status          PurchaseStatus  @default(PENDING)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  commission      AdminCommission?
+
+  @@index([listingId])
+  @@index([buyerId])
+  @@map("purchases")
+}
+
+model AdminCommission {
+  id              String   @id @default(uuid())
+  listingId       String
+  listing         Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  purchaseId      String   @unique
+  purchase        Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  sellerId        String
+  seller          User     @relation("SellerCommissions", fields: [sellerId], references: [id], onDelete: Cascade)
+  buyerId         String
+  buyer           User     @relation("BuyerCommissions", fields: [buyerId], references: [id], onDelete: Cascade)
+  amount          Decimal  @db.Decimal(10, 2)
+  commissionRate  Decimal  @db.Decimal(5, 4)
+  commissionAmount Decimal @db.Decimal(10, 2)
+  sellerAmount    Decimal  @db.Decimal(10, 2)
+  categoryId      String?
+  category        Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  createdAt       DateTime @default(now())
+
+  @@index([listingId])
+  @@index([sellerId])
+  @@index([buyerId])
+  @@index([categoryId])
+  @@map("admin_commissions")
 }

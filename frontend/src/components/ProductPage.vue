@@ -595,25 +595,8 @@ const handleInstantPurchase = async () => {
     console.error('Erreur:', err)
   }
 
-  isPurchasing.value = true
-  
-  try {
-    const response = await fetch(`${API_URL}/purchases/instant/${product.value.id}`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
-    
-    if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.message || 'Erreur lors de l\'achat')
-    }
-    
-    alert('Achat initié avec succès !')
-  } catch (err) {
-    alert(err.message || 'Erreur lors de l\'achat')
-  } finally {
-    isPurchasing.value = false
-  }
+  // Rediriger vers la page de checkout
+  router.push(`/checkout/${product.value.id}`)
 }
 
 const contactSeller = async () => {

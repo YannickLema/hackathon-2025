@@ -195,6 +195,20 @@ export class StripeService {
     return paymentIntent;
   }
 
+  /**
+   * Récupère un payment intent
+   */
+  async retrievePaymentIntent(paymentIntentId: string): Promise<Stripe.PaymentIntent> {
+    return await this.stripe.paymentIntents.retrieve(paymentIntentId);
+  }
+
+  /**
+   * Confirme un payment intent
+   */
+  async confirmPaymentIntent(paymentIntentId: string): Promise<Stripe.PaymentIntent> {
+    return await this.stripe.paymentIntents.confirm(paymentIntentId);
+  }
+
   async checkHealth(): Promise<boolean> {
     try {
       await this.stripe.balance.retrieve();

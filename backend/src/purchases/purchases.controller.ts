@@ -32,5 +32,18 @@ export class PurchasesController {
       body.paymentIntentId,
     );
   }
+
+  @Post('auction/:listingId')
+  async createAuctionPurchase(@Param('listingId') listingId: string) {
+    return this.purchasesService.createAuctionPurchase(listingId);
+  }
+
+  @Post('auction/:listingId/confirm')
+  async confirmAuctionPurchase(
+    @Param('listingId') listingId: string,
+    @Body() body: { paymentIntentId: string },
+  ) {
+    return this.purchasesService.confirmAuctionPurchase(listingId, body.paymentIntentId);
+  }
 }
 
