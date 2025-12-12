@@ -399,21 +399,38 @@ const loadStats = async () => {
   if (!token) return
 
   try {
-    // TODO: Remplacer par les vraies API calls
-    stats.value = {
-      activeListings: 8,
-      newListingsThisMonth: 3,
-      cartItems: 2,
-      cartValue: 4500,
-      totalSales: 12,
-      salesThisMonth: 4,
-      totalRevenue: 35000,
-      revenueThisMonth: 12000,
-      pendingOffers: 5,
-      unreadMessages: 3
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+    const response = await fetch(`${API_URL}/listings/me/stats`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    if (response.ok) {
+      const data = await response.json()
+      // Charger le panier depuis localStorage
+      const cart = JSON.parse(localStorage.getItem('cart') || '[]')
+      stats.value = {
+        ...data,
+        cartItems: cart.length,
+        cartValue: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+      }
+    } else {
+      throw new Error('Erreur lors du chargement des statistiques')
     }
   } catch (error) {
     console.error('Erreur lors du chargement des statistiques:', error)
+    // Valeurs par défaut en cas d'erreur
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]')
+    stats.value = {
+      activeListings: 0,
+      newListingsThisMonth: 0,
+      cartItems: cart.length,
+      cartValue: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+      totalSales: 0,
+      salesThisMonth: 0,
+      totalRevenue: 0,
+      revenueThisMonth: 0,
+      pendingOffers: 0,
+      unreadMessages: 0
+    }
   }
 }
 
@@ -447,20 +464,36 @@ const submitFeedback = async () => {
 
   isSubmittingFeedback.value = true
   const token = localStorage.getItem('access_token')
+  if (!token) {
+    alert('Vous devez être connecté pour donner votre avis')
+    isSubmittingFeedback.value = false
+    return
+  }
 
   try {
-    // TODO: Remplacer par la vraie API call
-    localStorage.setItem('user_feedback_professionnel', JSON.stringify({
-      stars: selectedStars.value,
-      nps: npsScore.value,
-      comment: feedbackComment.value,
-      date: new Date().toISOString()
-    }))
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+    const response = await fetch(`${API_URL}/feedback`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        stars: selectedStars.value || null,
+        nps: npsScore.value || null,
+        comment: feedbackComment.value.trim() || null
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error('Erreur lors de l\'envoi du feedback')
+    }
 
     hasGivenFeedback.value = true
     selectedStars.value = 0
     npsScore.value = 0
     feedbackComment.value = ''
+    alert('Merci pour votre avis !')
   } catch (error) {
     console.error('Erreur lors de l\'envoi du feedback:', error)
     alert('Erreur lors de l\'envoi de votre avis. Veuillez réessayer.')

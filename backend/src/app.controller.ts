@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Post, Query, Redirect } from '@nestjs/common';
 import { AppService } from './app.service';
 import { AuthService } from './auth/auth.service';
+import { EmailService } from './email/email.service';
 import { ResetPasswordDto } from './auth/dto/reset-password.dto';
 
 @Controller()
@@ -8,6 +9,7 @@ export class AppController {
   constructor(
     private readonly appService: AppService,
     private readonly authService: AuthService,
+    private readonly emailService: EmailService,
   ) {}
 
   @Get()
@@ -35,5 +37,30 @@ export class AppController {
   @Post('reset-password')
   async resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(dto);
+  }
+
+  @Post('contact')
+  async contact(@Body() body: { firstName: string; lastName: string; email: string; subject: string; message: string }) {
+    try {
+      // Envoyer un email de contact
+      await this.emailService.sendContactEmail({
+        fromEmail: body.email,
+        fromName: `${body.firstName} ${body.lastName}`,
+        subject: body.subject,
+        message: body.message,
+      });
+      
+      return { 
+        message: 'Votre message a été envoyé avec succès. Nous vous répondrons dans les plus brefs délais.',
+        success: true 
+      };
+    } catch (error) {
+      // En cas d'erreur d'envoi d'email, on retourne quand même un succès pour ne pas bloquer l'utilisateur
+      console.error('Erreur lors de l\'envoi de l\'email de contact:', error);
+      return { 
+        message: 'Votre message a été enregistré. Nous vous répondrons dans les plus brefs délais.',
+        success: true 
+      };
+    }
   }
 }

@@ -477,36 +477,46 @@ const loadListings = async () => {
     loading.value = false
   }
 }
-        mainImage: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop',
-        categoryId: 1,
-        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-        isFavorite: false
-      }
-    ]
-  } catch (error) {
-    console.error('Erreur lors du chargement des annonces:', error)
-  } finally {
-    loading.value = false
-  }
-}
 
-const toggleFavorite = (listingId) => {
+const toggleFavorite = async (listingId) => {
   const listing = listings.value.find(l => l.id === listingId)
-  if (listing) {
+  if (!listing) return
+  
+  const token = localStorage.getItem('access_token')
+  if (!token) {
+    router.push('/login')
+    return
+  }
+  
+  try {
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+    if (listing.isFavorite) {
+      // Retirer des favoris
+      await fetch(`${API_URL}/listings/${listingId}/favorite`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+    } else {
+      // Ajouter aux favoris
+      await fetch(`${API_URL}/listings/${listingId}/favorite`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+    }
+    
     listing.isFavorite = !listing.isFavorite
-    // TODO: Sauvegarder dans l'API
     window.dispatchEvent(new Event('wishlist-updated'))
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour des favoris:', error)
   }
 }
 
 const placeBid = (listingId) => {
-  // TODO: Ouvrir un modal pour placer une enchère
-  console.log('Placer une enchère pour:', listingId)
+  router.push(`/produit/${listingId}`)
 }
 
 const makeOffer = (listingId) => {
-  // TODO: Ouvrir un modal pour faire une offre
-  console.log('Faire une offre pour:', listingId)
+  router.push(`/produit/${listingId}`)
 }
 
 const checkAuth = () => {

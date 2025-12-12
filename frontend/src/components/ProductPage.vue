@@ -616,8 +616,38 @@ const handleInstantPurchase = async () => {
   }
 }
 
-const contactSeller = () => {
-  alert('Fonctionnalité de contact à venir')
+const contactSeller = async () => {
+  if (!product.value) return
+  
+  const token = localStorage.getItem('access_token')
+  if (!token) {
+    router.push('/login')
+    return
+  }
+  
+  const message = prompt('Votre message au vendeur:')
+  if (!message || !message.trim()) return
+  
+  try {
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+    const response = await fetch(`${API_URL}/listings/${product.value.id}/messages`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ content: message.trim() })
+    })
+    
+    if (!response.ok) {
+      throw new Error('Erreur lors de l\'envoi du message')
+    }
+    
+    alert('Message envoyé au vendeur avec succès !')
+  } catch (error) {
+    console.error('Erreur:', error)
+    alert('Erreur lors de l\'envoi du message')
+  }
 }
 
 const checkDelivery = () => {

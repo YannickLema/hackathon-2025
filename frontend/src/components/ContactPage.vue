@@ -128,7 +128,6 @@ const handleSubmit = async () => {
   isLoading.value = true
 
   try {
-    // TODO: Implémenter l'endpoint backend pour le formulaire de contact
     const response = await fetch(`${API_URL}/contact`, {
       method: 'POST',
       headers: {

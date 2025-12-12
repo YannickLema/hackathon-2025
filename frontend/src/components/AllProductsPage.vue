@@ -434,7 +434,6 @@ onMounted(() => {
 })
 
 // Nettoyer l'écouteur d'événement
-import { onUnmounted } from 'vue'
 onUnmounted(() => {
   window.removeEventListener('listing-created', loadProducts)
 })

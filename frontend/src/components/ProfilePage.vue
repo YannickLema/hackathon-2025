@@ -578,8 +578,16 @@ const loadProfile = async () => {
   const token = localStorage.getItem('access_token')
   
   try {
-    // TODO: Remplacer par la vraie API call
-    const userData = JSON.parse(localStorage.getItem('user'))
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+    const response = await fetch(`${API_URL}/auth/me`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    
+    if (!response.ok) {
+      throw new Error('Erreur lors du chargement du profil')
+    }
+    
+    const userData = await response.json()
     Object.assign(userProfile, {
       id: userData.id,
       firstName: userData.firstName || '',
@@ -590,12 +598,15 @@ const loadProfile = async () => {
       age: userData.age || '',
       role: userData.role || '',
       profilePhoto: userData.profilePhoto || '',
-      companyName: userData.companyName || '',
-      siret: userData.siret || '',
-      website: userData.website || '',
-      specialities: userData.specialities || [],
-      mostSearchedItems: userData.mostSearchedItems || []
+      companyName: userData.professionnelProfile?.companyName || '',
+      siret: userData.professionnelProfile?.siret || '',
+      website: userData.professionnelProfile?.website || '',
+      specialities: userData.professionnelProfile?.specialities || [],
+      mostSearchedItems: []
     })
+    
+    // Mettre à jour localStorage
+    localStorage.setItem('user', JSON.stringify(userData))
     
     if (userProfile.profilePhoto) {
       profilePhotoUrl.value = userProfile.profilePhoto
@@ -603,6 +614,31 @@ const loadProfile = async () => {
   } catch (err) {
     console.error('Erreur lors du chargement du profil:', err)
     error.value = 'Erreur lors du chargement du profil'
+    // Fallback sur localStorage
+    try {
+      const userData = JSON.parse(localStorage.getItem('user') || '{}')
+      Object.assign(userProfile, {
+        id: userData.id,
+        firstName: userData.firstName || '',
+        lastName: userData.lastName || '',
+        email: userData.email || '',
+        postalAddress: userData.postalAddress || '',
+        birthDate: userData.birthDate || '',
+        age: userData.age || '',
+        role: userData.role || '',
+        profilePhoto: userData.profilePhoto || '',
+        companyName: userData.companyName || '',
+        siret: userData.siret || '',
+        website: userData.website || '',
+        specialities: userData.specialities || [],
+        mostSearchedItems: userData.mostSearchedItems || []
+      })
+      if (userProfile.profilePhoto) {
+        profilePhotoUrl.value = userProfile.profilePhoto
+      }
+    } catch (e) {
+      // Ignore
+    }
   } finally {
     loading.value = false
   }
@@ -749,8 +785,32 @@ const savePersonalInfo = async () => {
   errorMessage.value = ''
   successMessage.value = ''
   const token = localStorage.getItem('access_token')
+  if (!token) {
+    errorMessage.value = 'Vous devez être connecté'
+    isSaving.value = false
+    return
+  }
   
   try {
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+    const response = await fetch(`${API_URL}/auth/profile`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        firstName: editForm.firstName,
+        lastName: editForm.lastName
+      })
+    })
+    
+    if (!response.ok) {
+      throw new Error('Erreur lors de la mise à jour')
+    }
+    
+    const updatedUser = await response.json()
+    
     // Mise à jour locale
     Object.assign(userProfile, {
       firstName: editForm.firstName,

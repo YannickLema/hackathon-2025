@@ -343,35 +343,164 @@ const editListing = (listingId) => {
 }
 
 const viewListing = (listingId) => {
-  // TODO: Naviguer vers la page de détail de l'annonce
-  console.log('Voir l\'annonce:', listingId)
+  router.push(`/produit/${listingId}`)
 }
 
-const switchToAuction = (listingId) => {
-  // TODO: Implémenter le passage en enchères
-  console.log('Passer en enchères:', listingId)
-  openDropdownId.value = null
-}
-
-const switchToQuickSale = (listingId) => {
-  // TODO: Implémenter le passage en vente rapide
-  console.log('Passer en vente rapide:', listingId)
-  openDropdownId.value = null
-}
-
-const lowerPrice = (listingId) => {
-  // TODO: Ouvrir un modal pour baisser le prix
-  console.log('Baisser le prix:', listingId)
-  openDropdownId.value = null
-}
-
-const deleteListing = (listingId) => {
-  if (confirm('Êtes-vous sûr de vouloir supprimer cette annonce ?')) {
-    // TODO: Implémenter la suppression
-    console.log('Supprimer:', listingId)
-    listings.value = listings.value.filter(l => l.id !== listingId)
+const switchToAuction = async (listingId) => {
+  if (!confirm('Êtes-vous sûr de vouloir passer cette annonce en mode enchères ?')) {
+    openDropdownId.value = null
+    return
   }
-  openDropdownId.value = null
+  
+  const token = localStorage.getItem('access_token')
+  if (!token) {
+    router.push('/login')
+    return
+  }
+  
+  try {
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+    const response = await fetch(`${API_URL}/listings/${listingId}/sale-mode`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ saleMode: 'AUCTION' })
+    })
+    
+    if (!response.ok) {
+      throw new Error('Erreur lors du changement de mode de vente')
+    }
+    
+    alert('Annonce passée en mode enchères avec succès')
+    loadListings()
+  } catch (error) {
+    console.error('Erreur:', error)
+    alert('Erreur lors du changement de mode de vente')
+  } finally {
+    openDropdownId.value = null
+  }
+}
+
+const switchToQuickSale = async (listingId) => {
+  if (!confirm('Êtes-vous sûr de vouloir passer cette annonce en vente rapide ?')) {
+    openDropdownId.value = null
+    return
+  }
+  
+  const token = localStorage.getItem('access_token')
+  if (!token) {
+    router.push('/login')
+    return
+  }
+  
+  try {
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+    const response = await fetch(`${API_URL}/listings/${listingId}/sale-mode`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ saleMode: 'INSTANT_SALE' })
+    })
+    
+    if (!response.ok) {
+      throw new Error('Erreur lors du changement de mode de vente')
+    }
+    
+    alert('Annonce passée en vente rapide avec succès')
+    loadListings()
+  } catch (error) {
+    console.error('Erreur:', error)
+    alert('Erreur lors du changement de mode de vente')
+  } finally {
+    openDropdownId.value = null
+  }
+}
+
+const lowerPrice = async (listingId) => {
+  const listing = listings.value.find(l => l.id === listingId)
+  if (!listing) return
+  
+  const newPrice = prompt(`Nouveau prix (actuel: ${listing.priceDesired}€):`, listing.priceDesired.toString())
+  if (!newPrice) {
+    openDropdownId.value = null
+    return
+  }
+  
+  const price = parseFloat(newPrice.replace(/\s/g, '').replace(',', '.'))
+  if (isNaN(price) || price <= 0) {
+    alert('Prix invalide')
+    openDropdownId.value = null
+    return
+  }
+  
+  const token = localStorage.getItem('access_token')
+  if (!token) {
+    router.push('/login')
+    return
+  }
+  
+  try {
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+    const response = await fetch(`${API_URL}/listings/${listingId}/price`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ priceDesired: price })
+    })
+    
+    if (!response.ok) {
+      throw new Error('Erreur lors de la modification du prix')
+    }
+    
+    alert('Prix modifié avec succès')
+    loadListings()
+  } catch (error) {
+    console.error('Erreur:', error)
+    alert('Erreur lors de la modification du prix')
+  } finally {
+    openDropdownId.value = null
+  }
+}
+
+const deleteListing = async (listingId) => {
+  if (!confirm('Êtes-vous sûr de vouloir supprimer cette annonce ? Cette action est irréversible.')) {
+    openDropdownId.value = null
+    return
+  }
+  
+  const token = localStorage.getItem('access_token')
+  if (!token) {
+    router.push('/login')
+    return
+  }
+  
+  try {
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+    const response = await fetch(`${API_URL}/listings/${listingId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+    
+    if (!response.ok) {
+      throw new Error('Erreur lors de la suppression')
+    }
+    
+    alert('Annonce supprimée avec succès')
+    loadListings()
+  } catch (error) {
+    console.error('Erreur:', error)
+    alert('Erreur lors de la suppression de l\'annonce')
+  } finally {
+    openDropdownId.value = null
+  }
 }
 
 const checkAuth = () => {

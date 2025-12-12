@@ -207,4 +207,16 @@ export class ListingsController {
   getMyLostAuctions(@Req() req: AuthenticatedRequest) {
     return this.listingsService.getMyLostAuctions(req.user);
   }
+
+  @Get('me/stats')
+  @UseGuards(JwtAuthGuard)
+  getMyStats(@Req() req: AuthenticatedRequest) {
+    return this.listingsService.getMyStats(req.user);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard)
+  delete(@Req() req: AuthenticatedRequest, @Param('id') id: string) {
+    return this.listingsService.deleteListing(req.user, id);
+  }
 }

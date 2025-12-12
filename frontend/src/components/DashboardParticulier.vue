@@ -339,21 +339,30 @@ const loadStats = async () => {
   if (!token) return
 
   try {
-    // TODO: Remplacer par les vraies API calls
-    stats.value = {
-      activeListings: 3,
-      newListingsThisMonth: 2,
-      totalViews: 1247,
-      viewsThisWeek: 89,
-      totalSales: 5,
-      salesThisMonth: 2,
-      totalRevenue: 12500,
-      revenueThisMonth: 4500,
-      pendingOffers: 2,
-      unreadMessages: 3
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+    const response = await fetch(`${API_URL}/listings/me/stats`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    if (response.ok) {
+      stats.value = await response.json()
+    } else {
+      throw new Error('Erreur lors du chargement des statistiques')
     }
   } catch (error) {
     console.error('Erreur lors du chargement des statistiques:', error)
+    // Valeurs par défaut en cas d'erreur
+    stats.value = {
+      activeListings: 0,
+      newListingsThisMonth: 0,
+      totalViews: 0,
+      viewsThisWeek: 0,
+      totalSales: 0,
+      salesThisMonth: 0,
+      totalRevenue: 0,
+      revenueThisMonth: 0,
+      pendingOffers: 0,
+      unreadMessages: 0
+    }
   }
 }
 
@@ -362,41 +371,26 @@ const loadRecentListings = async () => {
   if (!token) return
 
   try {
-    // TODO: Remplacer par les vraies API calls
-    recentListings.value = [
-      {
-        id: 1,
-        title: 'Montre ancienne de collection',
-        price: 2500,
-        image: 'https://cdn.pixabay.com/photo/2015/06/25/17/21/smart-watch-821557_1280.jpg',
-        status: 'PUBLISHED',
-        views: 45,
-        offersCount: 2,
-        messagesCount: 1
-      },
-      {
-        id: 2,
-        title: 'Tableau impressionniste',
-        price: 8500,
-        image: 'https://cdn.pixabay.com/photo/2018/11/30/18/53/church-3848348_1280.jpg',
-        status: 'PUBLISHED',
-        views: 123,
-        offersCount: 0,
-        messagesCount: 2
-      },
-      {
-        id: 3,
-        title: 'Bijou art déco',
-        price: 1200,
-        image: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop',
-        status: 'PUBLISHED',
-        views: 67,
-        offersCount: 0,
-        messagesCount: 0
-      }
-    ]
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+    const response = await fetch(`${API_URL}/listings/me?status=PUBLISHED&limit=3`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    if (response.ok) {
+      const data = await response.json()
+      recentListings.value = (data.listings || []).map(listing => ({
+        id: listing.id,
+        title: listing.title,
+        price: parseFloat(listing.priceDesired),
+        image: listing.photos && listing.photos.length > 0 ? listing.photos[0].url : 'https://via.placeholder.com/400x400?text=No+Image',
+        status: listing.status,
+        views: 0, // TODO: Ajouter les vues si disponible
+        offersCount: listing.offers?.length || 0,
+        messagesCount: listing.messages?.length || 0
+      }))
+    }
   } catch (error) {
     console.error('Erreur lors du chargement des annonces:', error)
+    recentListings.value = []
   }
 }
 
@@ -430,34 +424,36 @@ const submitFeedback = async () => {
 
   isSubmittingFeedback.value = true
   const token = localStorage.getItem('access_token')
+  if (!token) {
+    alert('Vous devez être connecté pour donner votre avis')
+    isSubmittingFeedback.value = false
+    return
+  }
 
   try {
-    // TODO: Remplacer par la vraie API call
-    // const response = await fetch(`${API_URL}/feedback`, {
-    //   method: 'POST',
-    //   headers: {
-    //     'Authorization': `Bearer ${token}`,
-    //     'Content-Type': 'application/json'
-    //   },
-    //   body: JSON.stringify({
-    //     stars: selectedStars.value,
-    //     nps: npsScore.value,
-    //     comment: feedbackComment.value
-    //   })
-    // })
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+    const response = await fetch(`${API_URL}/feedback`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        stars: selectedStars.value || null,
+        nps: npsScore.value || null,
+        comment: feedbackComment.value.trim() || null
+      })
+    })
 
-    // Simulation
-    localStorage.setItem('user_feedback', JSON.stringify({
-      stars: selectedStars.value,
-      nps: npsScore.value,
-      comment: feedbackComment.value,
-      date: new Date().toISOString()
-    }))
+    if (!response.ok) {
+      throw new Error('Erreur lors de l\'envoi du feedback')
+    }
 
     hasGivenFeedback.value = true
     selectedStars.value = 0
     npsScore.value = 0
     feedbackComment.value = ''
+    alert('Merci pour votre avis !')
   } catch (error) {
     console.error('Erreur lors de l\'envoi du feedback:', error)
     alert('Erreur lors de l\'envoi de votre avis. Veuillez réessayer.')

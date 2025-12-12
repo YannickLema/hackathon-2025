@@ -456,9 +456,45 @@ const removeFavorite = (itemId) => {
   window.dispatchEvent(new Event('wishlist-updated'))
 }
 
-const increaseBid = (bidId) => {
-  // TODO: Ouvrir un modal pour surenchérir
-  console.log('Surenchérir pour:', bidId)
+const increaseBid = async (item) => {
+  const minBid = item.currentBid * 1.05
+  const bidAmount = prompt(`Entrez votre nouvelle enchère (minimum: ${minBid.toFixed(2)}€):`, minBid.toFixed(2))
+  
+  if (!bidAmount) return
+  
+  const amount = parseFloat(bidAmount.replace(/\s/g, '').replace(',', '.'))
+  if (isNaN(amount) || amount < minBid) {
+    alert(`Le montant doit être au moins de ${minBid.toFixed(2)}€`)
+    return
+  }
+  
+  const token = localStorage.getItem('access_token')
+  if (!token) {
+    router.push('/login')
+    return
+  }
+  
+  try {
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+    const response = await fetch(`${API_URL}/bids/${item.id}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ amount })
+    })
+    
+    if (!response.ok) {
+      throw new Error('Erreur lors de l\'enchère')
+    }
+    
+    alert('Enchère mise à jour avec succès !')
+    loadMyBids()
+  } catch (error) {
+    console.error('Erreur:', error)
+    alert('Erreur lors de la mise à jour de l\'enchère')
+  }
 }
 
 const cancelOffer = (offerId) => {
@@ -469,8 +505,7 @@ const cancelOffer = (offerId) => {
 }
 
 const viewPurchase = (purchaseId) => {
-  // TODO: Naviguer vers la page de détails de l'achat
-  console.log('Voir l\'achat:', purchaseId)
+  router.push(`/produit/${purchaseId}`)
 }
 
 const checkAuth = () => {

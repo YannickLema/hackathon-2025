@@ -489,9 +489,31 @@ const decreaseQuantity = (itemId) => {
 }
 
 const goToCheckout = () => {
-  // TODO: Rediriger vers la page de paiement
-  console.log('Aller au paiement')
-  closeCart()
+  if (cartItems.value.length === 0) {
+    alert('Votre panier est vide')
+    return
+  }
+  // Vérifier si l'utilisateur est connecté et est un professionnel
+  const userData = localStorage.getItem('user')
+  if (!userData) {
+    router.push('/login')
+    closeCart()
+    return
+  }
+  try {
+    const user = JSON.parse(userData)
+    if (user.role !== 'PROFESSIONNEL' && user.role !== 'professionnel') {
+      alert('Seuls les professionnels peuvent acheter des objets')
+      closeCart()
+      return
+    }
+    // Rediriger vers la page de paiement (ou créer une page checkout)
+    router.push('/paiement')
+    closeCart()
+  } catch (e) {
+    router.push('/login')
+    closeCart()
+  }
 }
 
 const openWishlistFromMenu = () => {

@@ -219,5 +219,45 @@ export class EmailService {
       console.error("Erreur lors de l'envoi de l'email de message:", error);
     }
   }
+
+  async sendContactEmail(params: {
+    fromEmail: string;
+    fromName: string;
+    subject: string;
+    message: string;
+  }): Promise<void> {
+    const { fromEmail, fromName, subject, message } = params;
+    const adminEmail = this.configService.get<string>('ADMIN_EMAIL', 'admin@purpledog.site');
+    
+    const mailOptions = {
+      from: this.configService.get<string>('EMAIL_FROM', 'noreply@example.com'),
+      to: adminEmail,
+      replyTo: fromEmail,
+      subject: `Contact Purple Dog: ${subject}`,
+      html: `
+        <p><strong>De:</strong> ${fromName} (${fromEmail})</p>
+        <p><strong>Sujet:</strong> ${subject}</p>
+        <hr>
+        <p>${message.replace(/\n/g, '<br>')}</p>
+      `,
+      text: `
+        De: ${fromName} (${fromEmail})
+        Sujet: ${subject}
+        
+        ${message}
+      `,
+    };
+
+    try {
+      await this.transporter.sendMail(mailOptions);
+    } catch (error: any) {
+      if (error?.code === 'EAUTH' && !this.configService.get<string>('MAILTRAP_USER') && !this.configService.get<string>('SMTP_USER')) {
+        console.warn('SMTP non configuré - email de contact non envoyé (mode développement)');
+      } else {
+        console.error('Erreur lors de l\'envoi de l\'email de contact:', error);
+      }
+      throw new Error('Impossible d\'envoyer l\'email de contact');
+    }
+  }
 }
 

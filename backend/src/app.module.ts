@@ -11,6 +11,7 @@ import { StripeModule } from './stripe/stripe.module';
 import { BidsModule } from './bids/bids.module';
 import { PurchasesModule } from './purchases/purchases.module';
 import { AdminModule } from './admin/admin.module';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { AdminModule } from './admin/admin.module';
     BidsModule,
     PurchasesModule,
     AdminModule,
+    EmailModule,
   ],
   controllers: [AppController],
   providers: [AppService],

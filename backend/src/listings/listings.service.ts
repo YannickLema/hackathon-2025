@@ -612,6 +612,56 @@ export class ListingsService {
     return lostListings;
   }
 
+  async getMyStats(user: User | undefined) {
+    if (!user) throw new ForbiddenException('Authentification requise');
+    if (!this.isSeller(user)) {
+      throw new ForbiddenException('Réservé aux vendeurs');
+    }
+
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - 7);
+
+    const [allListings, listingsThisMonth, purchases, purchasesThisMonth, unreadCounts] = await Promise.all([
+      this.prisma.listing.findMany({
+        where: { sellerId: user.id },
+        select: { id: true, status: true, createdAt: true },
+      }),
+      this.prisma.listing.findMany({
+        where: { sellerId: user.id, createdAt: { gte: startOfMonth } },
+        select: { id: true },
+      }),
+      this.prisma.purchase.findMany({
+        where: { listing: { sellerId: user.id } },
+        select: { finalPrice: true, createdAt: true },
+      }),
+      this.prisma.purchase.findMany({
+        where: { listing: { sellerId: user.id }, createdAt: { gte: startOfMonth } },
+        select: { finalPrice: true },
+      }),
+      this.getUnreadCounts(user),
+    ]);
+
+    const activeListings = allListings.filter((l) => l.status === ListingStatus.PUBLISHED);
+    const totalSales = purchases.length;
+    const totalRevenue = purchases.reduce((sum, p) => sum + Number(p.finalPrice), 0);
+    const revenueThisMonth = purchasesThisMonth.reduce((sum, p) => sum + Number(p.finalPrice), 0);
+
+    return {
+      activeListings: activeListings.length,
+      newListingsThisMonth: listingsThisMonth.length,
+      totalViews: 0, // TODO: Implémenter le tracking des vues
+      viewsThisWeek: 0, // TODO: Implémenter le tracking des vues
+      totalSales,
+      salesThisMonth: purchasesThisMonth.length,
+      totalRevenue,
+      revenueThisMonth,
+      pendingOffers: unreadCounts.offersUnread,
+      unreadMessages: unreadCounts.messagesUnread,
+    };
+  }
+
   private ensureValidPayload(dto: CreateListingDto) {
     if (!dto?.title?.trim()) throw new BadRequestException('Le nom de l’objet est requis');
     if (!dto?.dimensions?.trim()) throw new BadRequestException('Les dimensions sont requises');
@@ -835,6 +885,23 @@ export class ListingsService {
     if (!found) {
       throw new NotFoundException('Annonce introuvable');
     }
+  }
+
+  async deleteListing(user: User | undefined, listingId: string) {
+    if (!user) throw new ForbiddenException('Authentification requise');
+    await this.ensureListingOwnership(user.id, listingId);
+    await this.ensureListingExists(listingId);
+
+    // Supprimer les relations
+    await this.prisma.listingPhoto.deleteMany({ where: { listingId } });
+    await this.prisma.listingDocument.deleteMany({ where: { listingId } });
+    await this.prisma.offer.deleteMany({ where: { listingId } });
+    await this.prisma.bid.deleteMany({ where: { listingId } });
+    await this.prisma.favorite.deleteMany({ where: { listingId } });
+    await this.prisma.listingMessage.deleteMany({ where: { listingId } });
+    await this.prisma.purchase.deleteMany({ where: { listingId } });
+
+    return this.prisma.listing.delete({ where: { id: listingId } });
   }
 
   private isSeller(user: User) {
