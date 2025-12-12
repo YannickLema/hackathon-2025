@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { Request } from 'express';
 import { AuthService } from './auth.service';
 import { RegisterParticulierDto } from './dto/register-particulier.dto';
@@ -78,6 +78,11 @@ export class AuthController {
   @Post('admin/verify-email')
   async adminVerifyEmail(@Body() body: { email: string }) {
     return this.authService.adminVerifyEmail(body.email);
+  }
+
+  @Get('validate-siret/:siret')
+  async validateSiret(@Param('siret') siret: string) {
+    return this.authService.validateSiret(siret);
   }
 }
 

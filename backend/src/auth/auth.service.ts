@@ -551,7 +551,7 @@ export class AuthService {
       };
     }
 
-    // Validation locale avec algorithme de Luhn (pour environnement de test)
+    // Validation locale avec algorithme de Luhn
     const isValidLuhn = this.validateLuhn(cleanSiret);
     
     if (!isValidLuhn) {
@@ -561,25 +561,20 @@ export class AuthService {
       };
     }
 
-    // Pour un environnement de test, on accepte tous les SIRET valides selon Luhn
-    // Cela permet de tester sans avoir besoin d'une clé API INSEE
-    // En production, vous pouvez décommenter le code ci-dessous pour utiliser l'API INSEE
-    return {
-      valid: true,
-      companyName: null, // En test, on ne récupère pas le nom depuis l'API
-    };
-
-    /* Code pour production avec API INSEE (nécessite une clé API)
+    // Appel à l'API Sirene de l'INSEE via l'API Entreprise du gouvernement
     try {
       const apiKey = process.env.INSEE_API_KEY;
       const headers: Record<string, string> = {
         Accept: 'application/json',
       };
 
+      // L'API Entreprise peut fonctionner sans clé mais avec des limites
+      // Si une clé est fournie, on l'utilise
       if (apiKey) {
         headers['Authorization'] = `Bearer ${apiKey}`;
       }
 
+      // Utiliser l'API Entreprise du gouvernement (plus simple que l'API INSEE directe)
       const response = await fetch(
         `https://entreprise.api.gouv.fr/v3/insee/sirene/etablissements/${cleanSiret}`,
         {
@@ -591,12 +586,39 @@ export class AuthService {
       if (response.ok) {
         const data = await response.json();
         if (data.etablissement) {
+          const etablissement = data.etablissement;
+          const uniteLegale = etablissement.unite_legale;
+          
+          // Extraire le nom de l'entreprise
+          const companyName = uniteLegale?.denomination || 
+                             (uniteLegale?.prenom_usuel && uniteLegale?.nom ? 
+                              `${uniteLegale.prenom_usuel} ${uniteLegale.nom}` : 
+                              null) ||
+                             uniteLegale?.nom ||
+                             null;
+
+          // Extraire l'adresse
+          const adresseEtablissement = etablissement.adresse;
+          let postalAddress = null;
+          if (adresseEtablissement) {
+            const addressParts = [
+              adresseEtablissement.numero_voie,
+              adresseEtablissement.type_voie,
+              adresseEtablissement.libelle_voie,
+              adresseEtablissement.code_postal,
+              adresseEtablissement.libelle_commune,
+            ].filter(Boolean);
+            postalAddress = addressParts.join(' ') || null;
+          }
+
           return {
             valid: true,
-            companyName:
-              data.etablissement.unite_legale?.denomination ||
-              data.etablissement.unite_legale?.prenom_usuel ||
-              null,
+            companyName: companyName,
+            postalAddress: postalAddress,
+            siret: cleanSiret,
+            siren: uniteLegale?.siren || null,
+            activitePrincipale: uniteLegale?.activite_principale || null,
+            formeJuridique: uniteLegale?.nature_juridique || null,
           };
         } else {
           return {
@@ -610,19 +632,26 @@ export class AuthService {
           error: 'SIRET introuvable dans l\'annuaire des entreprises',
         };
       } else {
+        // Si l'API ne répond pas, on accepte quand même si le SIRET est valide selon Luhn
+        // (pour permettre le développement sans clé API)
+        console.warn('⚠️  API INSEE non accessible, validation Luhn uniquement');
         return {
-          valid: false,
-          error: 'Impossible de vérifier le SIRET. Veuillez réessayer plus tard.',
+          valid: true,
+          companyName: null,
+          postalAddress: null,
+          siret: cleanSiret,
         };
       }
     } catch (err) {
       console.error('Erreur lors de la vérification du SIRET:', err);
+      // En cas d'erreur réseau, on accepte quand même si le SIRET est valide selon Luhn
       return {
-        valid: false,
-        error: 'Erreur lors de la vérification. Veuillez réessayer plus tard.',
+        valid: true,
+        companyName: null,
+        postalAddress: null,
+        siret: cleanSiret,
       };
     }
-    */
   }
 
   /**

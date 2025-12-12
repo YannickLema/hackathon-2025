@@ -760,9 +760,12 @@ const validateSiret = async () => {
           if (data.valid) {
             siretValid.value = true
             siretError.value = ''
-            // Pré-remplir le nom de l'entreprise si disponible et si le champ est vide
-            if (data.companyName && !professionnelForm.companyName) {
+            // Auto-compléter les champs avec les données de l'API
+            if (data.companyName) {
               professionnelForm.companyName = data.companyName
+            }
+            if (data.postalAddress && !professionnelForm.postalAddress) {
+              professionnelForm.postalAddress = data.postalAddress
             }
           } else {
             siretError.value = data.error || 'SIRET invalide'

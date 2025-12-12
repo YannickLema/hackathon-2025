@@ -387,14 +387,33 @@
               </div>
               <div class="form-group">
                 <label for="siret" class="form-label">N. SIRET<span class="required-asterisk">*</span></label>
-                <input
-                  id="siret"
-                  v-model="editForm.siret"
-                  type="text"
-                  class="form-input"
-                  maxlength="14"
-                  required
-                />
+                <div class="input-with-icon">
+                  <input
+                    id="siret"
+                    v-model="editForm.siret"
+                    type="text"
+                    class="form-input"
+                    :class="{ 'input-error': siretError, 'input-valid': siretValid }"
+                    @blur="validateSiretProfile"
+                    @input="handleSiretInputProfile"
+                    maxlength="14"
+                    required
+                  />
+                  <!-- Check vert si valide -->
+                  <span v-if="siretValid && !siretError && !isValidatingSiret" class="validation-icon valid-icon">
+                    <span class="material-symbols-outlined">check_circle</span>
+                  </span>
+                  <!-- Croix rouge si erreur -->
+                  <span v-if="siretError && !isValidatingSiret" class="validation-icon error-icon">
+                    <span class="material-symbols-outlined">error</span>
+                  </span>
+                  <!-- Spinner si en cours de validation -->
+                  <span v-if="isValidatingSiret" class="validation-icon loading-icon">
+                    <span class="material-symbols-outlined spinner">sync</span>
+                  </span>
+                </div>
+                <div v-if="siretError" class="field-error">{{ siretError }}</div>
+                <div v-if="siretValid && !siretError" class="field-success">SIRET valide</div>
               </div>
               <div class="form-group">
                 <label for="website" class="form-label">Site internet</label>
@@ -558,6 +577,107 @@ const passwordForm = reactive({
   newPassword: '',
   confirmPassword: ''
 })
+
+// Validation SIRET pour le profil
+const siretError = ref('')
+const siretValid = ref(false)
+const isValidatingSiret = ref(false)
+let siretValidationTimer = null
+
+// Gestion de la saisie SIRET avec validation en temps réel (profil)
+const handleSiretInputProfile = () => {
+  const siret = editForm.siret.replace(/\s/g, '')
+  
+  if (!siret) {
+    siretError.value = ''
+    siretValid.value = false
+    isValidatingSiret.value = false
+    if (siretValidationTimer) {
+      clearTimeout(siretValidationTimer)
+      siretValidationTimer = null
+    }
+    return
+  }
+  
+  if (siret.length < 14 || !/^\d+$/.test(siret)) {
+    if (siret.length > 0) {
+      siretError.value = 'Le SIRET doit contenir 14 chiffres'
+      siretValid.value = false
+    }
+    if (siretValidationTimer) {
+      clearTimeout(siretValidationTimer)
+      siretValidationTimer = null
+    }
+    return
+  }
+  
+  if (siret.length === 14) {
+    if (siretValidationTimer) {
+      clearTimeout(siretValidationTimer)
+    }
+    
+    siretError.value = ''
+    siretValid.value = false
+    
+    siretValidationTimer = setTimeout(() => {
+      validateSiretProfile()
+    }, 500)
+  }
+}
+
+// Validation SIRET via le backend (profil)
+const validateSiretProfile = async () => {
+  const siret = editForm.siret.replace(/\s/g, '')
+  
+  if (!siret || siret.length !== 14 || !/^\d+$/.test(siret)) {
+    siretError.value = 'Le SIRET doit contenir 14 chiffres'
+    siretValid.value = false
+    return
+  }
+
+  isValidatingSiret.value = true
+  siretError.value = ''
+  siretValid.value = false
+
+  try {
+    const response = await fetch(`${API_URL}/auth/validate-siret/${siret}`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
+    })
+
+    let data
+    try {
+      data = await response.json()
+    } catch (parseError) {
+      throw new Error('Erreur lors de la lecture de la réponse du serveur')
+    }
+
+    if (response.ok) {
+      if (data.valid) {
+        siretValid.value = true
+        siretError.value = ''
+        // Auto-compléter les champs avec les données de l'API
+        if (data.companyName && !editForm.companyName) {
+          editForm.companyName = data.companyName
+        }
+      } else {
+        siretError.value = data.error || 'SIRET invalide'
+        siretValid.value = false
+      }
+    } else {
+      siretError.value = data.error || 'Erreur lors de la vérification du SIRET'
+      siretValid.value = false
+    }
+  } catch (err) {
+    console.error('Erreur lors de la vérification du SIRET:', err)
+    siretError.value = err.message || 'Erreur réseau. Veuillez réessayer.'
+    siretValid.value = false
+  } finally {
+    isValidatingSiret.value = false
+  }
+}
 
 const checkAuth = () => {
   const token = localStorage.getItem('access_token')
