@@ -434,10 +434,53 @@ const loadStats = async () => {
   }
 }
 
-const loadFavorites = () => {
-  const saved = localStorage.getItem('wishlist')
-  if (saved) {
-    favoriteItems.value = JSON.parse(saved)
+const loadFavorites = async () => {
+  const token = localStorage.getItem('access_token')
+  if (!token) {
+    const saved = localStorage.getItem('wishlist')
+    if (saved) {
+      try {
+        favoriteItems.value = JSON.parse(saved)
+      } catch (e) {
+        favoriteItems.value = []
+      }
+    }
+    return
+  }
+  
+  try {
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+    const response = await fetch(`${API_URL}/listings/me/favorites`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    if (response.ok) {
+      const data = await response.json()
+      favoriteItems.value = data.map(listing => ({
+        id: listing.id,
+        title: listing.title,
+        price: parseFloat(listing.priceDesired),
+        image: listing.photos && listing.photos.length > 0 ? listing.photos[0].url : 'https://via.placeholder.com/400x400?text=No+Image'
+      }))
+    } else {
+      const saved = localStorage.getItem('wishlist')
+      if (saved) {
+        try {
+          favoriteItems.value = JSON.parse(saved)
+        } catch (e) {
+          favoriteItems.value = []
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Erreur lors du chargement des favoris:', error)
+    const saved = localStorage.getItem('wishlist')
+    if (saved) {
+      try {
+        favoriteItems.value = JSON.parse(saved)
+      } catch (e) {
+        favoriteItems.value = []
+      }
+    }
   }
 }
 
@@ -503,16 +546,35 @@ const submitFeedback = async () => {
 }
 
 const checkAuth = () => {
+  const token = localStorage.getItem('access_token')
   const userData = localStorage.getItem('user')
-  if (userData) {
-    try {
-      user.value = JSON.parse(userData)
-    } catch (e) {
-      console.error('Erreur lors du parsing des données utilisateur:', e)
-      router.push('/login')
-    }
-  } else {
+  
+  if (!token || !userData) {
     router.push('/login')
+    return false
+  }
+  
+  try {
+    user.value = JSON.parse(userData)
+    const userRole = user.value.role?.toUpperCase()
+    if (userRole !== 'PROFESSIONNEL' && userRole !== 'professionnel') {
+      // Rediriger vers le bon dashboard
+      if (userRole === 'ADMIN' || userRole === 'admin') {
+        router.push('/admin')
+      } else if (userRole === 'PARTICULIER' || userRole === 'particulier') {
+        router.push('/dashboard/particulier')
+      } else {
+        router.push('/')
+      }
+      return false
+    }
+    return true
+  } catch (e) {
+    console.error('Erreur lors du parsing des données utilisateur:', e)
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('user')
+    router.push('/login')
+    return false
   }
 }
 

@@ -285,7 +285,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -354,16 +354,26 @@ const checkAuth = () => {
   
   try {
     const user = JSON.parse(userData)
-    if (user.role !== 'ADMIN' && user.role !== 'admin') {
-      router.push('/dashboard/particulier')
+    const userRole = user.role?.toUpperCase()
+    if (userRole !== 'ADMIN' && userRole !== 'admin') {
+      // Rediriger vers le bon dashboard
+      if (userRole === 'PROFESSIONNEL' || userRole === 'professionnel') {
+        router.push('/dashboard/professionnel')
+      } else if (userRole === 'PARTICULIER' || userRole === 'particulier') {
+        router.push('/dashboard/particulier')
+      } else {
+        router.push('/')
+      }
       return false
     }
+    return true
   } catch (e) {
+    console.error('Erreur lors du parsing des données utilisateur:', e)
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('user')
     router.push('/login')
     return false
   }
-  
-  return true
 }
 
 const loadStats = async () => {
@@ -391,7 +401,7 @@ const loadStats = async () => {
     
     if (usersRes.ok) {
       const data = await usersRes.json()
-      stats.value.totalUsers = data.length || 0
+      stats.value.totalUsers = data.pagination?.total || data.users?.length || data.length || 0
     }
     
     if (feedbackRes.ok) {
@@ -600,6 +610,20 @@ const updateCategoryCommission = async (category, rate) => {
     console.error('Erreur lors de la mise à jour:', error)
   }
 }
+
+// Charger les données quand on change d'onglet
+watch(activeTab, (newTab) => {
+  if (!checkAuth()) return
+  if (newTab === 'listings') {
+    loadListings()
+  } else if (newTab === 'users') {
+    loadUsers()
+  } else if (newTab === 'commissions') {
+    loadCommissions()
+  } else if (newTab === 'feedback') {
+    loadFeedback()
+  }
+})
 
 onMounted(() => {
   if (!checkAuth()) return

@@ -52,6 +52,13 @@
                 <span class="material-symbols-outlined">person</span>
                 <span>Mon profil</span>
               </router-link>
+              <!-- Lien spécifique aux admins -->
+              <template v-if="user?.role === 'ADMIN' || user?.role === 'admin'">
+                <router-link to="/admin" class="user-menu-item" @click="closeUserMenu">
+                  <span class="material-symbols-outlined">admin_panel_settings</span>
+                  <span>Administration</span>
+                </router-link>
+              </template>
               <!-- Liens spécifiques aux professionnels -->
               <template v-if="user?.role === 'PROFESSIONNEL' || user?.role === 'professionnel'">
                 <router-link to="/recherche" class="user-menu-item" @click="closeUserMenu">
@@ -183,6 +190,13 @@
                 <span class="material-symbols-outlined menu-auth-icon">person</span>
                 <span>Mon profil</span>
               </router-link>
+              <!-- Lien spécifique aux admins -->
+              <template v-if="user?.role === 'ADMIN' || user?.role === 'admin'">
+                <router-link to="/admin" class="menu-auth-link menu-auth-admin" @click="closeMenu">
+                  <span class="material-symbols-outlined menu-auth-icon">admin_panel_settings</span>
+                  <span>Administration</span>
+                </router-link>
+              </template>
               <!-- Liens spécifiques aux professionnels -->
               <template v-if="user?.role === 'PROFESSIONNEL' || user?.role === 'professionnel'">
                 <router-link to="/recherche" class="menu-auth-link menu-auth-search" @click="closeMenu">
@@ -424,19 +438,63 @@ const closeAllPanels = () => {
   document.body.style.overflow = ''
 }
 
-const loadWishlist = () => {
-  // Charger depuis localStorage ou API
-  const saved = localStorage.getItem('wishlist')
-  if (saved) {
-    try {
-      wishlistItems.value = JSON.parse(saved)
-    } catch (e) {
-      console.error('Erreur lors du chargement des favoris:', e)
+const loadWishlist = async () => {
+  const token = localStorage.getItem('access_token')
+  if (!token) {
+    // Si pas connecté, charger depuis localStorage
+    const saved = localStorage.getItem('wishlist')
+    if (saved) {
+      try {
+        wishlistItems.value = JSON.parse(saved)
+      } catch (e) {
+        console.error('Erreur lors du chargement des favoris:', e)
+        wishlistItems.value = []
+        localStorage.removeItem('wishlist')
+      }
+    } else {
       wishlistItems.value = []
-      localStorage.removeItem('wishlist')
     }
-  } else {
-    wishlistItems.value = []
+    return
+  }
+  
+  // Si connecté, charger depuis l'API
+  try {
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+    const response = await fetch(`${API_URL}/listings/me/favorites`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    if (response.ok) {
+      const data = await response.json()
+      wishlistItems.value = data.map(listing => ({
+        id: listing.id,
+        title: listing.title,
+        price: parseFloat(listing.priceDesired),
+        image: listing.photos && listing.photos.length > 0 ? listing.photos[0].url : 'https://via.placeholder.com/400x400?text=No+Image'
+      }))
+      // Synchroniser avec localStorage
+      localStorage.setItem('wishlist', JSON.stringify(wishlistItems.value))
+    } else {
+      // Fallback sur localStorage en cas d'erreur
+      const saved = localStorage.getItem('wishlist')
+      if (saved) {
+        try {
+          wishlistItems.value = JSON.parse(saved)
+        } catch (e) {
+          wishlistItems.value = []
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Erreur lors du chargement des favoris:', error)
+    // Fallback sur localStorage
+    const saved = localStorage.getItem('wishlist')
+    if (saved) {
+      try {
+        wishlistItems.value = JSON.parse(saved)
+      } catch (e) {
+        wishlistItems.value = []
+      }
+    }
   }
 }
 
@@ -456,7 +514,20 @@ const loadCart = () => {
   }
 }
 
-const removeFromWishlist = (itemId) => {
+const removeFromWishlist = async (itemId) => {
+  const token = localStorage.getItem('access_token')
+  if (token) {
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+      await fetch(`${API_URL}/listings/${itemId}/favorite`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+    } catch (error) {
+      console.error('Erreur lors de la suppression du favori:', error)
+    }
+  }
+  
   wishlistItems.value = wishlistItems.value.filter(item => item.id !== itemId)
   localStorage.setItem('wishlist', JSON.stringify(wishlistItems.value))
   window.dispatchEvent(new Event('wishlist-updated'))
@@ -574,9 +645,11 @@ const getDashboardRoute = () => {
     return '/'
   }
   const role = user.value.role.toUpperCase()
-  if (role === 'PARTICULIER') {
+  if (role === 'ADMIN' || role === 'admin') {
+    return '/admin'
+  } else if (role === 'PARTICULIER' || role === 'particulier') {
     return '/dashboard/particulier'
-  } else if (role === 'PROFESSIONNEL') {
+  } else if (role === 'PROFESSIONNEL' || role === 'professionnel') {
     return '/dashboard/professionnel'
   }
   return '/'

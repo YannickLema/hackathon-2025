@@ -463,16 +463,35 @@ const submitFeedback = async () => {
 }
 
 const checkAuth = () => {
+  const token = localStorage.getItem('access_token')
   const userData = localStorage.getItem('user')
-  if (userData) {
-    try {
-      user.value = JSON.parse(userData)
-    } catch (e) {
-      console.error('Erreur lors du parsing des données utilisateur:', e)
-      router.push('/login')
-    }
-  } else {
+  
+  if (!token || !userData) {
     router.push('/login')
+    return false
+  }
+  
+  try {
+    user.value = JSON.parse(userData)
+    const userRole = user.value.role?.toUpperCase()
+    if (userRole !== 'PARTICULIER' && userRole !== 'particulier') {
+      // Rediriger vers le bon dashboard
+      if (userRole === 'ADMIN' || userRole === 'admin') {
+        router.push('/admin')
+      } else if (userRole === 'PROFESSIONNEL' || userRole === 'professionnel') {
+        router.push('/dashboard/professionnel')
+      } else {
+        router.push('/')
+      }
+      return false
+    }
+    return true
+  } catch (e) {
+    console.error('Erreur lors du parsing des données utilisateur:', e)
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('user')
+    router.push('/login')
+    return false
   }
 }
 

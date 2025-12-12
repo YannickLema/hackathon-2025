@@ -334,8 +334,7 @@ const toggleDropdown = (listingId) => {
 }
 
 const viewOffersAndMessages = (listingId) => {
-  // TODO: Ouvrir un modal ou naviguer vers une page de détails
-  console.log('Voir les offres et messages pour:', listingId)
+  router.push(`/produit/${listingId}`)
 }
 
 const editListing = (listingId) => {

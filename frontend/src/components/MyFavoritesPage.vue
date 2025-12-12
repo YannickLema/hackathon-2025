@@ -497,10 +497,25 @@ const increaseBid = async (item) => {
   }
 }
 
-const cancelOffer = (offerId) => {
-  if (confirm('Êtes-vous sûr de vouloir annuler cette proposition ?')) {
-    myOffers.value = myOffers.value.filter(offer => offer.id !== offerId)
-    // TODO: Appeler l'API pour annuler
+const cancelOffer = async (offer) => {
+  if (!confirm('Êtes-vous sûr de vouloir annuler cette proposition ?')) {
+    return
+  }
+  
+  const token = localStorage.getItem('access_token')
+  if (!token) {
+    router.push('/login')
+    return
+  }
+  
+  try {
+    // Note: L'API ne permet pas de supprimer une offre, on peut juste la marquer comme refusée
+    // Pour l'instant, on retire juste de la liste locale
+    myOffers.value = myOffers.value.filter(o => o.id !== offer.id)
+    alert('Proposition retirée de la liste')
+  } catch (error) {
+    console.error('Erreur lors de l\'annulation:', error)
+    alert('Erreur lors de l\'annulation de la proposition')
   }
 }
 
