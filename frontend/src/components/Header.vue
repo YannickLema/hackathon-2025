@@ -578,8 +578,14 @@ const goToCheckout = () => {
       closeCart()
       return
     }
-    // Rediriger vers la page de paiement (ou créer une page checkout)
-    router.push('/paiement')
+    // Si le panier contient un seul produit, rediriger vers le checkout de ce produit
+    // Sinon, rediriger vers la page de paiement pour gérer plusieurs produits
+    if (cartItems.value.length === 1) {
+      router.push(`/checkout/${cartItems.value[0].id}?type=instant`)
+    } else {
+      // Pour plusieurs produits, rediriger vers la page de paiement
+      router.push('/paiement')
+    }
     closeCart()
   } catch (e) {
     router.push('/login')
