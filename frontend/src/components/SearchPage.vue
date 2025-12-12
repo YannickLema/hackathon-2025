@@ -470,46 +470,13 @@ const loadListings = async () => {
       createdAt: listing.createdAt,
       isFavorite: false
     }))
-    
-    // Fallback si pas de résultats
-    if (listings.value.length === 0) {
-      listings.value = [
-      {
-        id: 1,
-        title: 'Montre ancienne de collection',
-        category: 'MONTRE',
-        description: 'Magnifique montre ancienne...',
-        priceDesired: 2500,
-        saleMode: 'AUCTION',
-        status: 'PUBLISHED',
-        mainImage: 'https://cdn.pixabay.com/photo/2015/06/25/17/21/smart-watch-821557_1280.jpg',
-        currentBid: 2800,
-        auctionEndAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-        categoryId: 1,
-        createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-        isFavorite: false
-      },
-      {
-        id: 2,
-        title: 'Tableau impressionniste',
-        category: 'PEINTURE',
-        description: 'Tableau d\'époque...',
-        priceDesired: 8500,
-        saleMode: 'INSTANT_SALE',
-        status: 'PUBLISHED',
-        mainImage: 'https://cdn.pixabay.com/photo/2018/11/30/18/53/church-3848348_1280.jpg',
-        categoryId: 2,
-        createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-        isFavorite: true
-      },
-      {
-        id: 3,
-        title: 'Bijou art déco',
-        category: 'BIJOU',
-        description: 'Bijou rare...',
-        priceDesired: 1200,
-        saleMode: 'INSTANT_SALE',
-        status: 'PUBLISHED',
+  } catch (error) {
+    console.error('Erreur lors de la recherche:', error)
+    listings.value = []
+  } finally {
+    loading.value = false
+  }
+}
         mainImage: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop',
         categoryId: 1,
         createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
