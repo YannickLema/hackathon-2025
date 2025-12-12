@@ -44,16 +44,15 @@
                 required
               >
                 <option value="">Sélectionner une catégorie</option>
-                <option value="PEINTURE">Peinture</option>
-                <option value="SCULPTURE">Sculpture</option>
-                <option value="MONTRE">Montre</option>
-                <option value="BIJOU">Bijou</option>
-                <option value="OBJET_ART">Objet d'art</option>
-                <option value="PHOTOGRAPHIE">Photographie</option>
-                <option value="VETEMENT">Vêtement</option>
-                <option value="ACCESSOIRE">Accessoire</option>
-                <option value="DESIGN">Design</option>
-                <option value="AUTRE">Autre</option>
+                <option value="OBJETS_ART_TABLEAUX">Objets d'art & tableaux</option>
+                <option value="SCULPTURES_DECORATION">Sculptures & décoration</option>
+                <option value="BIJOUX_MONTRES">Bijoux & montres</option>
+                <option value="MODE_ACCESSOIRES_LUXE">Mode & accessoires de luxe</option>
+                <option value="MEUBLES_ANCIENS">Meubles anciens</option>
+                <option value="VINS_SPIRITUEUX">Vins & spiritueux</option>
+                <option value="INSTRUMENTS_MUSIQUE">Instruments de musique</option>
+                <option value="LIVRES_MANUSCRITS">Livres & manuscrits</option>
+                <option value="PHOTOGRAPHIES_ANCIENNES">Photographies anciennes</option>
               </select>
             </div>
             <div class="form-group">
@@ -455,18 +454,27 @@ const handleSubmit = async () => {
       payload.auctionEndAt = form.auctionEndAt || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
     }
 
-    // TODO: Remplacer par la vraie API call
-    // const response = await fetch(`${API_URL}/listings`, {
-    //   method: 'POST',
-    //   headers: {
-    //     'Authorization': `Bearer ${token}`,
-    //     'Content-Type': 'application/json'
-    //   },
-    //   body: JSON.stringify(payload)
-    // })
+    // Appel API réel
+    const response = await fetch(`${API_URL}/listings`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    })
 
-    // Simulation
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.message || 'Erreur lors de la création de l\'annonce')
+    }
+
+    const createdListing = await response.json()
     successMessage.value = 'Annonce créée avec succès !'
+    
+    // Rafraîchir la liste des produits en déclenchant un événement
+    window.dispatchEvent(new CustomEvent('listing-created'))
+    
     setTimeout(() => {
       router.push('/mes-objets')
     }, 2000)

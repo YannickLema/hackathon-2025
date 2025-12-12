@@ -189,7 +189,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import NewsletterSection from './NewsletterSection.vue'
 
@@ -428,6 +428,15 @@ watch(searchQuery, () => {
 
 onMounted(() => {
   loadProducts()
+  
+  // Écouter les événements de création de listing pour rafraîchir
+  window.addEventListener('listing-created', loadProducts)
+})
+
+// Nettoyer l'écouteur d'événement
+import { onUnmounted } from 'vue'
+onUnmounted(() => {
+  window.removeEventListener('listing-created', loadProducts)
 })
 </script>
 

@@ -46,7 +46,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -214,6 +214,15 @@ const goToProduct = (productId) => {
 
 onMounted(() => {
   loadFeaturedProducts()
+  
+  // Écouter les événements de création de listing pour rafraîchir
+  window.addEventListener('listing-created', loadFeaturedProducts)
+})
+
+// Nettoyer l'écouteur d'événement
+import { onUnmounted } from 'vue'
+onUnmounted(() => {
+  window.removeEventListener('listing-created', loadFeaturedProducts)
 })
 </script>
 
