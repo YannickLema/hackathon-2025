@@ -863,14 +863,8 @@ const validateCurrentStep = () => {
   }
   
   if (currentStep.value === 2) {
-    if (professionnelForm.specialities.length === 0) {
-      error.value = 'Veuillez ajouter au moins une spécialité'
-      return false
-    }
-    if (professionnelForm.mostSearchedItems.length === 0) {
-      error.value = 'Veuillez ajouter au moins un élément recherché'
-      return false
-    }
+    // Les spécialités et éléments recherchés ne sont plus obligatoires
+    // On mettra des valeurs par défaut si vides
   }
   
   if (currentStep.value === 3) {

@@ -301,6 +301,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 const isSubmitting = ref(false)
 const error = ref('')
 const successMessage = ref('')
+const categories = ref([])
 
 const form = reactive({
   title: '',
@@ -332,7 +333,7 @@ const isFormValid = computed(() => {
          form.dimensions &&
          form.weightKg > 0 &&
          photos.value.some(p => p.url) &&
-         (!form.saleMode === 'AUCTION' || form.auctionEndAt || true)
+         (form.saleMode !== 'AUCTION' || form.auctionEndAt || true)
 })
 
 const handleSaleModeChange = () => {
@@ -513,8 +514,20 @@ const checkAuth = () => {
   return true
 }
 
+const loadCategories = async () => {
+  try {
+    const response = await fetch(`${API_URL}/categories`)
+    if (response.ok) {
+      categories.value = await response.json()
+    }
+  } catch (err) {
+    console.error('Erreur lors du chargement des catégories:', err)
+  }
+}
+
 onMounted(() => {
   if (!checkAuth()) return
+  loadCategories()
 })
 </script>
 
