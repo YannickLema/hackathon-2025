@@ -550,12 +550,11 @@
 
 <script setup>
 import { ref, reactive, watch } from 'vue'
-import { useRouter } from 'vue-router'
-
-const router = useRouter()
+import { registerParticulier, registerProfessionnel } from '../services/auth'
 const userType = ref('particulier')
 const isLoading = ref(false)
 const error = ref('')
+const success = ref('')
 const currentStep = ref(1)
 const totalSteps = 3
 
@@ -904,8 +903,7 @@ const handleRegisterParticulier = async () => {
   isLoading.value = true
 
   try {
-    // Le backend ne gère pas encore le multipart : envoi en JSON (nom de fichier si fourni)
-    const payload = {
+    await registerParticulier({
       firstName: particulierForm.firstName,
       lastName: particulierForm.lastName,
       email: particulierForm.email,
@@ -914,54 +912,27 @@ const handleRegisterParticulier = async () => {
       isOver18: particulierForm.isOver18,
       newsletter: particulierForm.newsletter || false,
       rgpdAccepted: particulierForm.rgpdAccepted,
-      profilePhoto: profilePhotoFile.value ? profilePhotoFile.value.name : undefined,
-    }
-
-    const response = await fetch(`${API_URL}/auth/register/particulier`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      // profilePhoto non envoyé (pas de multipart ici)
     })
 
-    let data
-    try {
-      data = await response.json()
-    } catch (parseError) {
-      throw new Error('Erreur lors de la lecture de la réponse du serveur')
-    }
+    // Message de confirmation sans changer le style
+    success.value = 'Inscription réussie ! Vérifie ton email pour valider le compte.'
 
-    if (!response.ok) {
-      // Gérer les différents types d'erreurs
-      if (response.status === 400) {
-        throw new Error(data.message || 'Données invalides')
-      } else if (response.status === 409) {
-        throw new Error(data.message || 'Cet email est déjà utilisé')
-      } else {
-        throw new Error(data.message || `Erreur lors de l'inscription (${response.status})`)
-      }
-    }
-
-    // Stocker le token et les informations utilisateur
-    if (data.access_token) {
-      localStorage.setItem('access_token', data.access_token)
-      if (data.user) {
-        localStorage.setItem('user', JSON.stringify(data.user))
-      }
-    }
-
-    // Afficher un message de succès si l'email doit être vérifié
-    if (data.message && data.message.includes('vérification')) {
-      alert('Inscription réussie ! Veuillez vérifier votre email avant de vous connecter.')
-    }
-
-    // Déclencher l'événement de mise à jour de l'authentification
-    window.dispatchEvent(new Event('auth-changed'))
-    
-    // Redirection après inscription réussie
-    router.push('/')
+    // Reset formulaire
+    particulierForm.firstName = ''
+    particulierForm.lastName = ''
+    particulierForm.email = ''
+    particulierForm.password = ''
+    particulierForm.confirmPassword = ''
+    particulierForm.postalAddress = ''
+    particulierForm.birthDate = ''
+    particulierForm.age = ''
+    particulierForm.isOver18 = false
+    particulierForm.newsletter = false
+    particulierForm.rgpdAccepted = false
+    profilePhotoFile.value = null
   } catch (err) {
-    error.value = err.message || 'Une erreur est survenue lors de l\'inscription'
-    console.error('Erreur d\'inscription:', err)
+    error.value = err?.response?.data?.message || 'Une erreur est survenue lors de l\'inscription'
   } finally {
     isLoading.value = false
   }
@@ -983,8 +954,7 @@ const handleRegisterProfessionnel = async () => {
   isLoading.value = true
 
   try {
-    // Le backend ne gère pas encore le multipart : envoi en JSON (nom de fichier pour le doc)
-    const payload = {
+    await registerProfessionnel({
       firstName: professionnelForm.firstName,
       lastName: professionnelForm.lastName,
       email: professionnelForm.email,
@@ -996,58 +966,36 @@ const handleRegisterProfessionnel = async () => {
       website: professionnelForm.website || undefined,
       specialities: professionnelForm.specialities,
       mostSearchedItems: professionnelForm.mostSearchedItems,
-      socialNetworks: buildSocialNetworksObject(),
+      newsletter: professionnelForm.newsletter || false,
       cgvAccepted: professionnelForm.cgvAccepted,
       mandateAccepted: professionnelForm.mandateAccepted,
-      newsletter: professionnelForm.newsletter || false,
-      rgpdAccepted: professionnelForm.rgpdAccepted,
-    }
-
-    const response = await fetch(`${API_URL}/auth/register/professionnel`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
     })
 
-    let data
-    try {
-      data = await response.json()
-    } catch (parseError) {
-      throw new Error('Erreur lors de la lecture de la réponse du serveur')
-    }
+    success.value = 'Inscription réussie ! Vérifie ton email pour valider le compte.'
 
-    if (!response.ok) {
-      // Gérer les différents types d'erreurs
-      if (response.status === 400) {
-        throw new Error(data.message || 'Données invalides')
-      } else if (response.status === 409) {
-        throw new Error(data.message || 'Cet email est déjà utilisé')
-      } else {
-        throw new Error(data.message || `Erreur lors de l'inscription (${response.status})`)
-      }
-    }
-
-    // Stocker le token et les informations utilisateur
-    if (data.access_token) {
-      localStorage.setItem('access_token', data.access_token)
-      if (data.user) {
-        localStorage.setItem('user', JSON.stringify(data.user))
-      }
-    }
-
-    // Afficher un message de succès si l'email doit être vérifié
-    if (data.message && data.message.includes('vérification')) {
-      alert('Inscription réussie ! Veuillez vérifier votre email avant de vous connecter.')
-    }
-
-    // Déclencher l'événement de mise à jour de l'authentification
-    window.dispatchEvent(new Event('auth-changed'))
-    
-    // Redirection après inscription réussie
-    router.push('/')
+    professionnelForm.firstName = ''
+    professionnelForm.lastName = ''
+    professionnelForm.email = ''
+    professionnelForm.password = ''
+    professionnelForm.confirmPassword = ''
+    professionnelForm.companyName = ''
+    professionnelForm.siret = ''
+    professionnelForm.postalAddress = ''
+    professionnelForm.website = ''
+    professionnelForm.specialities = []
+    professionnelForm.mostSearchedItems = []
+    professionnelForm.socialNetworks = []
+    professionnelForm.cgvAccepted = false
+    professionnelForm.mandateAccepted = false
+    professionnelForm.newsletter = false
+    professionnelForm.rgpdAccepted = false
+    officialDocumentFile.value = null
+    currentStep.value = 1
+    specialityInput.value = ''
+    mostSearchedInput.value = ''
+    socialNetworksList.value = [{ name: '', url: '' }]
   } catch (err) {
-    error.value = err.message || 'Une erreur est survenue lors de l\'inscription'
-    console.error('Erreur d\'inscription professionnel:', err)
+    error.value = err?.response?.data?.message || 'Une erreur est survenue lors de l\'inscription'
   } finally {
     isLoading.value = false
   }

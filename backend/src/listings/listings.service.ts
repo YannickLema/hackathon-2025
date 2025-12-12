@@ -818,13 +818,6 @@ export class ListingsService {
     }
 
     return listing;
-<<<<<<< HEAD
-  }
-
-  private isSeller(user: User) {
-    return user.role === Role.PROFESSIONNEL || user.role === Role.PARTICULIER;
-=======
->>>>>>> feature/dashboard_admin
   }
 
   private async ensureListingOwnership(userId: string, listingId: string) {
