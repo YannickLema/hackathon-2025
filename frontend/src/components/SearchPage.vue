@@ -434,13 +434,46 @@ const loadListings = async () => {
   const token = localStorage.getItem('access_token')
 
   try {
-    // TODO: Remplacer par la vraie API call
-    // const response = await fetch(`${API_URL}/listings/search`, {
-    //   headers: { 'Authorization': `Bearer ${token}` }
-    // })
+    const params = new URLSearchParams()
+    if (searchQuery.value) params.append('q', searchQuery.value)
+    if (filters.value.minPrice) params.append('priceMin', filters.value.minPrice.toString())
+    if (filters.value.maxPrice) params.append('priceMax', filters.value.maxPrice.toString())
+    if (filters.value.saleMode) params.append('saleMode', filters.value.saleMode)
+    if (filters.value.category) params.append('category', filters.value.category)
+    if (filters.value.status) params.append('status', filters.value.status)
     
-    // Données de démonstration
-    listings.value = [
+    const response = await fetch(`${API_URL}/listings/search?${params.toString()}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    
+    if (!response.ok) {
+      throw new Error('Erreur lors de la recherche')
+    }
+    
+    const data = await response.json()
+    
+    // Transformer les données
+    listings.value = data.map(listing => ({
+      id: listing.id,
+      title: listing.title,
+      category: listing.category,
+      description: listing.description,
+      priceDesired: parseFloat(listing.priceDesired),
+      saleMode: listing.saleMode,
+      status: listing.status,
+      mainImage: listing.photos && listing.photos.length > 0 
+        ? listing.photos[0].url 
+        : 'https://via.placeholder.com/400x400?text=No+Image',
+      currentBid: listing.auctionStartPrice ? parseFloat(listing.auctionStartPrice) : null,
+      auctionEndAt: listing.auctionEndAt,
+      categoryId: null,
+      createdAt: listing.createdAt,
+      isFavorite: false
+    }))
+    
+    // Fallback si pas de résultats
+    if (listings.value.length === 0) {
+      listings.value = [
       {
         id: 1,
         title: 'Montre ancienne de collection',

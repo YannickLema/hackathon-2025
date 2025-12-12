@@ -7,6 +7,14 @@ export class UpdateCommissionDto {
   @IsNumber()
   @Min(0)
   @Max(1)
+  commissionRate?: number;
+
+  // Pour compatibilité avec l'ancien format
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  @Max(1)
   buyerRate?: number;
 
   @IsOptional()

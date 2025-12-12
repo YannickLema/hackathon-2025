@@ -107,6 +107,13 @@ const routes = [
     path: '/paiement',
     name: 'PaymentMethod',
     component: () => import('../components/PaymentMethodPage.vue'),
+    meta: { requiresAuth: true, requiresRole: ['PROFESSIONNEL'] },
+  },
+  {
+    path: '/admin',
+    name: 'DashboardAdmin',
+    component: () => import('../components/DashboardAdmin.vue'),
+    meta: { requiresAuth: true, requiresRole: ['ADMIN'] },
   },
 ]
 

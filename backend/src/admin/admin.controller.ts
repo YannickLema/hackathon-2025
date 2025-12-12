@@ -27,6 +27,11 @@ export class AdminController {
   }
 
   // --- Users (création / blocage) ---
+  @Get('users')
+  listUsers() {
+    return this.adminService.listUsers();
+  }
+
   @Post('users')
   createUser(@Body() dto: CreateUserDto) {
     return this.adminService.createUser(dto);
@@ -55,6 +60,11 @@ export class AdminController {
       page: page ? Number(page) : 1,
       limit: limit ? Number(limit) : 20,
     });
+  }
+
+  @Delete('listings/:id')
+  deleteListing(@Param('id') id: string) {
+    return this.adminService.deleteListing(id);
   }
 
   // --- Feedbacks ---

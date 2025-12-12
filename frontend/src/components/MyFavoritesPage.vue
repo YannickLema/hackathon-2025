@@ -309,73 +309,143 @@ const getOfferStatusLabel = (status) => {
   return labels[status] || status
 }
 
-const loadFavorites = () => {
-  const saved = localStorage.getItem('wishlist')
-  if (saved) {
-    favoriteItems.value = JSON.parse(saved).map(item => ({
-      ...item,
-      status: 'available' // TODO: Vérifier le statut réel
-    }))
+const loadFavorites = async () => {
+  const token = localStorage.getItem('access_token')
+  if (!token) return
+  
+  try {
+    const response = await fetch(`${API_URL}/listings/me/favorites`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    if (response.ok) {
+      const data = await response.json()
+      favoriteItems.value = data.map(listing => ({
+        id: listing.id,
+        title: listing.title,
+        image: listing.photos && listing.photos.length > 0 ? listing.photos[0].url : '',
+        price: parseFloat(listing.priceDesired),
+        status: listing.status === 'PUBLISHED' ? 'available' : 'unavailable',
+        categoryId: null
+      }))
+    }
+  } catch (error) {
+    console.error('Erreur lors du chargement des favoris:', error)
   }
 }
 
 const loadMyBids = async () => {
-  // TODO: Remplacer par la vraie API call
-  myBids.value = [
-    {
-      id: 1,
-      title: 'Montre ancienne de collection',
-      image: 'https://cdn.pixabay.com/photo/2015/06/25/17/21/smart-watch-821557_1280.jpg',
-      myBid: 2800,
-      currentBid: 3000,
-      status: 'outbid',
-      auctionEndAt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-      categoryId: 1
+  const token = localStorage.getItem('access_token')
+  if (!token) return
+  
+  try {
+    const response = await fetch(`${API_URL}/listings/me/bids`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    if (response.ok) {
+      const bids = await response.json()
+      // Pour chaque bid, récupérer le listing
+      const listingsPromises = bids.map(bid => 
+        fetch(`${API_URL}/listings/${bid.listingId}`)
+          .then(r => r.json())
+          .then(listing => ({
+            id: listing.id,
+            title: listing.title,
+            image: listing.photos && listing.photos.length > 0 ? listing.photos[0].url : '',
+            myBid: parseFloat(bid.amount),
+            currentBid: parseFloat(listing.auctionStartPrice || listing.priceDesired),
+            status: bid.isWinning ? 'winning' : 'outbid',
+            auctionEndAt: listing.auctionEndAt,
+            categoryId: null
+          }))
+      )
+      myBids.value = await Promise.all(listingsPromises)
     }
-  ]
+  } catch (error) {
+    console.error('Erreur lors du chargement des enchères:', error)
+  }
 }
 
 const loadMyOffers = async () => {
-  // TODO: Remplacer par la vraie API call
-  myOffers.value = [
-    {
-      id: 2,
-      title: 'Tableau impressionniste',
-      image: 'https://cdn.pixabay.com/photo/2018/11/30/18/53/church-3848348_1280.jpg',
-      myOffer: 8000,
-      askingPrice: 8500,
-      status: 'pending',
-      categoryId: 2
+  const token = localStorage.getItem('access_token')
+  if (!token) return
+  
+  try {
+    const response = await fetch(`${API_URL}/listings/me/offers`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    if (response.ok) {
+      const offers = await response.json()
+      const listingsPromises = offers.map(offer =>
+        fetch(`${API_URL}/listings/${offer.listingId}`)
+          .then(r => r.json())
+          .then(listing => ({
+            id: listing.id,
+            title: listing.title,
+            image: listing.photos && listing.photos.length > 0 ? listing.photos[0].url : '',
+            myOffer: parseFloat(offer.amount),
+            askingPrice: parseFloat(listing.priceDesired),
+            status: offer.status.toLowerCase(),
+            categoryId: null
+          }))
+      )
+      myOffers.value = await Promise.all(listingsPromises)
     }
-  ]
+  } catch (error) {
+    console.error('Erreur lors du chargement des offres:', error)
+  }
 }
 
 const loadPurchases = async () => {
-  // TODO: Remplacer par la vraie API call
-  purchases.value = [
-    {
-      id: 3,
-      title: 'Bijou art déco',
-      image: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop',
-      pricePaid: 1200,
-      purchaseDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-      categoryId: 1
+  const token = localStorage.getItem('access_token')
+  if (!token) return
+  
+  try {
+    const response = await fetch(`${API_URL}/listings/me/purchases`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    if (response.ok) {
+      const purchasesData = await response.json()
+      const listingsPromises = purchasesData.map(purchase =>
+        fetch(`${API_URL}/listings/${purchase.listingId}`)
+          .then(r => r.json())
+          .then(listing => ({
+            id: listing.id,
+            title: listing.title,
+            image: listing.photos && listing.photos.length > 0 ? listing.photos[0].url : '',
+            pricePaid: parseFloat(purchase.finalPrice),
+            purchaseDate: purchase.createdAt,
+            categoryId: null
+          }))
+      )
+      purchases.value = await Promise.all(listingsPromises)
     }
-  ]
+  } catch (error) {
+    console.error('Erreur lors du chargement des achats:', error)
+  }
 }
 
 const loadLostItems = async () => {
-  // TODO: Remplacer par la vraie API call
-  lostItems.value = [
-    {
-      id: 4,
-      title: 'Sculpture moderne',
-      image: 'https://cdn.pixabay.com/photo/2021/12/30/16/46/bells-6904308_1280.jpg',
-      finalPrice: 5000,
-      soldDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-      categoryId: 2
+  const token = localStorage.getItem('access_token')
+  if (!token) return
+  
+  try {
+    const response = await fetch(`${API_URL}/listings/me/lost`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    if (response.ok) {
+      const lost = await response.json()
+      lostItems.value = lost.map(listing => ({
+        id: listing.id,
+        title: listing.title,
+        image: listing.photos && listing.photos.length > 0 ? listing.photos[0].url : '',
+        finalPrice: parseFloat(listing.priceDesired),
+        soldDate: listing.updatedAt,
+        categoryId: null
+      }))
     }
-  ]
+  } catch (error) {
+    console.error('Erreur lors du chargement des objets perdus:', error)
+  }
 }
 
 const removeFavorite = (itemId) => {

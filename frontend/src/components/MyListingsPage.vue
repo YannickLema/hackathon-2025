@@ -288,54 +288,40 @@ const loadListings = async () => {
   }
 
   try {
-    // TODO: Remplacer par la vraie API call
-    // const response = await fetch(`${API_URL}/listings/my`, {
-    //   headers: { 'Authorization': `Bearer ${token}` }
-    // })
-    // const data = await response.json()
+    const response = await fetch(`${API_URL}/listings/me`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
     
-    // Données de démonstration
-    listings.value = [
-      {
-        id: 1,
-        title: 'Montre ancienne de collection',
-        category: 'MONTRE',
-        description: 'Magnifique montre ancienne...',
-        priceDesired: 2500,
-        status: 'PUBLISHED',
-        mainImage: 'https://cdn.pixabay.com/photo/2015/06/25/17/21/smart-watch-821557_1280.jpg',
-        views: 45,
-        offersCount: 2,
-        messagesCount: 1,
-        createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        id: 2,
-        title: 'Tableau impressionniste',
-        category: 'PEINTURE',
-        description: 'Tableau d\'époque...',
-        priceDesired: 8500,
-        status: 'PUBLISHED',
-        mainImage: 'https://cdn.pixabay.com/photo/2018/11/30/18/53/church-3848348_1280.jpg',
-        views: 123,
-        offersCount: 0,
-        messagesCount: 2,
-        createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        id: 3,
-        title: 'Bijou art déco',
-        category: 'BIJOU',
-        description: 'Bijou rare...',
-        priceDesired: 1200,
-        status: 'DRAFT',
-        mainImage: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop',
-        views: 0,
-        offersCount: 0,
-        messagesCount: 0,
-        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
-      }
-    ]
+    if (!response.ok) {
+      throw new Error('Erreur lors du chargement des annonces')
+    }
+    
+    const data = await response.json()
+    
+    // Obtenir les compteurs non lus
+    const unreadResponse = await fetch(`${API_URL}/listings/me/unread-counts`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    const unreadData = unreadResponse.ok ? await unreadResponse.json() : { offers: 0, messages: 0 }
+    
+    // Transformer les données
+    listings.value = data.map((listing) => ({
+      id: listing.id,
+      title: listing.title,
+      category: listing.category,
+      description: listing.description,
+      priceDesired: parseFloat(listing.priceDesired),
+      status: listing.status,
+      saleMode: listing.saleMode,
+      mainImage: listing.photos && listing.photos.length > 0 
+        ? listing.photos[0].url 
+        : 'https://via.placeholder.com/400x400?text=No+Image',
+      views: 0, // TODO: Ajouter les vues si disponible
+      offersCount: unreadData.offers || 0,
+      messagesCount: unreadData.messages || 0,
+      createdAt: listing.createdAt,
+      publishedAt: listing.publishedAt
+    }))
   } catch (error) {
     console.error('Erreur lors du chargement des annonces:', error)
   } finally {

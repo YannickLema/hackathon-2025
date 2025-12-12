@@ -14,58 +14,55 @@ export class AdminService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getCommissions() {
+    // Utiliser PlatformCommission qui existe dans le schéma
     const [global, categories] = await Promise.all([
       this.prisma.platformCommission.findUnique({ where: { isGlobal: true } }),
       this.prisma.platformCommission.findMany({ where: { isGlobal: false } }),
     ]);
 
-    return { global, categories };
+    return [global, ...categories].filter(Boolean);
   }
 
   async updateGlobalCommission(dto: UpdateCommissionDto) {
-    if (dto.buyerRate === undefined && dto.sellerRate === undefined) {
-      throw new BadRequestException('buyerRate ou sellerRate requis');
+    const commissionRate = dto.commissionRate ?? (dto.sellerRate ?? 0);
+    if (commissionRate === undefined) {
+      throw new BadRequestException('commissionRate requis');
     }
-
-    const data: Prisma.PlatformCommissionUpdateInput = {};
-    if (dto.buyerRate !== undefined) data.buyerRate = dto.buyerRate;
-    if (dto.sellerRate !== undefined) data.sellerRate = dto.sellerRate;
 
     return this.prisma.platformCommission.upsert({
       where: { isGlobal: true },
-      update: data,
+      update: { sellerRate: commissionRate },
       create: {
         isGlobal: true,
-        buyerRate: dto.buyerRate ?? 0,
-        sellerRate: dto.sellerRate ?? 0,
+        buyerRate: 0,
+        sellerRate: commissionRate,
       },
     });
   }
 
-  async updateCategoryCommission(categoryId: string, dto: UpdateCommissionDto) {
-    if (dto.buyerRate === undefined && dto.sellerRate === undefined) {
-      throw new BadRequestException('buyerRate ou sellerRate requis');
+  async updateCategoryCommission(category: string, dto: UpdateCommissionDto) {
+    const commissionRate = dto.commissionRate ?? (dto.sellerRate ?? 0);
+    if (commissionRate === undefined) {
+      throw new BadRequestException('commissionRate requis');
     }
 
-    const category = await this.prisma.category.findFirst({
-      where: { id: categoryId, isActive: true },
+    // Trouver la catégorie
+    const cat = await this.prisma.category.findFirst({
+      where: { OR: [{ id: category }, { code: category }] },
     });
-    if (!category) {
-      throw new NotFoundException('Catégorie introuvable ou inactive');
+    
+    if (!cat) {
+      throw new NotFoundException('Catégorie introuvable');
     }
-
-    const data: Prisma.PlatformCommissionUpdateInput = {};
-    if (dto.buyerRate !== undefined) data.buyerRate = dto.buyerRate;
-    if (dto.sellerRate !== undefined) data.sellerRate = dto.sellerRate;
 
     return this.prisma.platformCommission.upsert({
-      where: { categoryId: category.id },
-      update: data,
+      where: { categoryId: cat.id },
+      update: { sellerRate: commissionRate },
       create: {
         isGlobal: false,
-        categoryId: category.id,
-        buyerRate: dto.buyerRate ?? 0,
-        sellerRate: dto.sellerRate ?? 0,
+        categoryId: cat.id,
+        buyerRate: 0,
+        sellerRate: commissionRate,
       },
     });
   }
@@ -247,6 +244,43 @@ export class AdminService {
         totalPages: Math.ceil(total / limit),
       },
     };
+  }
+
+  // --- Users ---
+  async listUsers() {
+    return this.prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        status: true,
+        emailVerified: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async deleteListing(id: string) {
+    const listing = await this.prisma.listing.findUnique({ where: { id } });
+    if (!listing) {
+      throw new NotFoundException('Annonce introuvable');
+    }
+    
+    // Supprimer les relations d'abord
+    await this.prisma.listingPhoto.deleteMany({ where: { listingId: id } });
+    await this.prisma.listingDocument.deleteMany({ where: { listingId: id } });
+    await this.prisma.bid.deleteMany({ where: { listingId: id } });
+    await this.prisma.offer.deleteMany({ where: { listingId: id } });
+    await this.prisma.listingMessage.deleteMany({ where: { listingId: id } });
+    await this.prisma.favorite.deleteMany({ where: { listingId: id } });
+    
+    // Supprimer l'annonce
+    await this.prisma.listing.delete({ where: { id } });
+    
+    return { message: 'Annonce supprimée avec succès' };
   }
 
   // --- Feedback admin ---
