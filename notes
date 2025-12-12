@@ -1,13 +1,15 @@
-Utilisateur Particulier :
+Professionnel
+Email : professionnel@test.com
+Mot de passe : test123
+Nom : Jean Dupont
+Entreprise : Galerie Dupont
+
+Particulier
 Email : particulier@test.com
 Mot de passe : test123
 Nom : Marie Martin
-Statut : Vérifié et actif
 
-
-Utilisateur Professionnel :
-Email : professionnel@test.com
+Admin
+Email : admin@purpledog.site
 Mot de passe : test123
-Nom : Pierre Dubois
-Entreprise : Antiquités Dubois
-Statut : Vérifié et actif
+Nom : Admin PurpleDog
