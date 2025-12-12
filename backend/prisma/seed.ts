@@ -1,12 +1,16 @@
-import { PrismaClient, ListingCategory, SaleMode, ListingStatus, Role } from '@prisma/client';
-import { config } from 'dotenv';
+import { PrismaClient, SaleMode, ListingStatus, Role } from '@prisma/client';
 import { resolve } from 'path';
+import { config } from 'dotenv';
 
 // Charger le .env depuis la racine du projet
 config({ path: resolve(__dirname, '../../.env') });
 
-// Ajuster DATABASE_URL si on est hors Docker
-if (process.env.DATABASE_URL && process.env.DATABASE_URL.includes('@db:')) {
+// Ajuster DATABASE_URL uniquement hors Docker
+const inDocker =
+  process.env.DOCKER === 'true' ||
+  process.env.IN_DOCKER === 'true' ||
+  process.env.CONTAINER === 'true';
+if (!inDocker && process.env.DATABASE_URL && process.env.DATABASE_URL.includes('@db:')) {
   process.env.DATABASE_URL = process.env.DATABASE_URL.replace('@db:', '@localhost:');
 }
 
@@ -14,6 +18,15 @@ const prisma = new PrismaClient();
 
 async function main() {
   console.log('🌱 Début du seed...');
+
+  // Charger les catégories et préparer un helper code -> id
+  const categories = await prisma.category.findMany();
+  const catByCode = new Map(categories.map((c) => [c.code, c.id]));
+  const cat = (code: string): string => {
+    const found = catByCode.get(code) ?? catByCode.get('AUTRE');
+    if (!found) throw new Error('Aucune catégorie trouvée (y compris AUTRE)');
+    return found;
+  };
 
   // Vérifier si un utilisateur professionnel existe
   let professionalUser = await prisma.user.findFirst({
@@ -58,7 +71,7 @@ async function main() {
   const testListings = [
     {
       title: 'Montre de collection Rolex Submariner 1960',
-      category: ListingCategory.BIJOUX_MONTRES,
+      categoryId: cat('BIJOUX_MONTRES'),
       dimensions: '42mm x 13mm',
       weightKg: 0.15,
       description: 'Magnifique montre de collection Rolex Submariner datant de 1960. En excellent état, avec boîte et papiers d\'origine. Mouvement automatique fonctionnel. Bracelet original en acier inoxydable.',
@@ -80,7 +93,7 @@ async function main() {
     },
     {
       title: 'Peinture à l\'huile - Paysage de Provence',
-      category: ListingCategory.OBJETS_ART_TABLEAUX,
+      categoryId: cat('OBJETS_ART_TABLEAUX'),
       dimensions: '60cm x 80cm',
       weightKg: 2.5,
       description: 'Superbe peinture à l\'huile représentant un paysage de Provence. Signée par l\'artiste, datée de 1985. Encadrée dans un cadre doré ancien. Excellent état de conservation.',
@@ -101,7 +114,7 @@ async function main() {
     },
     {
       title: 'Collier en or et diamants - Art Déco',
-      category: ListingCategory.BIJOUX_MONTRES,
+      categoryId: cat('BIJOUX_MONTRES'),
       dimensions: 'Longueur: 45cm',
       weightKg: 0.08,
       description: 'Magnifique collier en or 18 carats avec diamants, style Art Déco des années 1920. Pièce authentique et rare. Certificat d\'authenticité inclus. État impeccable.',
@@ -123,7 +136,7 @@ async function main() {
     },
     {
       title: 'Sculpture en bronze - Figure féminine',
-      category: ListingCategory.SCULPTURES_DECORATION,
+      categoryId: cat('SCULPTURES_DECORATION'),
       dimensions: 'Hauteur: 45cm, Largeur: 25cm, Profondeur: 20cm',
       weightKg: 8.5,
       description: 'Élégante sculpture en bronze représentant une figure féminine. Signée par l\'artiste, datée de 1970. Patine originale préservée. Pièce unique et authentique.',
@@ -144,7 +157,7 @@ async function main() {
     },
     {
       title: 'Photographie ancienne - Portrait de famille 1900',
-      category: ListingCategory.PHOTOGRAPHIES,
+      categoryId: cat('PHOTOGRAPHIES'),
       dimensions: '20cm x 25cm',
       weightKg: 0.05,
       description: 'Photographie ancienne sur papier albuminé, représentant un portrait de famille datant de 1900. Excellent état de conservation. Encadrée dans un cadre d\'époque.',
@@ -165,7 +178,7 @@ async function main() {
     },
     {
       title: 'Meuble ancien - Commode Louis XVI',
-      category: ListingCategory.AUTRE,
+      categoryId: cat('MEUBLES_ANCIENS'),
       dimensions: '120cm x 60cm x 80cm',
       weightKg: 45,
       description: 'Superbe commode en bois massif de style Louis XVI. Marqueterie d\'époque, poignées en bronze doré originales. Restauration professionnelle récente. Pièce authentique et rare.',
@@ -187,7 +200,7 @@ async function main() {
     },
     {
       title: 'Violon ancien - Stradivarius réplique',
-      category: ListingCategory.AUTRE,
+      categoryId: cat('AUTRE'),
       dimensions: 'Longueur: 59cm',
       weightKg: 0.6,
       description: 'Magnifique violon ancien, réplique de Stradivarius. Daté de 1850, en excellent état. Son exceptionnel. Certificat d\'authenticité et étui d\'origine inclus.',
@@ -208,7 +221,7 @@ async function main() {
     },
     {
       title: 'Sac à main Hermès Birkin - Cuir noir',
-      category: ListingCategory.MODE_ACCESSOIRES_LUXE,
+      categoryId: cat('MODE_ACCESSOIRES_LUXE'),
       dimensions: '30cm x 22cm x 16cm',
       weightKg: 1.2,
       description: 'Authentique sac à main Hermès Birkin en cuir noir. Modèle rare et recherché. Excellent état, avec serrure, clés et boîte d\'origine. Certificat d\'authenticité inclus.',
@@ -230,7 +243,7 @@ async function main() {
     },
     {
       title: 'Vase en porcelaine de Sèvres - XVIIIe siècle',
-      category: ListingCategory.OBJETS_ART_TABLEAUX,
+      categoryId: cat('OBJETS_ART_TABLEAUX'),
       dimensions: 'Hauteur: 35cm, Diamètre: 20cm',
       weightKg: 1.8,
       description: 'Exceptionnel vase en porcelaine de Sèvres datant du XVIIIe siècle. Décor floral bleu et or. Marque de manufacture authentique. État de conservation remarquable.',
@@ -251,7 +264,7 @@ async function main() {
     },
     {
       title: 'Livre ancien - Première édition 1850',
-      category: ListingCategory.AUTRE,
+      categoryId: cat('AUTRE'),
       dimensions: '22cm x 15cm x 3cm',
       weightKg: 0.8,
       description: 'Livre ancien, première édition datant de 1850. Reliure en cuir d\'époque, pages en excellent état. Ouvrage rare et recherché par les collectionneurs.',
@@ -271,6 +284,47 @@ async function main() {
         { url: 'https://cdn.pixabay.com/photo/2014/09/05/18/32/old-books-436498_1280.jpg', position: 9 },
       ],
     },
+    {
+      title: 'Tableau impressionniste - Bord de mer',
+      categoryId: cat('OBJETS_ART_TABLEAUX'),
+      dimensions: '50cm x 70cm',
+      weightKg: 1.8,
+      description: 'Huile sur toile style impressionniste, bord de mer. Signée, datée 1952.',
+      priceDesired: 3200,
+      saleMode: SaleMode.AUCTION,
+      auctionStartPrice: 2800,
+      photos: Array.from({ length: 10 }, (_, i) => ({
+        url: 'https://cdn.pixabay.com/photo/2018/11/30/18/53/church-3848348_1280.jpg',
+        position: i,
+      })),
+    },
+    {
+      title: 'Sculpture contemporaine en acier',
+      categoryId: cat('SCULPTURES_DECORATION'),
+      dimensions: '120cm x 40cm x 30cm',
+      weightKg: 12,
+      description: 'Sculpture moderne en acier brossé, pièce unique.',
+      priceDesired: 5400,
+      saleMode: SaleMode.INSTANT_SALE,
+      photos: Array.from({ length: 10 }, (_, i) => ({
+        url: 'https://cdn.pixabay.com/photo/2021/12/30/16/46/bells-6904308_1280.jpg',
+        position: i,
+      })),
+    },
+    {
+      title: 'Sac de luxe vintage',
+      categoryId: cat('MODE_ACCESSOIRES_LUXE'),
+      dimensions: '32cm x 24cm x 15cm',
+      weightKg: 0.9,
+      description: 'Sac en cuir grainé, édition limitée, très bon état.',
+      priceDesired: 7600,
+      saleMode: SaleMode.AUCTION,
+      auctionStartPrice: 6800,
+      photos: Array.from({ length: 10 }, (_, i) => ({
+        url: 'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=400&h=400&fit=crop',
+        position: i,
+      })),
+    },
   ];
 
   // Créer les listings
@@ -286,7 +340,7 @@ async function main() {
       data: {
         sellerId: professionalUser.id,
         title: listing.title,
-        category: listing.category,
+        categoryId: listing.categoryId,
         dimensions: listing.dimensions,
         weightKg: listing.weightKg,
         description: listing.description,
