@@ -10,6 +10,7 @@ import { FeedbackModule } from './feedback/feedback.module';
 import { StripeModule } from './stripe/stripe.module';
 import { BidsModule } from './bids/bids.module';
 import { PurchasesModule } from './purchases/purchases.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { PurchasesModule } from './purchases/purchases.module';
     StripeModule,
     BidsModule,
     PurchasesModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [AppService],

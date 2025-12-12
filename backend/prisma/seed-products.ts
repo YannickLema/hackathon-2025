@@ -1,12 +1,17 @@
-import { PrismaClient, ListingCategory, SaleMode, ListingStatus, Role } from '@prisma/client';
+// @ts-nocheck
+import { PrismaClient, SaleMode, ListingStatus, Role } from '@prisma/client';
 import { config } from 'dotenv';
 import { resolve } from 'path';
 
 // Charger le .env depuis la racine du projet
 config({ path: resolve(__dirname, '../../.env') });
 
-// Ajuster DATABASE_URL si on est hors Docker
-if (process.env.DATABASE_URL && process.env.DATABASE_URL.includes('@db:')) {
+// Ajuster DATABASE_URL uniquement hors Docker
+const inDocker =
+  process.env.DOCKER === 'true' ||
+  process.env.IN_DOCKER === 'true' ||
+  process.env.CONTAINER === 'true';
+if (!inDocker && process.env.DATABASE_URL && process.env.DATABASE_URL.includes('@db:')) {
   process.env.DATABASE_URL = process.env.DATABASE_URL.replace('@db:', '@localhost:');
 }
 
